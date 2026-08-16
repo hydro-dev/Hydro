@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { confirm } from 'vj/components/dialog';
@@ -119,7 +119,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       // @ts-ignore
       .transition(
         { opacity: 1 },
-        { duration: 200, easing: 'easeOutCubic' },
+        200,
+        'easeOutCubic',
       )
       .promise();
   }
@@ -129,7 +130,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       // @ts-ignore
       .transition(
         { opacity: 0 },
-        { duration: 200, easing: 'easeOutCubic' },
+        200,
+        'easeOutCubic',
       )
       .promise();
   }

@@ -5,7 +5,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import { Entry, ZipReader } from '@zip.js/zip.js';
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { keyBy, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { ProblemConfigFile, ProblemType } from '@hydrooj/common';

@@ -1,0 +1,13 @@
+/* Imported via `import './styles.css'` — bundled and injected globally as a <style>. */
+.example-page {
+    padding: 24px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+.example-page h1 {
+    font-size: 24px;
+    font-weight: 700;
+}
+.example-page a {
+    color: #4f46e5;
+}

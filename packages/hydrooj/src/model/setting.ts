@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import saslPrep from '@mongodb-js/saslprep';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import Schema from 'schemastery';

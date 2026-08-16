@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { getAlphabeticId } from '@hydrooj/utils/lib/common';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import React from 'react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { createPortal } from 'react-dom';

@@ -3,10 +3,10 @@ import { fs } from '@hydrooj/utils';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
 import { runQueued } from '../sandbox';
-import { Context } from './interface';
+import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
-    return async (ctx: Context) => {
+    return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         const chars = /[a-zA-Z0-9_.-]/;
         const name = (ctx.config.filename && /^[a-zA-Z0-9-_#.]+$/.test(ctx.config.filename))
             ? ctx.config.filename.replace('#', c.id.toString())
@@ -56,6 +56,7 @@ function judgeCase(c: NormalizedCase) {
         }
         return {
             id: c.id,
+            subtaskId: ctxSubtask.subtask.id,
             status,
             score,
             time: 0,

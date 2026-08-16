@@ -87,6 +87,9 @@ Add prefix/suffix: 添加前缀/后缀
 Add suffix: 添加后缀
 Add testcase: 添加测试点
 Add User: 添加用户
+Cancel Registration: 取消报名
+Registration cancelled.: 报名已取消。
+Are you sure to cancel the registration of this user?: 确定要取消该用户的报名吗？
 Add: 添加
 Additional Files: 附加文件
 additional_file: 附加文件
@@ -966,6 +969,7 @@ There are no contests...: 没有比赛…
 There are no files currently.: 目前还没有文件。
 There is no homework so far ╰(*°▽°*)╯: 目前还没有作业 ╰(*°▽°*)╯
 This contest is not live.: 比赛没有开始。
+This contest has already started.: 比赛已开始。
 This email was sent by {0} automatically, and please do not reply directly.: 这封邮件由 {0} 自动发送，请勿直接回复。
 This homework is not open and you cannot view problems.: 该作业还未到开放时间，您无法查看作业题目。
 This homework is not open.: 该作业还未开放递交。

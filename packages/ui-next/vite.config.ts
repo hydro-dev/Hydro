@@ -9,6 +9,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'src'),
+            '@hydrooj/ui-next': path.resolve(__dirname, 'src/api.ts'),
         },
     },
     publicDir: 'pub',

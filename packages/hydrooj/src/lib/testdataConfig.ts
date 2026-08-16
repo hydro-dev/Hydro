@@ -6,7 +6,7 @@ import type { ProblemConfig } from '../interface';
 
 export async function parseConfig(config: string | ProblemConfigFile = {}, files: string[]) {
     const cfg: ProblemConfigFile = typeof config === 'string'
-        ? await readYamlCases(load(config) as Record<string, any>)
+        ? await readYamlCases(load(config || '{}') as Record<string, any>)
         : await readYamlCases(config);
     const result: ProblemConfig = {
         count: Object.keys(cfg.answers || {}).length || Math.sum((cfg.subtasks || []).map((s) => s.cases.length)),

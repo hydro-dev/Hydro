@@ -1,4 +1,4 @@
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import { Context, Service } from './context';
 import { Logger } from './logger';

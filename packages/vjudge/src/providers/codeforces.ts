@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { JSDOM } from 'jsdom';
 import {
     buildContent, Logger, randomstring, sleep, STATUS,

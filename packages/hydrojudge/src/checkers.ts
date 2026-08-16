@@ -19,7 +19,7 @@ export interface CheckConfig {
 type Checker = (config: CheckConfig) => Promise<{
     status: number;
     score: number;
-    message: string;
+    message: string | { message: string, params?: any[] };
     nextPass?: { input: CopyInFile, state?: Record<string, CopyInFile> };
 }>;
 
@@ -32,8 +32,8 @@ function parseDiffMsg(msg: string) {
         const lline = meta.split('L=')[1];
         if (lline?.trim() === 'EOF') {
             const next = u.split('EOF on ')[1].split(' ')[0];
-            if (next === 'usrout.processed') return 'Standard answer longer than user output.';
-            if (next === 'answer.processed') return 'User output longer than standard answer.';
+            if (next === 'usrout.processed') return { message: 'Standard answer longer than user output.', params: [] };
+            if (next === 'answer.processed') return { message: 'User output longer than standard answer.', params: [] };
             return `Unable to parse: ${u}`;
         }
         const lineNum = +lline;
@@ -42,8 +42,8 @@ function parseDiffMsg(msg: string) {
         const std = t.trim().split(' ');
         if (std.every((x) => !Number.isNaN(+x))) {
             // Number mode, report length not match
-            if (usr.length > std.length) return 'User output longer than standard answer.';
-            if (usr.length < std.length) return 'Standard answer longer than user output.';
+            if (usr.length > std.length) return { message: 'User output longer than standard answer.', params: [] };
+            if (usr.length < std.length) return { message: 'Standard answer longer than user output.', params: [] };
         }
         for (let i = 0; i < usr.length; i++) {
             if (usr[i] === std[i]) continue;
@@ -119,7 +119,7 @@ const getDefaultChecker = (strict: boolean) => async (config: CheckConfig) => {
         status = STATUS.STATUS_WRONG_ANSWER;
         if (config.detail === 'full') message = parseDiffMsg(stdout);
     } else status = STATUS.STATUS_ACCEPTED;
-    if (message.length > 1024000) message = '';
+    if (typeof message === 'string' && message.length > 1024000) message = '';
     return {
         score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
         status,

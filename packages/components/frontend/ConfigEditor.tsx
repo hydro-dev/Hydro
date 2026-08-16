@@ -2,7 +2,7 @@ import 'schemastery-react/lib/schemastery-react.css';
 
 import { Allotment } from 'allotment';
 import { diffLines } from 'diff';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import React from 'react';
 import { createSchemasteryReact } from 'schemastery-react';
 import { ComponentsContext } from './provider';
