@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 declare global {
     interface String {
         format: (...args: Array<any>) => string;
@@ -13,7 +15,7 @@ const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567
 
 export function randomstring(digit = 32, dict = defaultDict) {
     let str = '';
-    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
+    for (let i = 1; i <= digit; i++) str += dict[randomInt(dict.length)];
     return str;
 }
 
