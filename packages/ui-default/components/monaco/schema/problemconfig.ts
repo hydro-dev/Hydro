@@ -32,6 +32,7 @@ const problemConfigSchema: JSONSchema7 = {
         score: { $ref: '#/definitions/score', description: 'score' },
         cases: { $ref: '#/definitions/cases' },
         if: { type: 'array', items: { type: 'integer' } },
+        if_score: { type: 'array', items: { type: 'integer' } },
         id: { type: 'integer' },
       },
       required: ['score'],
