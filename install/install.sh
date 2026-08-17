@@ -15,10 +15,23 @@ To disable this feature, checkout our sourcecode."
 # Sessions started with `su` will not have updated $USER, need to manually fix everything
 actual_user=$(whoami)
 if [ "$actual_user" != "$USER" ]; then
+echo "In the current environment, the environment variable does not belong to the root, which will cause Hydro to fail to start up properly after the server restart"
+echo "在目前环境下，环境变量并不属于 root，这会导致服务器重启后 Hydro 可能不能正常自启动"
+echo "Try to fix it..."
+echo "尝试修复..."
 export USER=root
 export LOGNAME=root
 export HOME=/root
 export PWD=/root
+echo "This might work"
+echo "这可能会奏效"
+echo "If Hydro can not be properly self-started after server restart"
+echo "如果服务器重启后 Hydro 不能正常自启动"
+echo "Use the following code to fix it after reboot"
+echo "在重启后使用下面的代码以修复"
+echo "pm2 resurrect # 手动载入进程列表"
+echo "pm2 unstartup # 清除原来的服务"
+echo "pm2 startup systemd -u root # 以 root 身份创建服务"
 fi
 mkdir -p /data/db /data/file ~/.hydro
 bash <(curl https://hydro.ac/nix.sh)
