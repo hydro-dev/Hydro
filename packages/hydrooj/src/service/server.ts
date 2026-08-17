@@ -161,7 +161,7 @@ export async function apply(ctx: Context) {
             },
             translate(str: string) {
                 if (!str) return '';
-                const lang = this.user?.viewLang || this.session?.viewLang;
+                const lang = this.session?.viewLang;
                 const langs = lang
                     ? [lang, ...this.context.acceptsLanguages()]
                     : [...this.context.acceptsLanguages(), system.get('server.language')];
