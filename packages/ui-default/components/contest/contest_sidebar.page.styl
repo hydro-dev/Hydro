@@ -19,3 +19,26 @@
 
   .contest-sidebar__status
     margin-top: rem(20px)
+
+.contest-attend-dialog__modes
+  display: grid
+  grid-template-columns: repeat(2, minmax(0, 1fr))
+  gap: rem(10px)
+  margin-bottom: rem(12px)
+
+  .button
+    margin-bottom: 0
+    text-align: center
+    white-space: normal
+
+  +mobile()
+    grid-template-columns: 1fr
+
+.contest-attend-dialog__hint
+  margin-bottom: rem(12px)
+
+.contest-attend-dialog__desc
+  margin: rem(4px) 0 rem(12px)
+
+.contest-attend-dialog__team-select
+  margin-top: rem(12px)
