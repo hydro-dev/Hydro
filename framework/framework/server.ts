@@ -707,7 +707,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     try {
                         await h.message?.(payload);
                     } catch (err) {
-                        logger.error(e);
+                        logger.error(err);
                     }
                 };
             } else ctx.body = stream;
