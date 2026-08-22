@@ -51,6 +51,7 @@ export function configYamlFormat(config: ProblemConfigFile) {
         && (['default', 'strict'].includes(formatConfig.checker_type) || !formatConfig.checker_type)) return;
       if (key === 'interactor' && config.type !== 'interactive') return;
       if (key === 'multi_pass' && (!Number.isInteger(config.multi_pass) || config.multi_pass <= 1 || config.multi_pass > 20)) return;
+      if (key === 'num_processes' && config.type !== 'communication') return;
       if (key === 'subtasks') {
         formatConfig[key] = [];
         config[key].forEach((subtask) => {

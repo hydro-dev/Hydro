@@ -51,6 +51,9 @@ export default function reducer(state = {
       const next = { ...state, [action.key]: action.value };
       if (action.key === 'score' && action.value) next.score = +next.score;
       if (action.key === 'checker_type' && action.value === 'other') next.checker_type = 'syzoj';
+      if (action.key === 'type' && action.value === 'communication' && next.num_processes == null) {
+        next.num_processes = 2;
+      }
       if (!action.value || (action.value instanceof Array && !action.value.join(''))) delete next[action.key];
       return next;
     }
