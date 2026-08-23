@@ -303,8 +303,12 @@ class UserRegisterWithCodeHandler extends Handler {
     }
 
     async get() {
+        const provider = this.ctx.oauth.providers[this.tdoc.identity.provider];
         this.response.template = 'user_register_with_code.html';
-        this.response.body = this.tdoc;
+        this.response.body = {
+            ...this.tdoc,
+            lockUsername: !!provider?.lockUsername,
+        };
     }
 
     @param('password', Types.Password)
