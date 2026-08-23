@@ -390,9 +390,11 @@ function set(s: Setting, key: string, value: any) {
     if (value) {
         if (['json', 'yaml', 'markdown', 'textarea'].includes(s.type)) {
             if (!Types.Content[1](value)) throw new ValidationError(key);
+            return Types.Content[0](value);
         }
         if (s.type === 'text') {
             if (!Types.ShortString[1](value)) throw new ValidationError(key);
+            return Types.ShortString[0](value);
         }
     }
     if (s.subType === 'yaml') {
