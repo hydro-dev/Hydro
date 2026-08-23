@@ -30,14 +30,16 @@ export default async function download(filename, targets) {
   const fileStream = streamsaver.createWriteStream(filename);
   const queue = new PQueue({ concurrency: 5 });
   const abortCallbackReceiver: any = {};
-  function stopDownload() { abortCallbackReceiver.abort?.(); }
+  function stopDownload(reason?: unknown) {
+    abortCallbackReceiver.abort?.(reason instanceof Error ? reason : new Error('Download aborted'));
+  }
   let i = 0;
   async function downloadFile(target, retry = 5) {
     try {
       let stream;
       if (target.url) {
         const response = await fetch(target.url);
-        if (!response.ok) throw response.statusText;
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
         stream = response.body;
       } else {
         stream = new Blob([target.content]).stream();
@@ -48,15 +50,14 @@ export default async function download(filename, targets) {
       };
     } catch (e) {
       if (retry) {
-        Notification.warn(i18n('Download Error: {0} {1}, retry in 3 secs...', [target.filename, e.toString()]));
+        Notification.warn(i18n('Download Error: {0} {1}, retry in 3 secs...', [target.filename, String(e)]));
         await sleep(3000);
         return await downloadFile(target, retry - 1);
       }
-      window.captureException?.(e);
-      stopDownload();
-      Notification.error(i18n('Download Error: {0} {1}', [target.filename, e.toString()]));
+      const error = new Error(i18n('Download Error: {0} {1}', [target.filename, String(e)]));
+      stopDownload(error);
+      throw error;
     }
-    return {};
   }
   const handles = [];
   for (const target of targets) {
