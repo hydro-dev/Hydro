@@ -317,7 +317,7 @@ class UserRegisterWithCodeHandler extends Handler {
     ) {
         const provider = this.ctx.oauth.providers[this.tdoc.identity.provider];
         if (!provider) throw new SystemError(`OAuth provider ${this.tdoc.identity.provider} not found`);
-        if (provider.lockUsername) uname = this.tdoc.identity.username;
+        if (provider.lockUsername) uname = this.tdoc.username;
         if (!Types.Username[1](uname)) throw new ValidationError('uname');
         if (password !== verify) throw new VerifyPasswordError();
         const randomEmail = `${randomstring(12)}@invalid.local`; // some random email to remove in the future
