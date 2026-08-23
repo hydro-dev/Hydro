@@ -188,9 +188,16 @@ let transition: ViewTransition | null = null;
 export async function withTransitionCallback(callback: () => (Promise<void> | void)) {
   if (!document.startViewTransition || document.visibilityState === 'hidden') return callback?.();
   transition?.skipTransition?.();
-  transition = document.startViewTransition(callback);
-  await transition.finished;
-  transition = null;
+  const currentTransition = document.startViewTransition(callback);
+  transition = currentTransition;
+  const ready = currentTransition.ready.catch((error) => {
+    if (!(error instanceof DOMException) || !['AbortError', 'InvalidStateError'].includes(error.name)) throw error;
+  });
+  try {
+    await Promise.all([ready, currentTransition.finished]);
+  } finally {
+    if (transition === currentTransition) transition = null;
+  }
   return null;
 }
 
