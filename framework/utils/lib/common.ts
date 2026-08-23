@@ -1,5 +1,3 @@
-import { randomInt } from 'node:crypto';
-
 declare global {
     interface String {
         format: (...args: Array<any>) => string;
@@ -13,9 +11,21 @@ declare global {
 
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
+function randomInt(min: number, max: number) {
+    const range = max - min + 1;
+    const maxValid = Math.floor(4294967296 / range) * range;
+    const array = new Uint32Array(1);
+    let value: number;
+    do {
+        crypto.getRandomValues(array);
+        value = array[0];
+    } while (value >= maxValid);
+    return min + (value % range);
+}
+
 export function randomstring(digit = 32, dict = defaultDict) {
     let str = '';
-    for (let i = 1; i <= digit; i++) str += dict[randomInt(dict.length)];
+    for (let i = 1; i <= digit; i++) str += dict[randomInt(0, dict.length - 1)];
     return str;
 }
 
