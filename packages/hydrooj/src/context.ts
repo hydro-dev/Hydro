@@ -1,4 +1,3 @@
-import type { } from '@cordisjs/plugin-logger';
 import type { } from '@cordisjs/plugin-timer';
 import { Service } from 'cordis';
 import Schema from 'schemastery';

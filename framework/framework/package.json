@@ -10,7 +10,7 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:^",
         "@koa/router": "^15.7.0",
-        "@mongodb-js/saslprep": "^1.4.13",
+        "@mongodb-js/saslprep": "^1.5.0",
         "emoji-regex": "^10.6.0",
         "fs-extra": "^11.4.0",
         "koa": "^3.2.1",
