@@ -17,7 +17,6 @@
         "@aws-sdk/s3-presigned-post": "3.1048.0",
         "@aws-sdk/s3-request-presigner": "3.1048.0",
         "@babel/code-frame": "^8.0.0",
-        "@cordisjs/plugin-logger": "^1.0.2",
         "@cordisjs/plugin-timer": "1.1.2",
         "@hydrooj/common": "workspace:^",
         "@hydrooj/framework": "workspace:^",
