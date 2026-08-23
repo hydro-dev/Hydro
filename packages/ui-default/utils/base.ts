@@ -114,15 +114,17 @@ export const request = {
             reject(err);
           } else if (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON.error) {
             const { error } = jqXHR.responseJSON;
+            let err: any;
             if (error.params) {
               const message = i18n(error.message, ...error.params);
-              const err = new Error(message === error.message && error.params.length
+              err = new Error(message === error.message && error.params.length
                 ? `${error.message}: ${error.params.join(' ')}`
-                : message) as any;
+                : message);
               err.rawMessage = error.message;
               err.params = error.params;
-              reject(err);
-            } else reject(new Error(jqXHR.responseJSON.error.message));
+            } else err = new Error(error.message);
+            if (jqXHR.status >= 400 && jqXHR.status < 500) err.isUserFacingError = true;
+            reject(err);
           } else if (errorThrown instanceof Error) {
             reject(errorThrown);
           } else {

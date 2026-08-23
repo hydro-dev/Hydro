@@ -17,6 +17,7 @@ init({
   tracePropagationTargets: ['localhost', /^\//, window.location.host],
   replaysSessionSampleRate: 0.01,
   replaysOnErrorSampleRate: 0.1,
+  beforeSend: (event, hint) => ((hint.originalException as { isUserFacingError?: boolean } | undefined)?.isUserFacingError ? null : event),
 });
 setTag('host', window.location.host);
 setTag('page_name', document.documentElement.getAttribute('data-page'));
