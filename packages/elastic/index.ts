@@ -60,6 +60,7 @@ export default class ElasticSearchService extends Service {
                 pdoc = await ProblemModel.get(domainId, +q.substring(1), ProblemModel.PROJECTION_LIST);
                 if (pdoc) hits.unshift(`${pdoc.domainId}/${pdoc.docId}`);
             }
+            if (hits.length > size) hits.pop();
         }
         return {
             countRelation: typeof res.hits.total === 'number' ? 'eq' : res.hits.total.relation,

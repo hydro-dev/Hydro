@@ -67,6 +67,7 @@ const defaultSearch = async (domainId: string, q: string, options?: ProblemSearc
             pdoc = await problem.get(domainId, +q.substring(1), projection);
             if (pdoc) pdocs.unshift(pdoc);
         }
+        if (pdocs.length > (options.limit || system.get('pagination.problem'))) pdocs.pop();
     }
     return {
         hits: Array.from(new Set(pdocs.map((i) => `${i.domainId}/${i.docId}`))),
