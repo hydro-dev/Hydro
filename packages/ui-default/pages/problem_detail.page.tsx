@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import * as yaml from 'js-yaml';
+import _ from 'lodash';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { confirm } from 'vj/components/dialog';
@@ -144,6 +145,34 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     const { default: ScratchpadApp } = await import('../components/scratchpad');
     const { default: ScratchpadReducer } = await import('../components/scratchpad/reducers');
     const { Provider, store } = await loadReactRedux(ScratchpadReducer);
+    let cacheKey = `${UserContext._id}/${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`;
+    if (UiContext.tdoc?._id) cacheKey += `@${UiContext.tdoc._id}`;
+    try {
+      const draft = await (await openDB).get('scratchpad-drafts', cacheKey);
+      if (draft) {
+        store.dispatch({
+          type: 'SCRATCHPAD_EDITOR_HYDRATE',
+          payload: {
+            code: draft.code ?? UiContext.codeTemplate,
+            lang: draft.lang ?? UiContext.codeLang,
+          },
+        });
+      }
+    } catch { }
+
+    let previousEditorState = store.getState().editor;
+    let write = Promise.resolve();
+    const saveDraft = _.debounce((code: string, lang: string) => {
+      write = write
+        .then(() => openDB.then((db) => db.put('scratchpad-drafts', { id: cacheKey, code, lang })))
+        .catch(() => { });
+    }, 400);
+    store.subscribe(() => {
+      const editor = store.getState().editor;
+      if (editor === previousEditorState) return;
+      previousEditorState = editor;
+      saveDraft(editor.code, editor.lang);
+    });
 
     // @ts-ignore
     window.store = store;
