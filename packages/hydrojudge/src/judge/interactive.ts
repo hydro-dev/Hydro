@@ -11,9 +11,7 @@ function judgeCase(c: NormalizedCase) {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         if (ctx.config.multi_pass && !mp.i) mp.i = 1;
 
-        const [{
-            code, signalled, time, memory,
-        }, resInteractor] = await runPiped([
+        await using results = await runPiped([
             {
                 execute: ctx.executeUser.execute,
                 copyIn: { ...ctx.executeUser.copyIn, ...mp.state },
@@ -44,6 +42,9 @@ function judgeCase(c: NormalizedCase) {
             { in: { index: 0, fd: 1 }, out: { index: 1, fd: 0 }, name: 'userToInteractor' },
             { in: { index: 1, fd: 1 }, out: { index: 0, fd: 0 }, name: 'interactorToUser' },
         ], undefined, `judgeCase[${c.id}]${mp.i ? `[pass=${mp.i}]` : ''}<${ctx.rid}>`);
+        const [{
+            code, signalled, time, memory,
+        }, resInteractor] = results;
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;

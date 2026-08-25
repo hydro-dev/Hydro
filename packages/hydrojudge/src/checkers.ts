@@ -16,11 +16,16 @@ export interface CheckConfig {
     env?: Record<string, string>;
 }
 
+export interface NextPass extends AsyncDisposable {
+    input: CopyInFile;
+    state?: Record<string, CopyInFile>;
+}
+
 type Checker = (config: CheckConfig) => Promise<{
     status: number;
     score: number;
     message: string | { message: string, params?: any[] };
-    nextPass?: { input: CopyInFile, state?: Record<string, CopyInFile> };
+    nextPass?: NextPass;
 }>;
 
 function parseDiffMsg(msg: string) {
@@ -237,7 +242,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async testlib(config) {
-        const { stderr, status, code, fileIds } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
+        const res = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
             copyIn: {
                 in: config.input,
                 user_out: config.user_stdout,
@@ -248,41 +253,52 @@ const checkers: Record<string, Checker> = new Proxy({
             env: config.env,
             copyOutCached: ['nextpass.in?', 'state.txt?'],
         });
-        if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
-            const message = {
-                [STATUS.STATUS_SYSTEM_ERROR]: stderr,
-                [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'Checker Time Limit Exceeded',
-                [STATUS.STATUS_MEMORY_LIMIT_EXCEEDED]: 'Checker Memory Limit Exceeded',
-            }[status];
-            return {
-                status: STATUS.STATUS_SYSTEM_ERROR,
-                score: 0,
-                message,
-            };
+        const cleanup = res[Symbol.asyncDispose];
+        let cleanupTransferred = false;
+        try {
+            const {
+                stderr, status, code, fileIds,
+            } = res;
+            if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
+                const message = {
+                    [STATUS.STATUS_SYSTEM_ERROR]: stderr,
+                    [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'Checker Time Limit Exceeded',
+                    [STATUS.STATUS_MEMORY_LIMIT_EXCEEDED]: 'Checker Memory Limit Exceeded',
+                }[status];
+                return {
+                    status: STATUS.STATUS_SYSTEM_ERROR,
+                    score: 0,
+                    message,
+                };
+            }
+            if (status === STATUS.STATUS_RUNTIME_ERROR && !stderr?.trim()) {
+                return {
+                    status: STATUS.STATUS_SYSTEM_ERROR,
+                    score: 0,
+                    message: `Checker exited with code ${code}`,
+                };
+            }
+            const result = parse(stderr, config.score, config.detail);
+            if (result.status === STATUS.STATUS_ACCEPTED && fileIds['nextpass.in']) {
+                cleanupTransferred = true;
+                return {
+                    ...result,
+                    nextPass: {
+                        input: { fileId: fileIds['nextpass.in'] },
+                        state: fileIds['state.txt'] ? { 'state.txt': { fileId: fileIds['state.txt'] } } : undefined,
+                        [Symbol.asyncDispose]: cleanup,
+                    },
+                };
+            }
+            return result;
+        } finally {
+            if (!cleanupTransferred) await cleanup();
         }
-        if (status === STATUS.STATUS_RUNTIME_ERROR && !stderr?.trim()) {
-            return {
-                status: STATUS.STATUS_SYSTEM_ERROR,
-                score: 0,
-                message: `Checker exited with code ${code}`,
-            };
-        }
-        const result = parse(stderr, config.score, config.detail);
-        if (result.status === STATUS.STATUS_ACCEPTED && fileIds['nextpass.in']) {
-            return {
-                ...result,
-                nextPass: {
-                    input: { fileId: fileIds['nextpass.in'] },
-                    state: fileIds['state.txt'] ? { 'state.txt': { fileId: fileIds['state.txt'] } } : undefined,
-                },
-            };
-        }
-        return result;
     },
 
     // https://www.kattis.com/problem-package-format/spec/2023-07-draft.html#output-validator
     async kattis(config) {
-        const { files, fileIds, code } = await runQueued(`${config.execute} input answer_file feedback_dir`, {
+        const res = await runQueued(`${config.execute} input answer_file feedback_dir`, {
             copyIn: {
                 input: config.input,
                 answer_file: config.output,
@@ -301,38 +317,46 @@ const checkers: Record<string, Checker> = new Proxy({
                 'feedback_dir/state.txt?',
             ],
         });
+        const cleanup = res[Symbol.asyncDispose];
+        let cleanupTransferred = false;
+        try {
+            const { files, fileIds, code } = res;
+            const status = code === 42
+                ? STATUS.STATUS_ACCEPTED
+                : code === 43
+                    ? STATUS.STATUS_WRONG_ANSWER
+                    : STATUS.STATUS_SYSTEM_ERROR;
 
-        const status = code === 42
-            ? STATUS.STATUS_ACCEPTED
-            : code === 43
-                ? STATUS.STATUS_WRONG_ANSWER
-                : STATUS.STATUS_SYSTEM_ERROR;
+            const score = status === STATUS.STATUS_ACCEPTED
+                ? config.score
+                : +files['feedback_dir/score.txt'] || 0;
 
-        const score = status === STATUS.STATUS_ACCEPTED
-            ? config.score
-            : +files['feedback_dir/score.txt'] || 0;
+            const message = status === STATUS.STATUS_SYSTEM_ERROR
+                ? files['feedback_dir/judgeerror.txt'] || `Checker exited with code ${code}`
+                : config.detail === 'full'
+                    ? files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || ''
+                    : '';
 
-        const message = status === STATUS.STATUS_SYSTEM_ERROR
-            ? files['feedback_dir/judgeerror.txt'] || `Checker exited with code ${code}`
-            : config.detail === 'full'
-                ? files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || ''
-                : '';
+            if (status === STATUS.STATUS_ACCEPTED && fileIds['feedback_dir/nextpass.in']) {
+                cleanupTransferred = true;
+                return {
+                    status,
+                    score,
+                    message,
+                    nextPass: {
+                        input: { fileId: fileIds['feedback_dir/nextpass.in'] },
+                        state: fileIds['feedback_dir/state.txt']
+                            ? { 'feedback_dir/state.txt': { fileId: fileIds['feedback_dir/state.txt'] } }
+                            : undefined,
+                        [Symbol.asyncDispose]: cleanup,
+                    },
+                };
+            }
 
-        if (status === STATUS.STATUS_ACCEPTED && fileIds['feedback_dir/nextpass.in']) {
-            return {
-                status,
-                score,
-                message,
-                nextPass: {
-                    input: { fileId: fileIds['feedback_dir/nextpass.in'] },
-                    state: fileIds['feedback_dir/state.txt']
-                        ? { 'feedback_dir/state.txt': { fileId: fileIds['feedback_dir/state.txt'] } }
-                        : undefined,
-                },
-            };
+            return { status, score, message };
+        } finally {
+            if (!cleanupTransferred) await cleanup();
         }
-
-        return { status, score, message };
     },
 }, {
     get(self, key) {

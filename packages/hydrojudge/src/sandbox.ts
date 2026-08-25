@@ -62,6 +62,8 @@ interface SandboxAdaptedResult {
     error?: string;
 }
 
+type DisposableSandboxResults = SandboxAdaptedResult[] & AsyncDisposable;
+
 function checkStringArray(args: ParseEntry[]): args is string[] {
     return args.every((arg: ParseEntry) => typeof arg === 'string');
 }
@@ -147,9 +149,13 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
     return ret;
 }
 
+export async function del(fileId: string) {
+    await client.deleteFile(fileId);
+}
+
 export async function runPiped(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[], params: Parameter = {}, trace: string = '',
-): Promise<SandboxAdaptedResult[]> {
+): Promise<DisposableSandboxResults> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
@@ -179,11 +185,10 @@ export async function runPiped(
         console.error(e);
         throw new SystemError('Sandbox Error', [e]);
     }
-    return res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[];
-}
-
-export async function del(fileId: string) {
-    await client.deleteFile(fileId);
+    const result = res.map((r) => adaptResult(r, params)) as DisposableSandboxResults;
+    const fileIds = new Set(result.flatMap((item) => Object.values(item.fileIds || {})));
+    (result as any)[Symbol.asyncDispose] = () => Promise.allSettled([...fileIds].map(del));
+    return result;
 }
 
 export async function get(fileId: string, dest?: string) {
@@ -210,7 +215,7 @@ export function runQueued(
     return queue.add(async () => {
         const res = await runPiped(execute, pipeMapping, params, trace);
         const ret = single ? res[0] : res;
-        (ret as any)[Symbol.asyncDispose] = () => Promise.allSettled(res.flatMap((t) => Object.values(t.fileIds || {}).map(del)));
+        (ret as any)[Symbol.asyncDispose] = res[Symbol.asyncDispose];
         return ret;
     }, { priority });
 }

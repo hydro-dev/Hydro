@@ -1,5 +1,5 @@
 import { NormalizedCase, STATUS } from '@hydrooj/common';
-import checkers from '../checkers';
+import checkers, { type NextPass } from '../checkers';
 import { runFlow } from '../flow';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
@@ -31,7 +31,7 @@ function judgeCase(c: NormalizedCase) {
         let { status } = res;
         let message: any = '';
         let score = 0;
-        let nextPass: any;
+        let nextPass: NextPass | undefined;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -69,9 +69,10 @@ function judgeCase(c: NormalizedCase) {
             if (mp.i && typeof message === 'string') message = `${message} [Pass ${mp.i}]`;
         }
         if (nextPass) {
+            await using ownedNextPass = nextPass;
             if (mp.i < ctx.config.multi_pass) {
-                mp.input = nextPass.input;
-                mp.state = nextPass.state ?? undefined;
+                mp.input = ownedNextPass.input;
+                mp.state = ownedNextPass.state ?? undefined;
                 mp.i++;
                 return await runner(ctx, ctxSubtask, runner);
             }
