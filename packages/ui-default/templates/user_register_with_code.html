@@ -12,13 +12,13 @@
     <div>
       <label class="inverse material textbox">
         {{ _('Username') }}
-        <input name="uname" value="{{ username or '' }}" type="text" autofocus>
+        <input name="uname" value="{{ username or '' }}" type="text" {% if lockUsername %}readonly{% else %}autofocus{% endif %}>
       </label>
     </div>
     <div>
       <label class="inverse material textbox">
         {{ _('Password') }}
-        <input name="password" type="password">
+        <input name="password" type="password" {% if lockUsername %}autofocus{% endif %}>
       </label>
     </div>
     <div>
