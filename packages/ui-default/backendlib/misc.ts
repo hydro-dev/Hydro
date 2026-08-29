@@ -3,10 +3,8 @@ import { AnsiUp } from 'ansi_up';
 
 export { formatSeconds, size } from 'hydrooj';
 
-const AU = new AnsiUp();
-
 export function ansiToHtml(str: string, whiteToBlack = true) {
-  const res = AU.ansi_to_html(str);
+  const res = new AnsiUp().ansi_to_html(str);
   return whiteToBlack ? res.replace(/style="color:rgb\(255,255,255\)"/g, 'style="color:black"') : res;
 }
 

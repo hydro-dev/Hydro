@@ -7,8 +7,6 @@ import { i18n } from 'vj/utils';
 import DataInput from './DataInputComponent';
 import Panel from './PanelComponent';
 
-const AU = new AnsiUp();
-
 const mapStateToProps = (state) => ({
   input: state.pretest.input,
   output: state.pretest.output,
@@ -47,7 +45,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadPret
           />
           <DataInput
             title={i18n('Output')}
-            value={AU.ansi_to_html(this.props.output)}
+            value={new AnsiUp().ansi_to_html(this.props.output)}
             html
           />
         </Allotment>
