@@ -161,7 +161,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     } catch { }
 
     let previousEditorState = store.getState().editor;
-    let write = Promise.resolve();
+    let write: Promise<any> = Promise.resolve();
     const saveDraft = _.debounce((code: string, lang: string) => {
       write = write
         .then(() => openDB.then((db) => db.put('scratchpad-drafts', { id: cacheKey, code, lang })))

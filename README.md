@@ -111,6 +111,12 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary
 
+## Hydro 5.0.5 / UI 4.58.5
+
+- elastic: 修复基于 ID 搜索
+- ui: 将代码存储移动至 indexeddb
+- core: 允许比赛开始前移除参赛者
+
 ## Hydro 5.0.4 / UI 4.58.4
 
 - onsite-toolkit: 允许导入用户到指定域
@@ -122,7 +128,6 @@ Hydro 用户群：1085853538
 ## Hydro 5.0.2 / UI 4.58.2
 
 - judge: 支持 multi-pass 题型
-- core&ui: bug 与漏洞修复
 
 ## Hydro 5.0.0 / UI 4.58.0
 
@@ -138,7 +143,6 @@ Hydro 用户群：1085853538
 - judge: 支持配置叠加层
 - judge: 添加 pipe_proxy 选项
 - judge: 优化 \r 处理
-- 其他漏洞修复和交互优化
 
 ## Hydro 5.0.0-beta.18 / UI 4.58.0-beta.19
 
@@ -156,13 +160,11 @@ Hydro 用户群：1085853538
 - core: 支持多文件 patch
 - core: buildContent: 支持 background 字段
 - core: 排名：排除不在本域内的用户
-- core: 其他 bug 修复
 
 ## Hydro 5.0.0-beta.16 / UI 4.58.0-beta.17
 
 - core: 修复繁体中文 i18n 自动检测
 - scoreboard-xcpcio: 修复子域中自动重定向
-- core: 比赛导航优化
 - core&ui: 繁体中文翻译完善
 - core&ui: 支持搜索训练计划
 - core: 修复 judge 特定情况下的竞态
@@ -170,7 +172,6 @@ Hydro 用户群：1085853538
 - ui: 支持自动填写测试数据输入到在线 IDE
 - ui: 默认禁用提交列表页面统计数据
 - judge: 支持同时运行多组自测数据
-- ui: 细节优化
 
 ## Hydro 5.0.0-beta.15 / UI 4.58.0-beta.16
 
