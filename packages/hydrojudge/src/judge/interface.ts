@@ -1,7 +1,6 @@
 import PQueue from 'p-queue';
 import { NormalizedSubtask } from '@hydrooj/common';
 import { Execute } from '../interface';
-import { CopyInFile } from '../sandbox';
 import { JudgeTask } from '../task';
 
 export type Context = JudgeTask & RuntimeContext;
@@ -29,10 +28,4 @@ export interface ContextSubTask {
     subtask: NormalizedSubtask;
     score: number;
     status: number;
-}
-
-export interface MultiPassContext {
-    i: number;
-    input?: CopyInFile;
-    state?: Record<string, CopyInFile>;
 }

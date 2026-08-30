@@ -9,7 +9,7 @@ import { Context, ContextSubTask } from './judge/interface';
 interface Task {
     compile: () => Promise<void>;
     judgeCase: (c: NormalizedCase) => (
-        (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => Promise<JudgeResultBody['case']>
+        (ctx: Context, ctxSubtask: ContextSubTask) => Promise<JudgeResultBody['case']>
     );
 }
 
@@ -47,7 +47,7 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
                         message: '',
                     } : await (async () => {
                         using span = ctx.startChildSpan('judge.case', { id: subtask.cases[cid].id, subtaskId: subtask.id });
-                        const r = await runner(ctx, ctxSubtask, runner);
+                        const r = await runner(ctx, ctxSubtask);
                         span.setAttributes({ status: r?.status, time: r?.time, memory: r?.memory });
                         return r;
                     })();
@@ -98,7 +98,7 @@ export const runFlow = async (ctx: Context, task: Task) => {
             score: subtask.type === 'min' ? subtask.score : 0,
         };
         const runner = task.judgeCase(subtask.cases.find((i) => i.input.endsWith(ctx.meta.hackRejudge)));
-        const res = await runner(ctx, ctxSubtask, runner);
+        const res = await runner(ctx, ctxSubtask);
         if (res) ctx.next({ case: res });
         if (res?.status !== STATUS.STATUS_ACCEPTED) {
             const totalScore = Math.sum(ctx.config.subtasks.map((i) => i.score));

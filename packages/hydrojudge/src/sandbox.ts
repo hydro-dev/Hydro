@@ -47,7 +47,7 @@ export interface Parameter {
     filename?: string;
 }
 
-interface SandboxAdaptedResult {
+interface SandboxAdaptedResult extends AsyncDisposable {
     status: number;
     code: number;
     signalled: boolean;
@@ -72,6 +72,10 @@ function parseArgs(execute: string): string[] {
         throw new SystemError(`${execute} contains invalid operator`);
     }
     return args;
+}
+
+export async function del(fileId: string) {
+    await client.deleteFile(fileId);
 }
 
 function proc(params: Parameter): Cmd {
@@ -126,6 +130,7 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
         memory: result.memory / 1024,
         files: result.files,
         code: result.exitStatus,
+        [Symbol.asyncDispose]: () => Promise.allSettled([...new Set(Object.values(result.fileIds || {}))].map(del)) as Promise<any>,
     };
     if (ret.time > (params.time || 16000)) {
         ret.status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -182,10 +187,6 @@ export async function runPiped(
     return res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[];
 }
 
-export async function del(fileId: string) {
-    await client.deleteFile(fileId);
-}
-
 export async function get(fileId: string, dest?: string) {
     return await client.getFile(fileId, dest);
 }
@@ -209,8 +210,9 @@ export function runQueued(
         : [arg0, arg1, arg2 || {}, arg3 || '', arg4 || 0];
     return queue.add(async () => {
         const res = await runPiped(execute, pipeMapping, params, trace);
+        const disposers = res.map((t) => t[Symbol.asyncDispose]);
         const ret = single ? res[0] : res;
-        (ret as any)[Symbol.asyncDispose] = () => Promise.allSettled(res.flatMap((t) => Object.values(t.fileIds || {}).map(del)));
+        (ret as any)[Symbol.asyncDispose] = () => Promise.allSettled(disposers.map((dispose) => dispose()));
         return ret;
     }, { priority });
 }
