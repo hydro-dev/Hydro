@@ -56,6 +56,10 @@ async function forkContextWithScope(ctx: CordisContext) {
     };
 }
 
+function unwrapAggregateError(error: any) {
+    return error instanceof AggregateError ? error.errors[0] : error;
+}
+
 export interface HydroRequest {
     method: string;
     host: string;
@@ -601,11 +605,12 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 } else current++;
             }
         } catch (e) {
+            const error = unwrapAggregateError(e);
             try {
                 // FIXME: should pass type check
-                await (this.ctx.serial as any)(`handler/error/${name}`, h, e);
-                await (this.ctx.serial as any)('handler/error', h, e);
-                await h.onerror(e);
+                await (this.ctx.serial as any)(`handler/error/${name}`, h, error);
+                await (this.ctx.serial as any)('handler/error', h, error);
+                await h.onerror(error);
             } catch (err) {
                 logger.error(err);
                 h.response.status = 500;
@@ -726,7 +731,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             // error during initialization (prepare, hooks)
-            await clean(e);
+            await clean(unwrapAggregateError(e));
         }
     }
 
