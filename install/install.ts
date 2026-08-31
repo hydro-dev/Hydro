@@ -166,7 +166,7 @@ for (const line of lines) {
 }
 let avx = true;
 const cpuInfoFile = readFileSync('/proc/cpuinfo', 'utf-8');
-if (!cpuInfoFile.includes('avx') && !installAsJudge) {
+if (!cpuInfoFile.includes('avx') && process.arch === 'x64' && !installAsJudge) {
     avx = false;
     log.warn('warn.avx');
     warnings.push(['warn.avx']);
