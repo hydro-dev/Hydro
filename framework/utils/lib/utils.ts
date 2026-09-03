@@ -170,8 +170,15 @@ export const Time = {
     },
 };
 
+export function unwrapAggregateError(error: any): any {
+    return error instanceof Error && Array.isArray((error as any).errors) && (error as any).errors.length
+        ? unwrapAggregateError((error as any).errors[0])
+        : error;
+}
+
 export function errorMessage(err: Error | string) {
-    const t = typeof err === 'string' ? err : err.stack;
+    err = unwrapAggregateError(err);
+    const t = typeof err === 'string' ? err : err.stack || err.message || String(err);
     const lines = t.split('\n')
         .filter((i) => !i.includes(' (node:') && !i.includes('(internal'));
     let cursor = 1;
