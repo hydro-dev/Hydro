@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import esbuild from 'esbuild';
 import c2k from 'koa2-connect/ts';
+import ts from 'typescript';
 import { createServer, type Plugin } from 'vite';
 import { HandlerCommon, serializer } from '@hydrooj/framework';
 import {
@@ -26,6 +27,75 @@ const PENDING_HTML = `<html>
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
 const buildInject = (data: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${data}</script>`;
 
+const PAGE_SOURCE_FILTER = /\.[cm]?[jt]sx?$/;
+
+function getScriptKind(filename: string) {
+    if (/\.tsx$/i.test(filename)) return ts.ScriptKind.TSX;
+    if (/\.jsx$/i.test(filename)) return ts.ScriptKind.JSX;
+    if (/\.[cm]?ts$/i.test(filename)) return ts.ScriptKind.TS;
+    return ts.ScriptKind.JS;
+}
+
+function isRegisterPageCall(expression: ts.LeftHandSideExpression) {
+    if (ts.isIdentifier(expression)) return expression.text === 'registerPage';
+    return ts.isPropertyAccessExpression(expression) && expression.name.text === 'registerPage';
+}
+
+function collectPageRegistrations(filename: string, source: string, pages: Set<string>) {
+    const sourceFile = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, getScriptKind(filename));
+
+    const visit = (node: ts.Node) => {
+        if (ts.isCallExpression(node) && isRegisterPageCall(node.expression)) {
+            const name = node.arguments[0];
+            if (!name || !ts.isStringLiteralLike(name)) {
+                const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+                throw new Error(`${filename}:${pos.line + 1}:${pos.character + 1}: registerPage() requires a static string literal`);
+            }
+            pages.add(name.text);
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(sourceFile);
+}
+
+function collectBuiltinPages() {
+    const pages = new Set<string>();
+    const filename = ['index.ts', 'index.tsx', 'index.js', 'index.jsx']
+        .map((name) => path.join(__dirname, 'src', 'pages', name))
+        .find((name) => fs.existsSync(name));
+    if (!filename) throw new Error('Cannot find the built-in ui-next page registry');
+    collectPageRegistrations(filename, fs.readFileSync(filename, 'utf-8'), pages);
+    return pages;
+}
+
+function isInside(file: string, root: string) {
+    const relative = path.relative(root, file);
+    return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+function pageManifestPlugin(entries: Record<string, string>, pages: Set<string>): esbuild.Plugin {
+    const addonRoots = Object.values(entries).map((entry) => path.dirname(path.dirname(entry)));
+    return {
+        name: 'page-manifest',
+        setup(b) {
+            b.onLoad({ filter: PAGE_SOURCE_FILTER, namespace: 'file' }, async (args) => {
+                if (!addonRoots.some((root) => isInside(args.path, root))) return undefined;
+                const source = await fs.promises.readFile(args.path, 'utf-8');
+                collectPageRegistrations(args.path, source, pages);
+                return undefined;
+            });
+        },
+    };
+}
+
+let registeredPages = new Set<string>();
+
+function supportsUiNextPage(routeName: string, templateName: string, args: Record<string, any>) {
+    if (args.error) return registeredPages.has('error');
+    const templateStem = templateName.replace(/\.html$/, '');
+    return registeredPages.has(templateStem) || registeredPages.has(routeName);
+}
+
 function getAddonEntries(): Record<string, string> {
     const entries: Record<string, string> = {};
     for (const [name, addon] of Object.entries(global.addons)) {
@@ -40,7 +110,7 @@ function getAddonEntries(): Record<string, string> {
     return entries;
 }
 
-function hydroPlugins(): Plugin {
+function hydroPlugins(onHotUpdate?: (file: string) => void): Plugin {
     const virtualModuleId = 'virtual:hydro-plugins';
     const resolvedVirtualModuleId = `\0${virtualModuleId}`;
 
@@ -63,6 +133,9 @@ function hydroPlugins(): Plugin {
                 return `${imports}\n${exports}`;
             }
             return undefined;
+        },
+        hotUpdate(options) {
+            onHotUpdate?.(options.file);
         },
     };
 }
@@ -169,6 +242,45 @@ class UiNextConstantHandler extends Handler {
     }
 }
 
+function getPluginBuildOptions(entries: Record<string, string>, pages: Set<string>): esbuild.BuildOptions {
+    return {
+        stdin: {
+            contents: [
+                ...Object.entries(entries).map(([_, e], i) => `import * as plugin${i} from '${e}';`),
+                `window.__hydroPlugins = [${Object.entries(entries).map(([n], i) => `{ name: '${n}', ...plugin${i} }`).join(', ')}];`,
+            ].join('\n'),
+            sourcefile: 'plugins.ts',
+            resolveDir: process.cwd(),
+            loader: 'ts',
+        },
+        bundle: true,
+        format: 'esm',
+        write: false,
+        target: ['chrome90'],
+        plugins: [pageManifestPlugin(entries, pages), federationPlugin],
+        jsx: 'automatic',
+        jsxImportSource: 'react',
+    };
+}
+
+async function scanPluginPages() {
+    const entries = getAddonEntries();
+    const nextRegisteredPages = collectBuiltinPages();
+    try {
+        if (Object.keys(entries).length) {
+            await esbuild.build({
+                ...getPluginBuildOptions(entries, nextRegisteredPages),
+                outfile: 'plugins-scan.js',
+                logLevel: 'silent',
+            });
+        }
+        registeredPages = nextRegisteredPages;
+        logger.info('Page manifest updated (%d ui-next pages)', registeredPages.size);
+    } catch (e) {
+        logger.error('Page manifest scan failed, keeping the previous manifest: %o', e);
+    }
+}
+
 export async function buildPlugins() {
     const start = Date.now();
     let totalSize = 0;
@@ -188,38 +300,25 @@ export async function buildPlugins() {
         }
     };
 
-    if (!Object.keys(entries).length) {
-        emit('plugins.js', 'window.__hydroPlugins = [];');
-        purge();
-        logger.info('No plugins to build');
-        return;
-    }
-
     try {
+        const nextRegisteredPages = collectBuiltinPages();
+        if (!Object.keys(entries).length) {
+            emit('plugins.js', 'window.__hydroPlugins = [];');
+            purge();
+            registeredPages = nextRegisteredPages;
+            logger.info('No plugins to build (%d ui-next pages)', registeredPages.size);
+            return;
+        }
+
         const result = await esbuild.build({
-            stdin: {
-                contents: [
-                    ...Object.entries(entries).map(([_, e], i) => `import * as plugin${i} from '${e}';`),
-                    `window.__hydroPlugins = [${Object.entries(entries).map(([n], i) => `{ name: '${n}', ...plugin${i} }`).join(', ')}];`,
-                ].join('\n'),
-                sourcefile: 'plugins.ts',
-                resolveDir: process.cwd(),
-                loader: 'ts',
-            },
-            bundle: true,
-            format: 'esm',
+            ...getPluginBuildOptions(entries, nextRegisteredPages),
             splitting: true,
             outdir: 'plugins-dist',
             entryNames: 'plugins',
             chunkNames: 'chunk-[hash]',
             assetNames: 'asset-[hash]',
             metafile: true,
-            write: false,
-            target: ['chrome90'],
-            plugins: [federationPlugin],
             minify: true,
-            jsx: 'automatic',
-            jsxImportSource: 'react',
         });
         if (result.errors.length) logger.error('Plugin build errors: %o', result.errors);
 
@@ -257,7 +356,14 @@ export async function buildPlugins() {
         }
 
         purge();
-        logger.success('Plugins built in %dms (%d entries, %s)', Date.now() - start, Object.keys(entries).length, size(totalSize));
+        registeredPages = nextRegisteredPages;
+        logger.success(
+            'Plugins built in %dms (%d entries, %d ui-next pages, %s)',
+            Date.now() - start,
+            Object.keys(entries).length,
+            registeredPages.size,
+            size(totalSize),
+        );
     } catch (e) {
         logger.error('Plugin build failed: %o', e);
     }
@@ -277,14 +383,25 @@ const injectedScripts = (resolve: (name: string) => string, viewLang: string) =>
 export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
 
+    registeredPages = collectBuiltinPages();
     ctx.Route('ui_next_constants', '/plugins/:version/:name', UiNextConstantHandler);
 
     if (process.env.DEV) {
-        ctx.on('app/started', async () => {
+        const buildDev = async () => {
+            await scanPluginPages();
             await buildI18n();
             await buildCodeLangs();
             await buildVersions();
-        });
+        };
+        const debouncedPageScan = ctx.debounce(scanPluginPages, 200);
+        const triggerPageScan = (filePath?: string) => {
+            if (filePath && ((!filePath.includes('/ui/') && !filePath.includes('/ui-next/')) || !PAGE_SOURCE_FILTER.test(filePath))) return;
+            debouncedPageScan();
+        };
+
+        ctx.on('app/started', buildDev);
+        ctx.on('app/watch/change', triggerPageScan);
+        ctx.on('app/watch/unlink', triggerPageScan);
         ctx.on('app/i18n/update', buildI18n);
         ctx.on('system/setting-loaded', buildCodeLangs);
         ctx.on('system/setting', buildCodeLangs);
@@ -303,7 +420,7 @@ export async function apply(ctx: Context) {
                 },
             },
             appType: 'custom',
-            plugins: [hydroPlugins()],
+            plugins: [hydroPlugins(triggerPageScan)],
         });
         const middleware = c2k(vite.middlewares);
         const capture = ['/@vite/', '/src/', '/node_modules/', '/@react-refresh', '/@fs', '/@id/'];
@@ -314,8 +431,10 @@ export async function apply(ctx: Context) {
         ctx.server.registerRenderer('next', {
             name: 'next',
             accept: [],
+            supports: (name, args, context) => context.kind === 'page'
+                && supportsUiNextPage(context.handler.context._matchedRouteName, name, args),
             output: 'html',
-            asFallback: true,
+            asFallback: false,
             priority: 100,
             async render(_name, args, context) {
                 const serialized = JSON.stringify({
@@ -353,13 +472,21 @@ export async function apply(ctx: Context) {
             await buildCodeLangs();
             await buildVersions();
         };
+        const debouncedBuild = ctx.debounce(build, 2000);
+        const triggerHotUpdate = (filePath?: string) => {
+            if (filePath && !filePath.includes('/ui/') && !filePath.includes('/ui-next/')) return;
+            debouncedBuild();
+        };
+
         ctx.on('app/started', build);
 
         ctx.server.registerRenderer('next', {
             name: 'next',
             accept: [],
+            supports: (name, args, context) => context.kind === 'page'
+                && supportsUiNextPage(context.handler.context._matchedRouteName, name, args),
             output: 'html',
-            asFallback: true,
+            asFallback: false,
             priority: 100,
             async render(_name, args, context) {
                 const indexHtml = path.join(__dirname, 'public', 'index.html');
@@ -387,11 +514,6 @@ export async function apply(ctx: Context) {
                 return html.replace(INJECT_MARKER, injectHtml);
             },
         });
-        const debouncedBuild = ctx.debounce(build, 2000);
-        const triggerHotUpdate = (filePath?: string) => {
-            if (filePath && !filePath.includes('/ui/')) return;
-            debouncedBuild();
-        };
         ctx.on('app/watch/change', triggerHotUpdate);
         ctx.on('app/watch/unlink', triggerHotUpdate);
         ctx.on('system/setting-loaded', buildCodeLangs);

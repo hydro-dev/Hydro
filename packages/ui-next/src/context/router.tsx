@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { endpointOrigins, endpoints, isInjected, routeMapStore } from '../globals';
+import { resolvePage } from '../registry/page';
 import { useSetPageData } from './page-data';
 
 interface InternalState {
@@ -88,6 +89,13 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
           console.log('[Hydro] data from', reqUrl, 'received:', body, 'pageName:', pageName);
 
           if (gen !== genRef.current) return false;
+
+          const isError = !!(body && typeof body === 'object' && body.error);
+          const [, page] = resolvePage(pageName, template, isError);
+          if (!page) {
+            window.location.assign(url);
+            return false;
+          }
 
           if (init && body.routeMap && typeof body.routeMap === 'object') {
             routeMapStore.set(body.routeMap);

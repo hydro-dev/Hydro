@@ -9,14 +9,13 @@ export interface UrlParams {
 
 export function useBuildUrl() {
   const routeMap = useRouteMap();
-  const { domainId, domain } = useUiContext();
+  const { domainId, domainHost = [] } = useUiContext();
 
   const getPrefix = useCallback((id?: string) => {
     id ||= domainId;
-    const domainHost = Array.isArray(domain.host) ? domain.host : [domain.host];
     const currentHost = window.location.host;
-    return id === (domainHost && domainHost.includes(currentHost) ? domainId : 'system') ? '' : `/d/${id}`;
-  }, [domainId, domain]);
+    return id === (domainHost.includes(currentHost) ? domainId : 'system') ? '' : `/d/${id}`;
+  }, [domainId, domainHost]);
 
   return useCallback((name: string, params: UrlParams = {}, searchParams: Record<string, string> = {}): string => {
     const pattern = routeMap[name];

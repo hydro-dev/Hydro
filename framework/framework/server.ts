@@ -106,11 +106,12 @@ export type KoaContext = Koa.Context & {
     holdFiles: (string | File)[];
 };
 
-interface RendererContext {
+export interface RendererContext {
     handler: HandlerCommon;
     UserContext: UserModel;
     url: HandlerCommon['url'];
     _: HandlerCommon['translate'];
+    kind: 'page' | 'fragment';
 }
 export interface TextRenderer {
     output: 'html' | 'json' | 'text';
@@ -123,6 +124,7 @@ export interface BinaryRenderer {
 export type Renderer = (BinaryRenderer | TextRenderer) & {
     name: string;
     accept: readonly string[];
+    supports?: (name: string, args: Record<string, any>, context: RendererContext) => boolean;
     priority: number;
     asFallback: boolean;
 };
@@ -205,17 +207,19 @@ export class HandlerCommon {
         return str;
     }
 
-    renderHTML(templateName: string, args: Record<string, any>) {
-        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
-            .filter((r) => r.accept.includes(templateName) || r.asFallback);
-        const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
-        const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
-        return engine(templateName, args, {
+    renderHTML(templateName: string, args: Record<string, any>, options: { kind?: RendererContext['kind'] } = {}) {
+        const context: RendererContext = {
             handler: this,
             UserContext: this.user,
             url: this.url,
             _: this.translate,
-        });
+            kind: options.kind ?? 'fragment',
+        };
+        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
+            .filter((r) => r.accept.includes(templateName) || r.supports?.(templateName, args, context) || r.asFallback);
+        const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
+        const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
+        return engine(templateName, args, context);
     }
 }
 

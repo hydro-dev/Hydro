@@ -3,6 +3,7 @@ import DefaultLayout from './components/layout';
 import { usePageData } from './context/page-data';
 import { defineSlot } from './registry';
 import { SlotErrorBoundary } from './registry/error-boundary';
+import { resolvePage } from './registry/page';
 import { store } from './registry/store';
 
 const App = defineSlot('app:root', () => {
@@ -11,25 +12,11 @@ const App = defineSlot('app:root', () => {
   const isError = !!(args as Record<string, unknown>).error;
 
   const [slotName, entry] = useMemo(() => {
-    if (isError) {
-      return ['page:error', store.getDefault('page:error')] as const;
-    }
-    const templateName = typeof template === 'string' ? template.replace(/\.html$/, '') : null;
-    if (templateName) {
-      const templateSlot = `page:${templateName}` as `page:${string}`;
-      const templateEntry = store.getDefault(templateSlot);
-      if (templateEntry) {
-        if (import.meta.env.DEV) {
-          console.log(`[ui-next] using template "${templateName}" for page "${name}"`);
-        }
-        return [templateSlot, templateEntry] as const;
-      }
-    }
-    const slot = `page:${name}` as `page:${string}`;
+    const resolved = resolvePage(name, template, isError);
     if (import.meta.env.DEV) {
-      console.log(`[ui-next] using page slot "${slot}"`);
+      console.log(`[ui-next] using page slot "${resolved[0]}"`);
     }
-    return [slot, store.getDefault(slot)] as const;
+    return resolved;
   }, [name, template, isError]);
 
   const [subscribe, getSnapshot] = useMemo(() => [

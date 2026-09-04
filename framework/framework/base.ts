@@ -98,7 +98,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 }
                 response.type = 'application/json';
             } else if (response.template) {
-                response.body = await handler.renderHTML(response.template, response.body || {});
+                response.body = await handler.renderHTML(response.template, response.body || {}, { kind: 'page' });
                 response.type = 'text/html';
             }
         }
@@ -116,6 +116,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 response.body = await ctx.handler.renderHTML(
                     error instanceof UserFacingError ? 'error.html' : 'bsod.html',
                     { UserFacingError, error },
+                    { kind: 'page' },
                 );
                 response.type = 'text/html';
             } catch (e) {

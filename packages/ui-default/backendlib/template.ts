@@ -175,11 +175,15 @@ export class TemplateService extends Service {
       h.translate = h.translate.bind(h);
       h.url = h.url.bind(h);
       h.ctx = h.ctx.extend({ domain: h.domain });
-      h.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
+      h.renderHTML = ((orig) => function (
+        name: string,
+        args: Record<string, any>,
+        options?: { kind?: 'page' | 'fragment' },
+      ) {
         const s = name.split('.');
         let templateName = `${s[0]}.${h.domain._id}.${s[1]}`;
         if (!that.registry[templateName]) templateName = name;
-        return orig(templateName, args);
+        return orig(templateName, args, options);
       })(h.renderHTML).bind(h);
     });
 
