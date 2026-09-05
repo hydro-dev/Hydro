@@ -10,8 +10,8 @@ const logger = new Logger('patch');
 
 function locateFile(file: string): string | null {
     const candidates = [file];
-    if (file.startsWith('packages/')) {
-        candidates.push(file.replace(/^packages\//, ''), file.replace(/^packages\//, '@hydrooj/'));
+    if (['packages/', 'framework/'].some((p) => file.startsWith(p))) {
+        candidates.push(file.replace(/^(packages|framework)\//, ''), file.replace(/^(packages|framework)\//, '@hydrooj/'));
     }
     for (const candidate of candidates) {
         try {
@@ -45,6 +45,10 @@ export function register(cli: CAC) {
                     const match = line.match(/diff --git a\/(.+?) b\/(.+?)(?:\s|$)/);
                     if (!match) continue;
                     const filename = match[2];
+                    if (path.basename(filename) === 'package.json') {
+                        logger.info('Skipping %s (package.json changes are ignored)', filename);
+                        continue;
+                    }
                     const startLine = i;
                     let endLine = lines.length;
                     for (let j = i + 1; j < lines.length; j++) {
