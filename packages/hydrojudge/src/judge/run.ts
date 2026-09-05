@@ -60,6 +60,7 @@ export const judge = async (ctx: Context) => {
         time: ctx.config.time,
         memory: ctx.config.memory,
         if: [],
+        if_score: [],
         cases: ctx.input.map((i, idx) => ({
             id: idx + 1,
             time: ctx.config.time,
