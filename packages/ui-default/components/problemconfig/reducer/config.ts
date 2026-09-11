@@ -21,7 +21,7 @@ export default function reducer(state = {
     case 'CONFIG_LOAD_FULFILLED': {
       const c = { ...state, __loaded: true };
       try {
-        let data = yaml.load(action.payload.config) as any;
+        let data = yaml.load(action.payload.config || '{}') as any;
         if (typeof data !== 'object') data = { subtasks: [] };
         else data.subtasks ||= [];
         if (!validate(data)) {
