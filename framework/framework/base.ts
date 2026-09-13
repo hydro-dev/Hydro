@@ -65,8 +65,9 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
             response.body ||= {};
             response.body.url = response.redirect;
         }
-        if (!response.type) {
-            if (response.pjax && args.pjax) {
+        // Attachments already have their body and content type on the Koa response.
+        if (!response.type && (!handler.useUiNext || response.body !== null || ctx.body == null)) {
+            if (!handler.useUiNext && response.pjax && args.pjax) {
                 const pjax = typeof response.pjax === 'string' ? [[response.pjax, {}]] : response.pjax;
                 response.body = {
                     fragments: (await Promise.all(
@@ -76,7 +77,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 response.type = 'application/json';
             } else if (
                 request.json || response.redirect
-                || request.query.noTemplate || !response.template // no template, send raw data
+                || request.query.noTemplate || handler.useUiNext || !response.template // no template, send raw data
             ) {
                 // Send raw data
                 try {
@@ -84,7 +85,6 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                         const inject = request.headers['x-hydro-inject'].toString().toLowerCase().split(',').map((i) => i.trim());
                         if (inject.includes('pagename')) {
                             ctx.set('x-hydro-page', ctx._matchedRouteName || '');
-                            ctx.set('x-hydro-template', response.template || '');
                         }
                         if (response.body !== null && typeof response.body === 'object') {
                             if (inject.includes('uicontext')) response.body.UiContext = UiContext;
@@ -98,7 +98,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 }
                 response.type = 'application/json';
             } else if (response.template) {
-                response.body = await handler.renderHTML(response.template, response.body || {}, { kind: 'page' });
+                response.body = await handler.renderHTML(response.template, response.body || {});
                 response.type = 'text/html';
             }
         }
@@ -116,7 +116,6 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 response.body = await ctx.handler.renderHTML(
                     error instanceof UserFacingError ? 'error.html' : 'bsod.html',
                     { UserFacingError, error },
-                    { kind: 'page' },
                 );
                 response.type = 'text/html';
             } catch (e) {

@@ -82,16 +82,20 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
             window.location.href = res.url;
             return false;
           }
-          if (!res.ok) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
+          if (gen !== genRef.current) return false;
+          if (res.headers.get('x-hydro-ui-next') !== 'true') {
+            window.location.assign(url);
+            return false;
+          }
           const body = await res.json();
           const pageName = res.headers.get('x-hydro-page') || '';
-          const template = res.headers.get('x-hydro-template') || '';
           console.log('[Hydro] data from', reqUrl, 'received:', body, 'pageName:', pageName);
 
           if (gen !== genRef.current) return false;
 
           const isError = !!(body && typeof body === 'object' && body.error);
-          const [, page] = resolvePage(pageName, template, isError);
+          if (!res.ok && !isError) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
+          const [, page] = resolvePage(pageName, isError);
           if (!page) {
             window.location.assign(url);
             return false;
@@ -104,7 +108,6 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
             ...prev,
             args: body,
             name: pageName,
-            template,
             url,
           }));
           dispatch({ type: 'FETCH_SUCCESS' });

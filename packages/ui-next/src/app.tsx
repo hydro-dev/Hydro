@@ -7,17 +7,14 @@ import { resolvePage } from './registry/page';
 import { store } from './registry/store';
 
 const App = defineSlot('app:root', () => {
-  const { name, template, args } = usePageData();
+  const { name, args } = usePageData();
 
   const isError = !!(args as Record<string, unknown>).error;
 
-  const [slotName, entry] = useMemo(() => {
-    const resolved = resolvePage(name, template, isError);
-    if (import.meta.env.DEV) {
-      console.log(`[ui-next] using page slot "${resolved[0]}"`);
-    }
-    return resolved;
-  }, [name, template, isError]);
+  const [slotName, entry] = resolvePage(name, isError);
+  if (import.meta.env.DEV) {
+    console.log(`[ui-next] using page slot "${slotName}"`);
+  }
 
   const [subscribe, getSnapshot] = useMemo(() => [
     (cb: () => void) => store.subscribe(slotName, cb),

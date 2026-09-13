@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import esbuild from 'esbuild';
+import type { Next } from 'koa';
 import c2k from 'koa2-connect/ts';
-import ts from 'typescript';
 import { createServer, type Plugin } from 'vite';
-import { HandlerCommon, serializer } from '@hydrooj/framework';
+import { HandlerCommon, type KoaContext, serializer } from '@hydrooj/framework';
 import {
     Context, Handler, Logger,
     NotFoundError, param, SettingModel, sha1, size, Types,
@@ -27,75 +27,6 @@ const PENDING_HTML = `<html>
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
 const buildInject = (data: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${data}</script>`;
 
-const PAGE_SOURCE_FILTER = /\.[cm]?[jt]sx?$/;
-
-function getScriptKind(filename: string) {
-    if (/\.tsx$/i.test(filename)) return ts.ScriptKind.TSX;
-    if (/\.jsx$/i.test(filename)) return ts.ScriptKind.JSX;
-    if (/\.[cm]?ts$/i.test(filename)) return ts.ScriptKind.TS;
-    return ts.ScriptKind.JS;
-}
-
-function isRegisterPageCall(expression: ts.LeftHandSideExpression) {
-    if (ts.isIdentifier(expression)) return expression.text === 'registerPage';
-    return ts.isPropertyAccessExpression(expression) && expression.name.text === 'registerPage';
-}
-
-function collectPageRegistrations(filename: string, source: string, pages: Set<string>) {
-    const sourceFile = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, getScriptKind(filename));
-
-    const visit = (node: ts.Node) => {
-        if (ts.isCallExpression(node) && isRegisterPageCall(node.expression)) {
-            const name = node.arguments[0];
-            if (!name || !ts.isStringLiteralLike(name)) {
-                const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-                throw new Error(`${filename}:${pos.line + 1}:${pos.character + 1}: registerPage() requires a static string literal`);
-            }
-            pages.add(name.text);
-        }
-        ts.forEachChild(node, visit);
-    };
-    visit(sourceFile);
-}
-
-function collectBuiltinPages() {
-    const pages = new Set<string>();
-    const filename = ['index.ts', 'index.tsx', 'index.js', 'index.jsx']
-        .map((name) => path.join(__dirname, 'src', 'pages', name))
-        .find((name) => fs.existsSync(name));
-    if (!filename) throw new Error('Cannot find the built-in ui-next page registry');
-    collectPageRegistrations(filename, fs.readFileSync(filename, 'utf-8'), pages);
-    return pages;
-}
-
-function isInside(file: string, root: string) {
-    const relative = path.relative(root, file);
-    return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
-}
-
-function pageManifestPlugin(entries: Record<string, string>, pages: Set<string>): esbuild.Plugin {
-    const addonRoots = Object.values(entries).map((entry) => path.dirname(path.dirname(entry)));
-    return {
-        name: 'page-manifest',
-        setup(b) {
-            b.onLoad({ filter: PAGE_SOURCE_FILTER, namespace: 'file' }, async (args) => {
-                if (!addonRoots.some((root) => isInside(args.path, root))) return undefined;
-                const source = await fs.promises.readFile(args.path, 'utf-8');
-                collectPageRegistrations(args.path, source, pages);
-                return undefined;
-            });
-        },
-    };
-}
-
-let registeredPages = new Set<string>();
-
-function supportsUiNextPage(routeName: string, templateName: string, args: Record<string, any>) {
-    if (args.error) return registeredPages.has('error');
-    const templateStem = templateName.replace(/\.html$/, '');
-    return registeredPages.has(templateStem) || registeredPages.has(routeName);
-}
-
 function getAddonEntries(): Record<string, string> {
     const entries: Record<string, string> = {};
     for (const [name, addon] of Object.entries(global.addons)) {
@@ -110,7 +41,7 @@ function getAddonEntries(): Record<string, string> {
     return entries;
 }
 
-function hydroPlugins(onHotUpdate?: (file: string) => void): Plugin {
+function hydroPlugins(): Plugin {
     const virtualModuleId = 'virtual:hydro-plugins';
     const resolvedVirtualModuleId = `\0${virtualModuleId}`;
 
@@ -133,9 +64,6 @@ function hydroPlugins(onHotUpdate?: (file: string) => void): Plugin {
                 return `${imports}\n${exports}`;
             }
             return undefined;
-        },
-        hotUpdate(options) {
-            onHotUpdate?.(options.file);
         },
     };
 }
@@ -242,7 +170,7 @@ class UiNextConstantHandler extends Handler {
     }
 }
 
-function getPluginBuildOptions(entries: Record<string, string>, pages: Set<string>): esbuild.BuildOptions {
+function getPluginBuildOptions(entries: Record<string, string>): esbuild.BuildOptions {
     return {
         stdin: {
             contents: [
@@ -257,28 +185,10 @@ function getPluginBuildOptions(entries: Record<string, string>, pages: Set<strin
         format: 'esm',
         write: false,
         target: ['chrome90'],
-        plugins: [pageManifestPlugin(entries, pages), federationPlugin],
+        plugins: [federationPlugin],
         jsx: 'automatic',
         jsxImportSource: 'react',
     };
-}
-
-async function scanPluginPages() {
-    const entries = getAddonEntries();
-    const nextRegisteredPages = collectBuiltinPages();
-    try {
-        if (Object.keys(entries).length) {
-            await esbuild.build({
-                ...getPluginBuildOptions(entries, nextRegisteredPages),
-                outfile: 'plugins-scan.js',
-                logLevel: 'silent',
-            });
-        }
-        registeredPages = nextRegisteredPages;
-        logger.info('Page manifest updated (%d ui-next pages)', registeredPages.size);
-    } catch (e) {
-        logger.error('Page manifest scan failed, keeping the previous manifest: %o', e);
-    }
 }
 
 export async function buildPlugins() {
@@ -301,17 +211,15 @@ export async function buildPlugins() {
     };
 
     try {
-        const nextRegisteredPages = collectBuiltinPages();
         if (!Object.keys(entries).length) {
             emit('plugins.js', 'window.__hydroPlugins = [];');
             purge();
-            registeredPages = nextRegisteredPages;
-            logger.info('No plugins to build (%d ui-next pages)', registeredPages.size);
+            logger.info('No plugins to build');
             return;
         }
 
         const result = await esbuild.build({
-            ...getPluginBuildOptions(entries, nextRegisteredPages),
+            ...getPluginBuildOptions(entries),
             splitting: true,
             outdir: 'plugins-dist',
             entryNames: 'plugins',
@@ -356,14 +264,7 @@ export async function buildPlugins() {
         }
 
         purge();
-        registeredPages = nextRegisteredPages;
-        logger.success(
-            'Plugins built in %dms (%d entries, %d ui-next pages, %s)',
-            Date.now() - start,
-            Object.keys(entries).length,
-            registeredPages.size,
-            size(totalSize),
-        );
+        logger.success('Plugins built in %dms (%d entries, %s)', Date.now() - start, Object.keys(entries).length, size(totalSize));
     } catch (e) {
         logger.error('Plugin build failed: %o', e);
     }
@@ -380,28 +281,70 @@ const injectedScripts = (resolve: (name: string) => string, viewLang: string) =>
     'versions.js',
 ].map((name) => `<script src="${resolve(name)}"></script>`);
 
+function injectPage(ctx: Context, handler: Handler, html: string, assetUrl: (name: string) => string, pluginsUrl?: string) {
+    const serialized = JSON.stringify({
+        HYDRO_INJECTED: true,
+        name: handler.context._matchedRouteName,
+        args: {
+            UserContext: handler.user,
+            UiContext: handler.UiContext,
+            ...handler.response.body,
+        },
+        url: handler.context.req.url!,
+        route_map: ctx.server.routeMap,
+        endpoint: ctx.setting.get('server.url') || undefined,
+        plugins_url: pluginsUrl,
+    }, serializer(false, handler));
+    const injectHtml = [
+        buildInject(serialized),
+        ...injectedScripts(assetUrl, getViewLang(handler)),
+    ].join('\n');
+    return html.replace(INJECT_MARKER, injectHtml);
+}
+
+const uiNextLayer = (render: (handler: Handler) => string | Promise<string>) => async (ctx: KoaContext, next: Next) => {
+    await next();
+    const handler: Handler = ctx.handler;
+    if (!handler?.useUiNext || handler.request.websocket) return;
+
+    const { request, response } = handler;
+    response.addHeader('x-hydro-ui-next', 'true');
+    if (ctx.cors) ctx.append('Access-Control-Expose-Headers', 'x-hydro-page, x-hydro-ui-next');
+    if (request.json || request.query.noTemplate || response.type || response.redirect || response.body === null) return;
+
+    response.body = await render(handler);
+    response.type = 'text/html';
+};
+
+const SupportedHandlers = [
+    'HomeHandler',
+    'ProblemMainHandler',
+];
+
 export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
 
-    registeredPages = collectBuiltinPages();
+    for (const name of SupportedHandlers) {
+        ctx.withHandlerClass(name, (HandlerClass) => {
+            ctx.effect(() => {
+                const original = Object.getOwnPropertyDescriptor(HandlerClass.prototype, 'useUiNext');
+                HandlerClass.prototype.useUiNext = true;
+                return () => {
+                    if (original) Object.defineProperty(HandlerClass.prototype, 'useUiNext', original);
+                    else delete HandlerClass.prototype.useUiNext;
+                };
+            });
+        });
+    }
     ctx.Route('ui_next_constants', '/plugins/:version/:name', UiNextConstantHandler);
 
     if (process.env.DEV) {
         const buildDev = async () => {
-            await scanPluginPages();
             await buildI18n();
             await buildCodeLangs();
             await buildVersions();
         };
-        const debouncedPageScan = ctx.debounce(scanPluginPages, 200);
-        const triggerPageScan = (filePath?: string) => {
-            if (filePath && ((!filePath.includes('/ui/') && !filePath.includes('/ui-next/')) || !PAGE_SOURCE_FILTER.test(filePath))) return;
-            debouncedPageScan();
-        };
-
         ctx.on('app/started', buildDev);
-        ctx.on('app/watch/change', triggerPageScan);
-        ctx.on('app/watch/unlink', triggerPageScan);
         ctx.on('app/i18n/update', buildI18n);
         ctx.on('system/setting-loaded', buildCodeLangs);
         ctx.on('system/setting', buildCodeLangs);
@@ -420,7 +363,7 @@ export async function apply(ctx: Context) {
                 },
             },
             appType: 'custom',
-            plugins: [hydroPlugins(triggerPageScan)],
+            plugins: [hydroPlugins()],
         });
         const middleware = c2k(vite.middlewares);
         const capture = ['/@vite/', '/src/', '/node_modules/', '/@react-refresh', '/@fs', '/@id/'];
@@ -428,38 +371,12 @@ export async function apply(ctx: Context) {
             ctx.server.addCaptureRoute(route, middleware);
         }
         const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
-        ctx.server.registerRenderer('next', {
-            name: 'next',
-            accept: [],
-            supports: (name, args, context) => context.kind === 'page'
-                && supportsUiNextPage(context.handler.context._matchedRouteName, name, args),
-            output: 'html',
-            asFallback: false,
-            priority: 100,
-            async render(_name, args, context) {
-                const serialized = JSON.stringify({
-                    HYDRO_INJECTED: true,
-                    name: context.handler.context._matchedRouteName,
-                    template: context.handler.response.template || '',
-                    args: {
-                        UserContext: context.UserContext,
-                        UiContext: context.handler.UiContext,
-                        ...args,
-                    },
-                    url: context.handler.context.req.url!,
-                    route_map: ctx.server.routeMap,
-                    endpoint: ctx.setting.get('server.url') || undefined,
-                }, serializer(false, context.handler));
-                const ts = Date.now();
-                const devAssetUrl = (name: string) => `/plugins/0/${name}?_=${ts}`;
-                const injectHtml = [
-                    buildInject(serialized),
-                    ...injectedScripts(devAssetUrl, getViewLang(context.handler)),
-                ].join('\n');
-                const htmlToRender = html.replace(INJECT_MARKER, injectHtml);
-                return await vite.transformIndexHtml(context.handler.context.req.url!, htmlToRender);
-            },
-        });
+        ctx.server.addHandlerLayer('ui-next', uiNextLayer(async (handler) => {
+            const ts = Date.now();
+            const devAssetUrl = (name: string) => `/plugins/0/${name}?_=${ts}`;
+            const htmlToRender = injectPage(ctx, handler, html, devAssetUrl);
+            return vite.transformIndexHtml(handler.context.req.url!, htmlToRender);
+        }));
 
         // eslint-disable-next-line consistent-return
         return async () => {
@@ -480,40 +397,13 @@ export async function apply(ctx: Context) {
 
         ctx.on('app/started', build);
 
-        ctx.server.registerRenderer('next', {
-            name: 'next',
-            accept: [],
-            supports: (name, args, context) => context.kind === 'page'
-                && supportsUiNextPage(context.handler.context._matchedRouteName, name, args),
-            output: 'html',
-            asFallback: false,
-            priority: 100,
-            async render(_name, args, context) {
-                const indexHtml = path.join(__dirname, 'public', 'index.html');
-                if (!fs.existsSync(indexHtml)) return PENDING_HTML;
-                const html = fs.readFileSync(indexHtml, 'utf-8');
-                const serialized = JSON.stringify({
-                    HYDRO_INJECTED: true,
-                    name: context.handler.context._matchedRouteName,
-                    template: context.handler.response.template || '',
-                    args: {
-                        UserContext: context.UserContext,
-                        UiContext: context.handler.UiContext,
-                        ...args,
-                    },
-                    url: context.handler.context.req.url!,
-                    route_map: ctx.server.routeMap,
-                    endpoint: ctx.setting.get('server.url') || undefined,
-                    plugins_url: `/plugins/${hashes['plugins.js'] || HASH_FALLBACK}/plugins.js`,
-                }, serializer(false, context.handler));
-                const prodAssetUrl = (name: string) => `/plugins/${hashes[name] || HASH_FALLBACK}/${name}`;
-                const injectHtml = [
-                    buildInject(serialized),
-                    ...injectedScripts(prodAssetUrl, getViewLang(context.handler)),
-                ].join('\n');
-                return html.replace(INJECT_MARKER, injectHtml);
-            },
-        });
+        ctx.server.addHandlerLayer('ui-next', uiNextLayer((handler) => {
+            const indexHtml = path.join(__dirname, 'public', 'index.html');
+            if (!fs.existsSync(indexHtml)) return PENDING_HTML;
+            const html = fs.readFileSync(indexHtml, 'utf-8');
+            const prodAssetUrl = (name: string) => `/plugins/${hashes[name] || HASH_FALLBACK}/${name}`;
+            return injectPage(ctx, handler, html, prodAssetUrl, prodAssetUrl('plugins.js'));
+        }));
         ctx.on('app/watch/change', triggerHotUpdate);
         ctx.on('app/watch/unlink', triggerHotUpdate);
         ctx.on('system/setting-loaded', buildCodeLangs);

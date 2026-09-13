@@ -106,12 +106,11 @@ export type KoaContext = Koa.Context & {
     holdFiles: (string | File)[];
 };
 
-export interface RendererContext {
+interface RendererContext {
     handler: HandlerCommon;
     UserContext: UserModel;
     url: HandlerCommon['url'];
     _: HandlerCommon['translate'];
-    kind: 'page' | 'fragment';
 }
 export interface TextRenderer {
     output: 'html' | 'json' | 'text';
@@ -124,7 +123,6 @@ export interface BinaryRenderer {
 export type Renderer = (BinaryRenderer | TextRenderer) & {
     name: string;
     accept: readonly string[];
-    supports?: (name: string, args: Record<string, any>, context: RendererContext) => boolean;
     priority: number;
     asFallback: boolean;
 };
@@ -207,24 +205,25 @@ export class HandlerCommon {
         return str;
     }
 
-    renderHTML(templateName: string, args: Record<string, any>, options: { kind?: RendererContext['kind'] } = {}) {
-        const context: RendererContext = {
+    renderHTML(templateName: string, args: Record<string, any>) {
+        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
+            .filter((r) => r.accept.includes(templateName) || r.asFallback);
+        const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
+        const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
+        return engine(templateName, args, {
             handler: this,
             UserContext: this.user,
             url: this.url,
             _: this.translate,
-            kind: options.kind ?? 'fragment',
-        };
-        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
-            .filter((r) => r.accept.includes(templateName) || r.supports?.(templateName, args, context) || r.asFallback);
-        const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
-        const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
-        return engine(templateName, args, context);
+        });
     }
 }
 
 export class Handler extends HandlerCommon {
     static [kHandler] = 'Handler';
+
+    /** Render this handler with ui-next, using its route name instead of a template. */
+    declare useUiNext?: boolean;
 
     loginMethods: any;
     notUsage = false;
@@ -394,7 +393,7 @@ export class WebService extends Service<never> {
         ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
         this.server.keys = this.config.keys;
         this.server.proxy = this.config.proxy;
-        const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
+        const corsAllowHeaders = 'x-requested-with, x-hydro-inject, accept, origin, content-type, upgrade-insecure-requests';
         this.server.use(Compress());
         this.server.use(async (c, next) => {
             if ((c.request.headers.origin || c.request.headers.referer) && this.config.cors) {
