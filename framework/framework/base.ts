@@ -125,6 +125,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         }
     } finally {
         if (!request.websocket) {
+            if (ctx.handler) ctx.vary('Accept');
             if (response.etag && request.headers['if-none-match'] === response.etag) {
                 ctx.response.status = 304;
             } else if (response.redirect && !request.json) {

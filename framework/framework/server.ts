@@ -402,9 +402,9 @@ export class WebService extends Service<never> {
                         c.set('Access-Control-Allow-Headers', corsAllowHeaders);
                         if (c.request.headers.origin) {
                             c.set('Access-Control-Allow-Origin', c.request.headers.origin);
-                            c.set('Vary', 'Origin');
+                            c.vary('Origin');
                         } else {
-                            c.set('Vary', 'Referer');
+                            c.vary('Referer');
                         }
                         c.cors = true;
                     }
