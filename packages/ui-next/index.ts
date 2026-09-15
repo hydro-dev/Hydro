@@ -294,7 +294,7 @@ function injectPage(ctx: Context, handler: Handler, html: string, assetUrl: (nam
         route_map: ctx.server.routeMap,
         endpoint: ctx.setting.get('server.url') || undefined,
         plugins_url: pluginsUrl,
-    }, serializer(false, handler));
+    }, serializer(false, handler)).replaceAll('<', '\\u003c');
     const injectHtml = [
         buildInject(serialized),
         ...injectedScripts(assetUrl, getViewLang(handler)),
