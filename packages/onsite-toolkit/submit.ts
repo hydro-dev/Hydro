@@ -73,7 +73,7 @@ Language ${SettingModel.langs[lang].display} (${lang})
         await Promise.all([
             ProblemModel.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
             DomainModel.incUserInDomain(domainId, this.user._id, 'nSubmit'),
-            ContestModel.updateStatus(domainId, this.tdoc.docId, this.user._id, rid, this.pdoc.docId),
+            ContestModel.updateStatus(domainId, this.tdoc.docId, this.team ?? this.user._id, rid, this.pdoc.docId),
         ]);
         return { rid };
     }

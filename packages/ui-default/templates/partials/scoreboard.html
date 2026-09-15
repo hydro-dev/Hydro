@@ -49,12 +49,25 @@
             {%- if column.type == 'rank' -%}
               <span class="{{ 'rank--unrank' if column.value == '0' else 'rank--normal' }}">{{ '*' if column.value == '0' else column.value|string|nl2br|safe }}</span>
             {%- elif column.type == 'user' -%}
-              {%- set canView = canViewAll or handler.user._id == column.raw -%}
+              {%- set canView = canViewAll or handler.user._id == column.raw or (handler.team and handler.team == column.raw) -%}
               <button class="star user--{{ column.raw }}" data-uid="{{ column.raw }}">
                 <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
                 <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
               </button>
-              {{ user.render_inline(udict[column.raw], badge=false) }}
+              {%- if udict[column.raw].teamMembers -%}
+                <span class="user-profile-link">
+                  <span class="icon icon-user--multiple"></span>
+                  <span class="user-profile-name">{{ udict[column.raw].displayName }}</span>
+                </span>
+                <br><small class="supplementary">
+                  {%- for memberUid in udict[column.raw].teamMembers -%}
+                    {%- if loop.index0 -%}, {% endif -%}
+                    {{ user.render_inline(udict[memberUid], avatar=false, badge=false) }}
+                  {%- endfor -%}
+                </small>
+              {%- else -%}
+                {{ user.render_inline(udict[column.raw], badge=false) }}
+              {%- endif -%}
             {%- elif column.type == 'record' and column.raw -%}
               {{ renderRecord(column, canView) }}
             {%- elif column.type == 'records' -%}
