@@ -95,7 +95,7 @@ export async function updateJudge(args) {
 }
 
 export async function apply(ctx: Context) {
-    if (process.env.NODE_APP_INSTANCE !== '0') return;
+    if (process.env.NODE_APP_INSTANCE !== '0' || process.env.CI) return;
     const info = await sysinfo.get();
     coll.updateOne(
         { mid: info.mid, type: 'server' },
