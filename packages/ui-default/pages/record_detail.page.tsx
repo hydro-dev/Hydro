@@ -31,16 +31,20 @@ export default new NamedPage('record_detail', async () => {
     const msg = JSON.parse(data);
     if (typeof msg.status === 'number' && window.parent) window.parent.postMessage({ status: msg.status });
     withTransitionCallback(() => {
-      const newStatus = $(msg.status_html);
-      const oldStatus = $('#status');
-      oldStatus.trigger('vjContentRemove');
-      dd.apply(oldStatus[0], dd.diff(oldStatus[0], newStatus[0]));
-      $('#status').trigger('vjContentNew');
-      const newSummary = $(msg.summary_html);
-      const oldSummary = $('#summary');
-      oldSummary.trigger('vjContentRemove');
-      dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
-      $('#summary').trigger('vjContentNew');
+      if (msg.status_html) {
+        const newStatus = $(msg.status_html);
+        const oldStatus = $('#status');
+        oldStatus.trigger('vjContentRemove');
+        dd.apply(oldStatus[0], dd.diff(oldStatus[0], newStatus[0]));
+        $('#status').trigger('vjContentNew');
+      }
+      if (msg.summary_html) {
+        const newSummary = $(msg.summary_html);
+        const oldSummary = $('#summary');
+        oldSummary.trigger('vjContentRemove');
+        dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
+        $('#summary').trigger('vjContentNew');
+      }
     });
   };
 });
