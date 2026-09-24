@@ -59,6 +59,9 @@ const page = new NamedPage('domain_group', () => {
         return;
       }
       if (!loaded) return;
+      // FIXME: a temporary fix to skip saving when user inputs partial text without selecting item.
+      // should skip emitting onChange event for this.
+      if (input.value().some(Number.isNaN)) return;
       $(ele).closest('tr').find('.group-member-count').text(`${input.value().length} ${i18n('members')}`);
       save();
     });
