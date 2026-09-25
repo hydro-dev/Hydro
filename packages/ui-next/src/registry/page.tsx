@@ -2,6 +2,15 @@ import { lazy } from 'react';
 import { store } from './store';
 import type { PageEntry, PageLoader, PageSlotName, RegisterPageOptions } from './types';
 
+export function resolvePage(name: string, isError = false): readonly [PageSlotName, PageEntry | undefined] {
+  if (isError) {
+    return ['page:error', store.getDefault('page:error')];
+  }
+
+  const routeSlot = `page:${name}` as PageSlotName;
+  return [routeSlot, store.getDefault(routeSlot)];
+}
+
 export function registerPage<P = any>(
   name: string,
   loader: PageLoader<P>,
