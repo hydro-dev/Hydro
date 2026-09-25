@@ -114,7 +114,7 @@ class TrainingDetailHandler extends Handler {
         const [udoc, udict, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
             user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO)),
-            problem.getList(domainId, pids, canViewHidden, false),
+            problem.getList(domainId, pids, canViewHidden, false, [...problem.PROJECTION_LIST, 'maintainer']),
         ]);
         const missing = pids.filter((pid) => !pdict[pid]?.docId);
         const exist = pids.filter((pid) => pdict[pid]?.docId);
