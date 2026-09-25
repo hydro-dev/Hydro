@@ -1,15 +1,34 @@
 import { AutoComplete, AutoCompleteHandle, AutoCompleteProps } from '@hydrooj/components';
 import type { Udoc } from 'hydrooj/src/interface';
+import _ from 'lodash';
 import PropTypes from 'prop-types';
 import { forwardRef } from 'react';
 import { api } from 'vj/utils';
+
+const cache = {};
+let pending = [];
+let callbacks = [];
+const dispatch = _.debounce(async () => {
+  const targets = pending;
+  pending = [];
+  const users = await api('users', { auto: targets }, ['_id', 'uname', 'displayName']);
+  for (const user of users) cache[user._id] = user;
+  for (const callback of callbacks) callback();
+  callbacks = [];
+}, 300);
+const loadUsers = async (ids: string[]) => {
+  pending.push(...ids);
+  dispatch();
+  await new Promise((resolve) => callbacks.push(resolve));
+  return ids.map((id) => cache[id]);
+};
 
 const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoCompleteProps<Udoc>>((props, ref) => (
   <AutoComplete<Udoc>
     ref={ref as any}
     cacheKey="user"
     queryItems={(query) => api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl'])}
-    fetchItems={(ids) => api('users', { auto: ids }, ['_id', 'uname', 'displayName'])}
+    fetchItems={(ids) => loadUsers(ids)}
     itemText={(user) => user.uname + (user.displayName ? ` (${user.displayName})` : '')}
     itemKey={(user) => ((props.multi || /^[+-]?\d+$/.test(user.uname.trim())) ? user._id.toString() : user.uname)}
     renderItem={(user) => (
