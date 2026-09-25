@@ -14,6 +14,10 @@ interface SubtaskSettingsProps {
   memory: string;
 }
 
+function parseDependencies(value: string) {
+  return value.split(',').map((i) => i.trim()).filter((i) => +i).map((i) => +i);
+}
+
 export function SubtaskSettings(props: SubtaskSettingsProps) {
   const [open, setOpen] = React.useState(false);
   const [depsOpen, setDepsOpen] = React.useState(false);
@@ -22,12 +26,14 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
   const time = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).time);
   const memory = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).memory);
   const deps = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).if || [], isEqual);
+  const scoreDeps = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).if_score || [], isEqual);
   const type = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).type || 'min');
 
   const [ctime, setTime] = React.useState(time);
   const [cmemory, setMemory] = React.useState(memory);
   const [cscore, setScore] = React.useState(score);
   const [cdeps, setDeps] = React.useState(deps.join(', '));
+  const [cscoreDeps, setScoreDeps] = React.useState(scoreDeps.join(', '));
   const [ctype, setType] = React.useState(type);
 
   const dispatch = useDispatch();
@@ -49,7 +55,8 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
         time: ctime,
         memory: cmemory,
         score: cscore,
-        if: cdeps.split(',').map((i) => i.trim()).filter((i) => +i).map((i) => +i),
+        if: parseDependencies(cdeps),
+        if_score: parseDependencies(cscoreDeps),
       },
     });
     setOpen(false);
@@ -88,13 +95,29 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
       </div>
     </Modal>
     <Modal opened={depsOpen} onClose={() => setDepsOpen(false)} title={i18n('Set dependencies')}>
-      <CustomSelectAutoComplete
-        data={subtaskIds.map((i) => ({ _id: i, name: `${i18n('Subtask {0}', i)}` }))}
-        setSelectItems={cdeps.split(',').map((i) => i.trim()).filter((i) => +i).map((i) => +i)}
-        onChange={(items) => setDeps(items)}
-        placeholder="dependencies"
-        multi
-      />
+      <div style={{ marginBottom: 16 }}>
+        <Text fw={600} style={{ marginBottom: 4 }}>{i18n('Dependencies')}</Text>
+        <CustomSelectAutoComplete
+          data={subtaskIds.map((i) => ({ _id: i.toString(), name: `${i18n('Subtask {0}', i)}` }))}
+          selectedKeys={parseDependencies(cdeps).map((i) => i.toString())}
+          onChange={(items) => setDeps(items)}
+          placeholder={i18n('Dependencies')}
+          multi
+        />
+      </div>
+      <div>
+        <Text fw={600} style={{ marginBottom: 4 }}>{i18n('Positive-score dependencies')}</Text>
+        <Text c="dimmed" size="sm" style={{ marginBottom: 4 }}>
+          {i18n('The current subtask is judged only when all selected subtasks have a score greater than 0.')}
+        </Text>
+        <CustomSelectAutoComplete
+          data={subtaskIds.map((i) => ({ _id: i.toString(), name: `${i18n('Subtask {0}', i)}` }))}
+          selectedKeys={parseDependencies(cscoreDeps).map((i) => i.toString())}
+          onChange={(items) => setScoreDeps(items)}
+          placeholder={i18n('Positive-score dependencies')}
+          multi
+        />
+      </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
         <Button color="blue" onClick={onConfirm}>{i18n('Save')}</Button>
       </div>
@@ -110,6 +133,10 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
     <div style={{ paddingLeft: 22, display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 8 }} onClick={() => setDepsOpen(true)}>
       <Text><i className="icon icon-diagram-tree" /></Text>
       <Text>{i18n('Dependencies')}: {deps.length ? deps.join(', ') : i18n('(None)')}</Text>
+    </div>
+    <div style={{ paddingLeft: 22, display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 8 }} onClick={() => setDepsOpen(true)}>
+      <Text><i className="icon icon-diagram-tree" /></Text>
+      <Text>{i18n('Positive-score dependencies')}: {scoreDeps.length ? scoreDeps.join(', ') : i18n('(None)')}</Text>
     </div>
     <div style={{ paddingLeft: 22, display: 'flex', alignItems: 'center', gap: 8 }}>
       <i className="icon icon-asterisk" />

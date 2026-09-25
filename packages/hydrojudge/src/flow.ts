@@ -1,6 +1,6 @@
 import Queue from 'p-queue';
 import {
-    JudgeResultBody, NormalizedCase, NormalizedSubtask, STATUS,
+    JudgeResultBody, NormalizedCase, NormalizedSubtask, STATUS, type SubtaskResult, type SubtaskType,
 } from '@hydrooj/common';
 import { getConfig } from './config';
 import { FormatError } from './error';
@@ -19,7 +19,7 @@ const Score = {
     min: Math.min,
 };
 
-function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['judgeCase']) {
+function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['judgeCase'], skip = false) {
     return async (ctx: Context) => {
         subtask.type ||= 'min';
         const ctxSubtask = {
@@ -33,7 +33,8 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
         for (const cid in subtask.cases) {
             const runner = judgeCase(subtask.cases[cid]);
             cases.push(ctx.queue.add(async () => {
-                const res = (ctx.errored
+                const res = (skip
+                    || ctx.errored
                     || (subtask.type === 'min' && ctxSubtask.score === 0)
                     || (subtask.type === 'max' && ctxSubtask.score === subtask.score)
                     || (subtask.if || []).filter((i) => ctx.failed[i]).length)
@@ -71,11 +72,45 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
         }
         ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
         return {
-            type: ctxSubtask.subtask.type,
+            type: ctxSubtask.subtask.type as SubtaskType,
             score: ctxSubtask.score,
             status: ctxSubtask.status,
         };
     };
+}
+
+async function judgeScoreDependentSubtasks(ctx: Context, task: Task) {
+    const subtasks: Record<string, NormalizedSubtask> = {};
+    for (const [key, value] of Object.entries(ctx.config.subtasks)) {
+        subtasks[value.id?.toString() || key] = value;
+    }
+    const pending = new Set(Object.keys(subtasks));
+    const infos: Record<string, SubtaskResult> = {};
+    while (pending.size) {
+        const ready = [...pending].filter((sid) => {
+            const subtask = subtasks[sid];
+            return [...(subtask.if || []), ...(subtask.if_score || [])]
+                .every((id) => !subtasks[id] || !pending.has(id.toString()));
+        });
+        if (!ready.length) throw new FormatError('Circular dependency between subtasks.');
+        for (const sid of ready) pending.delete(sid);
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.all(ready.map(async (sid) => {
+            const subtask = subtasks[sid];
+            const accepted = (subtask.if || []).every((id) => (
+                !subtasks[id] || (infos[id] && infos[id].status <= STATUS.STATUS_ACCEPTED)
+            ));
+            const scored = (subtask.if_score || []).every((id) => infos[id]?.score > 0);
+            if (!accepted || !scored) {
+                ctx.failed[sid] = true;
+                await judgeSubtask(subtask, sid, task.judgeCase, true)(ctx);
+                return;
+            }
+            infos[sid] = await judgeSubtask(subtask, sid, task.judgeCase)(ctx);
+        }));
+    }
+    for (const info of Object.values(infos)) ctx.total_score += info.score;
+    return infos;
 }
 
 export const runFlow = async (ctx: Context, task: Task) => {
@@ -111,21 +146,24 @@ export const runFlow = async (ctx: Context, task: Task) => {
             ctx.end({ nop: true });
         }
     } else {
-        const infos = {};
-        await Promise.all(Object.entries(ctx.config.subtasks).map(async ([key, value]) => {
-            const sid = value.id?.toString() || key;
-            infos[sid] = await judgeSubtask(value, sid, task.judgeCase)(ctx);
-        }));
-        for (const [key, value] of Object.entries(ctx.config.subtasks)) {
-            let effective = true;
-            const sid = value.id?.toString() || key;
-            for (const required of value.if || []) {
-                if (ctx.failed[required.toString()]) effective = false;
-            }
-            if (effective) ctx.total_score += infos[sid].score;
-            else {
-                ctx.failed[sid] = true;
-                delete infos[sid];
+        const hasScoreDependencies = ctx.config.subtasks.some((i) => i.if_score?.length);
+        const infos = hasScoreDependencies ? await judgeScoreDependentSubtasks(ctx, task) : {};
+        if (!hasScoreDependencies) {
+            await Promise.all(Object.entries(ctx.config.subtasks).map(async ([key, value]) => {
+                const sid = value.id?.toString() || key;
+                infos[sid] = await judgeSubtask(value, sid, task.judgeCase)(ctx);
+            }));
+            for (const [key, value] of Object.entries(ctx.config.subtasks)) {
+                let effective = true;
+                const sid = value.id?.toString() || key;
+                for (const required of value.if || []) {
+                    if (ctx.failed[required.toString()]) effective = false;
+                }
+                if (effective) ctx.total_score += infos[sid].score;
+                else {
+                    ctx.failed[sid] = true;
+                    delete infos[sid];
+                }
             }
         }
         ctx.end({
