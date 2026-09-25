@@ -27,7 +27,7 @@ services:
       - ./data/file:/data/file
       - ./data/backend:/root/.hydro
     ports:
-      - "40015:8888"
+      - "80:8888" # In docker mode, change THIS port instead of port in system settings!
     healthcheck:
       test: curl --silent --fail http://localhost:8888/status >/dev/null || exit 1
       interval: 1m30s
