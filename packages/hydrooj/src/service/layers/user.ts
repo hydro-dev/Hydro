@@ -12,8 +12,7 @@ export default async (ctx: KoaContext, next) => {
         ctx.session.scope = PERM.PERM_ALL.toString();
         user = await UserModel.getById(domainId, ctx.session.uid, ctx.session.scope);
     }
-    if (user._id === 0) delete user.viewLang;
-    else if (!user._udoc.ip.includes(ctx.request.ip) && user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+    if (user._id !== 0 && !user._udoc.ip.includes(ctx.request.ip) && user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
         await UserModel.setById(user._id, { loginip: ctx.request.ip });
     }
     ctx.HydroContext.user = await user.private();
