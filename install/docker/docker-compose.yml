@@ -13,10 +13,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
   oj-backend:
-    build: ./backend
+    image: ghcr.io/hydro-dev/hydro-backend:latest
     container_name: oj-backend
     restart: always
+    pull_policy: always
     depends_on:
       oj-mongo:
         condition: service_healthy
@@ -25,7 +27,7 @@ services:
       - ./data/file:/data/file
       - ./data/backend:/root/.hydro
     ports:
-      - "80:8888" # In docker mode, change THIS port instead of port in system settings!
+      - "40015:8888"
     healthcheck:
       test: curl --silent --fail http://localhost:8888/status >/dev/null || exit 1
       interval: 1m30s
@@ -33,11 +35,16 @@ services:
       retries: 3
       start_period: 30s
       start_interval: 5s
+    ulimits:
+      stack:
+        soft: -1
+        hard: -1
 
   oj-judge:
-    build: ./judge
+    image: ghcr.io/hydro-dev/hydro-judge:latest
     container_name: oj-judge
     restart: always
+    pull_policy: always
     privileged: true
     depends_on:
       oj-backend:
@@ -46,3 +53,7 @@ services:
     volumes:
       - ./judge/judge.yaml:/root/.hydro/judge.yaml
       - ./judge/mount.yaml:/root/.hydro/mount.yaml
+    ulimits:
+      stack:
+        soft: -1
+        hard: -1
