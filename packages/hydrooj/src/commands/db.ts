@@ -16,7 +16,7 @@ const exec = (...args: Parameters<typeof child.spawnSync>) => {
     if (res.status) throw new Error(`Error: Exited with code ${res.status}`);
     return res;
 };
-const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
+const dir = process.env.HYDRO_BACKUP_DIR || `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
 function getUrl() {
     const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
     const opts = JSON.parse(dbConfig);
