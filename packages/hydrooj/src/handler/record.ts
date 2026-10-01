@@ -353,7 +353,7 @@ export class RecordMainConnectionHandler extends ConnectionHandler {
     async onRecordChange(rdoc: RecordDoc) {
         if (!this.allDomain) {
             if (rdoc.domainId !== this.args.domainId) return;
-            if (!this.pretest && typeof rdoc.input === 'string') return;
+            if (!this.pretest && rdoc.contest?.toString() === '0'.repeat(24)) return;
             if (!this.all) {
                 if (!rdoc.contest && this.tid) return;
                 if (rdoc.contest && ![this.tid, '000000000000000000000000'].includes(rdoc.contest.toString())) return;
