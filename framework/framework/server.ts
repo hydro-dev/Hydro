@@ -222,6 +222,9 @@ export class HandlerCommon {
 export class Handler extends HandlerCommon {
     static [kHandler] = 'Handler';
 
+    /** Render this handler with ui-next, using its route name instead of a template. */
+    declare useUiNext?: boolean;
+
     loginMethods: any;
     notUsage = false;
     allowCors = false;
@@ -391,7 +394,7 @@ export class WebService extends Service<never> {
         ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
         this.server.keys = this.config.keys;
         this.server.proxy = this.config.proxy;
-        const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
+        const corsAllowHeaders = 'x-requested-with, x-hydro-inject, accept, origin, content-type, upgrade-insecure-requests';
         this.server.use(Compress());
         this.server.use(async (c, next) => {
             if ((c.request.headers.origin || c.request.headers.referer) && this.config.cors) {
