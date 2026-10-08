@@ -1,8 +1,8 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor/editor';
 import { configureMonacoYaml } from 'monaco-yaml';
 import problemConfigSchema from '../schema/problemconfig';
 
-configureMonacoYaml(monaco, {
+configureMonacoYaml(monaco as any, {
   validate: true,
   enableSchemaRequest: true,
   hover: true,

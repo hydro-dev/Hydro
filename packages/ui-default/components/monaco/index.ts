@@ -1,14 +1,41 @@
 import './monaco.styl';
+import 'monaco-editor/features/register.all.js';
+import 'monaco-editor/languages/definitions/register.all.js';
+import 'monaco-editor/languages/features/register.all.js';
 
 import $ from 'jquery';
+import * as monaco from 'monaco-editor/editor';
 import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/browser/editorExtensions';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import list from 'monaco-themes/themes/themelist.json';
 import { nanoid } from 'nanoid';
 import { i18n, request } from 'vj/utils';
 
 export { renderMarkdown } from 'monaco-editor/esm/vs/base/browser/markdownRenderer';
+
+self.MonacoEnvironment = {
+  getWorker(workerId: string, label: string): Worker {
+    if (label === 'editorWorkerService') {
+      return new Worker(new URL('monaco-editor/editor/editor.worker.js', import.meta.url), { type: 'module' });
+    }
+    if (label === 'yaml') {
+      return new Worker(new URL('monaco-yaml/yaml.worker.js', import.meta.url), { type: 'module' });
+    }
+    if (label === 'typescript' || label === 'javascript') {
+      return new Worker(new URL('monaco-editor/languages/features/typescript/ts.worker.js', import.meta.url), { type: 'module' });
+    }
+    if (['css', 'scss', 'less'].includes(label)) {
+      return new Worker(new URL('monaco-editor/languages/features/css/css.worker.js', import.meta.url), { type: 'module' });
+    }
+    if (['html', 'handlebars', 'razor'].includes(label)) {
+      return new Worker(new URL('monaco-editor/languages/features/html/html.worker.js', import.meta.url), { type: 'module' });
+    }
+    if (label === 'json') {
+      return new Worker(new URL('monaco-editor/languages/features/json/json.worker.js', import.meta.url), { type: 'module' });
+    }
+    throw new Error(`Unknown monaco worker label: ${label}`);
+  },
+} as monaco.Environment;
 
 export default monaco;
 export const customOptions: monaco.editor.IStandaloneDiffEditorConstructionOptions = JSON.parse(localStorage.getItem('editor.config') || '{}');

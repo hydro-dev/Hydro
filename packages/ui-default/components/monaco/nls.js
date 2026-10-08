@@ -1,4 +1,10 @@
-export { getNLSLanguage, getNLSMessages } from 'monaco-editor/esm/vs/nls.messages';
+export function getNLSLanguage() {
+  return globalThis._VSCODE_NLS_LANGUAGE;
+}
+
+export function getNLSMessages() {
+  return globalThis._VSCODE_NLS_MESSAGES || [];
+}
 
 function format(message, args) {
   let result;

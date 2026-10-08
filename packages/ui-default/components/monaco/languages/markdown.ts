@@ -1,6 +1,6 @@
 import keyword from 'emojis-keywords';
 import list from 'emojis-list';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor/editor';
 import qface from 'qface';
 import { api } from 'vj/utils';
 

@@ -8,7 +8,6 @@ import compat from 'core-js-compat';
 import { EsbuildPlugin } from 'esbuild-loader';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
-import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import packageJson from 'package-json';
 import { gt } from 'semver';
 import webpack from 'webpack';
@@ -17,6 +16,8 @@ import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WebpackBar from 'webpackbar';
 import { version } from '../../package.json';
 import root from '../utils/root';
+
+const monacoPath = join(dirname(require.resolve('monaco-editor/editor.js')), '..', '..');
 
 const {
   list,
@@ -134,6 +135,10 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
       alias: {
         vj: root(),
+        'monaco-editor/esm/vs/editor/browser/editorExtensions': join(monacoPath, 'esm/vs/editor/browser/editorExtensions.js'),
+        'monaco-editor/esm/vs/editor/editor.worker.js': join(monacoPath, 'esm/vs/editor/editor.worker.js'),
+        'monaco-editor/esm/vs/platform/quickinput/common/quickInput': join(monacoPath, 'esm/vs/platform/quickinput/common/quickInput.js'),
+        'monaco-editor/esm/vs/base/browser/markdownRenderer': join(monacoPath, 'esm/vs/base/browser/markdownRenderer.js'),
         'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
         'react-dom/client': require.resolve('react-dom/client'),
@@ -282,7 +287,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         jQuery: 'jquery',
         'window.jQuery': 'jquery',
         React: 'react',
-        monaco: 'monaco-editor/esm/vs/editor/editor.api',
+        monaco: 'monaco-editor/editor',
       }),
       new ExtractCssPlugin({
         filename: `[name]-${version}.css?[fullhash:6]`,
@@ -313,24 +318,12 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       new webpack.DefinePlugin({
         'process.env.VERSION': JSON.stringify(require('@hydrooj/ui-default/package.json').version),
       }),
-      new webpack.optimize.MinChunkSizePlugin({
-        minChunkSize: 128000,
-      }),
+      // MinChunkSizePlugin merges worker chunks into the main chunk and breaks
+      // the runtime id module (webpack#15416), do not re-enable it
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new webpack.NormalModuleReplacementPlugin(/^prettier[$/]/, root('../../modules/nop.ts')),
       new webpack.NormalModuleReplacementPlugin(/^highlightjs[$/]/, root('../../modules/nop.ts')),
       new webpack.NormalModuleReplacementPlugin(/core-js\/stable/, root('__core-js.js')),
-      new MonacoWebpackPlugin({
-        filename: '[name].[hash:6].worker.js',
-        customLanguages: [{
-          label: 'yaml',
-          entry: require.resolve('monaco-yaml/index.js'),
-          worker: {
-            id: 'vs/language/yaml/yamlWorker',
-            entry: require.resolve('monaco-yaml/yaml.worker.js'),
-          },
-        }],
-      }),
       ...env.measure ? [
         new BundleAnalyzerPlugin({ analyzerPort: 'auto' }),
         new DuplicatesPlugin(),

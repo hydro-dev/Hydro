@@ -1,4 +1,4 @@
-import type * as monaco from 'monaco-editor';
+import type * as monaco from 'monaco-editor/editor';
 import React from 'react';
 import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
