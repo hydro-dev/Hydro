@@ -1,0 +1,28 @@
+{% set page_name = "dtoj_community" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">社区广场</h1></div>
+      <div class="section__body dtoj-chips">
+        {% for t in tabs %}
+        <a class="dtoj-chip{% if tab == t %} on{% endif %}" href="{{ url('dtoj_community', query={tab: t}) }}">{{ t }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% for p in posts %}
+    <a class="dtoj-card" href="{{ url('dtoj_community_detail', id=p.id) }}" style="display:block;margin-bottom:12px">
+      <h2>{{ p.title }}</h2>
+      <p class="dtoj-meta">{{ p.author }} · {{ p.time }}</p>
+      <p>
+        {% for tag in p.tags %}<span class="dtoj-tag">{{ tag }}</span>{% endfor %}
+      </p>
+      <p>{{ p.summary }}</p>
+      <p class="dtoj-meta">浏览 {{ p.views }} · 点赞 {{ p.likes }}</p>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

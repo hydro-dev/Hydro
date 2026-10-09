@@ -1,0 +1,25 @@
+{% set page_name = "dtoj_community_detail" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">{{ post.title }}</h1></div>
+      <div class="section__body">
+        <p class="dtoj-meta">{{ post.author }} · {{ post.time }}</p>
+        <p>
+          {% for tag in post.tags %}<span class="dtoj-tag">{{ tag }}</span>{% endfor %}
+        </p>
+        <p>{{ post.summary }}</p>
+        <pre>int main() {
+    return 0;
+}</pre>
+        <p class="dtoj-meta">浏览 {{ post.views }} · 点赞 {{ post.likes }}</p>
+        <p class="dtoj-muted">示例帖，没有评论区。</p>
+        <p><a href="{{ url('dtoj_community') }}">返回社区</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

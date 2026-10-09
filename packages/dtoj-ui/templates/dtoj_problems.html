@@ -1,0 +1,33 @@
+{% set page_name = "dtoj_problems" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">题库</h1></div>
+      <div class="section__body no-padding">
+        <p class="dtoj-muted" style="padding:12px 12px 0">插件自己的列表示例。原来的题库仍在 /p。</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th>标签</th>
+              <th>难度</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in problems %}
+            <tr>
+              <td>{{ p.name }}</td>
+              <td>{% for tag in p.tags %}<span class="dtoj-tag">{{ tag }}</span>{% endfor %}</td>
+              <td>{{ p.level }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

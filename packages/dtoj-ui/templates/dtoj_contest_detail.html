@@ -1,0 +1,25 @@
+{% set page_name = "dtoj_contest_detail" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">{{ contest.title }}</h1></div>
+      <div class="section__body">
+        <p class="dtoj-meta">标签 {{ contest.tab }}</p>
+        <p>组别：{{ contest.group }}</p>
+        <p>时长：{{ contest.hours }} 小时</p>
+        <p>题量：{{ contest.problems }}</p>
+        <p>人数：{{ contest.people }}</p>
+        <p>赛制：{{ contest.rule }}</p>
+        <p>公开或邀请码：{{ contest.access }}</p>
+        <p>开始：{{ contest.begin }}</p>
+        <p>结束：{{ contest.end }}</p>
+        <p class="dtoj-muted">详情只有这些示例字段，没有题目，也不校验邀请码。</p>
+        <p><a href="{{ url('contest_main') }}">返回比赛</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

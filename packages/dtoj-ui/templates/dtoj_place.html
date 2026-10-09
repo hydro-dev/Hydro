@@ -1,0 +1,19 @@
+{% set page_name = pageName %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">{{ title }}</h1></div>
+      <div class="section__body">
+        <h2>这是什么</h2>
+        <p>{{ about }}</p>
+        <h2>奖励占位</h2>
+        <p>{{ reward }}</p>
+        <p><a href="{{ url('homepage') }}">返回首页</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

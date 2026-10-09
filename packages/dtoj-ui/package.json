@@ -1,0 +1,7 @@
+{
+    "name": "dtoj-ui",
+    "version": "0.1.0",
+    "main": "index.ts",
+    "license": "AGPL-3.0-or-later",
+    "repository": "https://github.com/hydro-dev/Hydro"
+}
