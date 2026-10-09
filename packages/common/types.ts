@@ -31,6 +31,7 @@ export interface SubtaskConfig {
     memory?: string;
     score?: number;
     if?: number[];
+    if_score?: number[];
     id?: number;
     type?: SubtaskType;
     cases?: TestCaseConfig[];
