@@ -13,9 +13,9 @@
 
    `git clone https://github.com/hydro-dev/Hydro.git && cd Hydro/install/docker`
 
-2. 启动服务。
+2. 用当前仓库编译镜像并启动。
 
-   `docker-compose up -d`
+   `docker-compose up -d --build`
 
 在本机制作 docker 镜像耗时可能会比较长。根据网络情况，大约 5 到 30 分钟就可以自动搭建完成，全程无需人工干预。
 

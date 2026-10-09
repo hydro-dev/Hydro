@@ -1,0 +1,10 @@
+.git
+.github
+**/node_modules
+**/.cache
+.cache
+*.log
+install/docker/data
+coverage
+.nyc_output
+**/*.tsbuildinfo
