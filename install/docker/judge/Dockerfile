@@ -22,16 +22,17 @@ RUN apt-get -qq update && \
     # so make a symlink to it
     ln -s /usr/local/bin/node /usr/bin/node
 
-# Pinned asset: criyle/go-judge v1.9.4 linux_amd64v3.
-# This repository does not contain an arm64 sandbox build. Do not replace
-# this with a baseline amd64 binary or another sandbox.
+# Official go-judge v1.9.4 Linux assets. The container is Linux, not macOS.
+# arm64: go-judge_1.9.4_linux_arm64
+# amd64: go-judge_1.9.4_linux_amd64v3
 ARG TARGETARCH
 RUN set -eu; \
-    if [ -n "$TARGETARCH" ] && [ "$TARGETARCH" != "amd64" ]; then \
-      echo "No arm64 go-judge build is in this repository. Refusing to install go-judge_1.9.4_linux_amd64v3 for TARGETARCH=$TARGETARCH." >&2; \
-      exit 1; \
-    fi; \
-    wget https://github.com/criyle/go-judge/releases/download/v1.9.4/go-judge_1.9.4_linux_amd64v3 -O /usr/bin/sandbox && \
+    case "$TARGETARCH" in \
+      arm64) asset=go-judge_1.9.4_linux_arm64 ;; \
+      amd64|"") asset=go-judge_1.9.4_linux_amd64v3 ;; \
+      *) echo "No go-judge v1.9.4 Linux asset selected for TARGETARCH=$TARGETARCH." >&2; exit 1 ;; \
+    esac; \
+    wget "https://github.com/criyle/go-judge/releases/download/v1.9.4/${asset}" -O /usr/bin/sandbox && \
     chmod +x /usr/bin/sandbox
 
 COPY . .
