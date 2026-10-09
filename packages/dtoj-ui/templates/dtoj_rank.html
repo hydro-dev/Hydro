@@ -1,0 +1,35 @@
+{% set page_name = "dtoj_rank" %}
+{% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">等级分</h1></div>
+      <div class="section__body no-padding">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>用户</th>
+              <th>当前分</th>
+              <th>历史最高分</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td>{{ row.name }}</td>
+              <td>{{ row.now }}</td>
+              <td>{{ row.best }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {{ paginator.render(page, pages) }}
+        <p class="dtoj-muted" style="padding:0 12px 12px">示例榜，没有接上站内 rating。翻页样式在，数据不变。</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

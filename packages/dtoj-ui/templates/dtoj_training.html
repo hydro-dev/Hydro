@@ -1,0 +1,66 @@
+{% set page_name = "dtoj_training" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">热门课程</h1></div>
+      <div class="section__body">
+        <div class="dtoj-scroll">
+          {% for c in hot %}
+          <a class="dtoj-card" href="{{ url('dtoj_training_detail', tid=c.id) }}">
+            <h3>{{ c.title }}</h3>
+            <p class="dtoj-muted">{{ c.brief }}</p>
+            <p class="dtoj-meta">{{ c.chapters }} 章 · {{ c.problems }} 道练习</p>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">筛选</h1></div>
+      <div class="section__body">
+        <p class="dtoj-meta">方向</p>
+        <div class="dtoj-chips">
+          {% for d in directions %}
+          <a class="dtoj-chip{% if direction == d %} on{% endif %}" href="{{ url('training_main', query={direction: d, kind: kind}) }}">{{ d }}</a>
+          {% endfor %}
+        </div>
+        <p class="dtoj-meta">类型</p>
+        <div class="dtoj-chips">
+          {% for k in kinds %}
+          <a class="dtoj-chip{% if kind == k %} on{% endif %}" href="{{ url('training_main', query={direction: direction, kind: k}) }}">{{ k }}</a>
+          {% endfor %}
+        </div>
+        <p class="dtoj-muted">筛选条只切换高亮，下面的课程列表不跟着变。</p>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">全部课程</h1>
+      </div>
+      <div class="section__body">
+        <div class="dtoj-grid">
+          {% for c in courses %}
+          <a class="dtoj-card" href="{{ url('dtoj_training_detail', tid=c.id) }}">
+            <h3>{{ c.title }}</h3>
+            <p class="dtoj-muted">{{ c.brief }}</p>
+            <p class="dtoj-meta">{{ c.chapters }} 章 · {{ c.problems }} 道练习</p>
+            <p class="dtoj-meta">{{ c.direction }} · {{ c.kind }}</p>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">密钥加入</h1></div>
+      <div class="section__body">
+        <input class="textbox" type="text" placeholder="课程密钥" disabled>
+        <button type="button" class="button" disabled>加入课程</button>
+        <p class="dtoj-muted">这一期不校验密钥，按钮不会提交。</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

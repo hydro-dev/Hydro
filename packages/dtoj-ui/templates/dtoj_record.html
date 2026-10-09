@@ -1,0 +1,79 @@
+{% set page_name = "dtoj_record" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <form method="get">
+      <div class="section">
+        <div class="section__header">
+          <h1 class="section__title">筛选</h1>
+          <div class="section__tools">
+            <button type="submit" class="primary button">筛选</button>
+            <a class="button" href="{{ url('record_main') }}">重置</a>
+          </div>
+        </div>
+        <div class="section__body">
+          <div class="row">
+            <div class="medium-3 columns">
+              <label>提交者<input class="textbox" name="uidOrName" value="{{ uidOrName }}"></label>
+            </div>
+            <div class="medium-3 columns">
+              <label>题目<input class="textbox" name="pid" value="{{ pid }}"></label>
+            </div>
+            <div class="medium-3 columns">
+              <label>语言
+                <select class="select" name="lang">
+                  <option value="">全部</option>
+                  <option value="cc" {% if lang == 'cc' %}selected{% endif %}>C++</option>
+                  <option value="py" {% if lang == 'py' %}selected{% endif %}>Python</option>
+                </select>
+              </label>
+            </div>
+            <div class="medium-3 columns">
+              <label>状态
+                <select class="select" name="status">
+                  <option value="">全部</option>
+                  <option value="ac" {% if status == 'ac' %}selected{% endif %}>通过</option>
+                  <option value="wa" {% if status == 'wa' %}selected{% endif %}>答案错误</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <p class="dtoj-muted">筛选条在，但不会改变下面的示例行。</p>
+        </div>
+      </div>
+    </form>
+    <div class="section">
+      <div class="section__body no-padding">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>状态</th>
+              <th>分数</th>
+              <th>用时</th>
+              <th>内存</th>
+              <th>语言</th>
+              <th>题目</th>
+              <th>提交者</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in records %}
+            <tr>
+              <td>{{ row.status }}</td>
+              <td>{{ row.score }}</td>
+              <td>{{ row.time }}</td>
+              <td>{{ row.memory }}</td>
+              <td>{{ row.lang }}</td>
+              <td>{{ row.problem }}</td>
+              <td>{{ row.user }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

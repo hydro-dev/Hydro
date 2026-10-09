@@ -1,0 +1,33 @@
+{% set page_name = "dtoj_discuss" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-3 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">分类</h1></div>
+      <div class="section__body">
+        <ul class="dtoj-tree">
+          {% for n in nodes %}
+          <li><a class="{% if node == n %}on{% endif %}" href="{{ url('discussion_main', query={node: n}) }}">{{ n }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">讨论</h1></div>
+      <div class="section__body">
+        <p class="dtoj-muted">当前高亮：{{ node }}。换分类只改高亮，列表不跟着变。</p>
+        {% for t in threads %}
+        <div class="dtoj-card" style="margin-bottom:10px">
+          <h3>{{ t.title }}</h3>
+          <p class="dtoj-meta">{{ t.author }} · {{ t.time }} · {{ t.node }} · {{ t.replies }} 条回复</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

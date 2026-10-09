@@ -1,0 +1,28 @@
+{% set page_name = "dtoj_wiki" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">知识库索引</h1></div>
+      <div class="section__body">
+        <p class="dtoj-muted">这里是索引格子，不是题目列表，也没有正文库。</p>
+      </div>
+    </div>
+    {% for group in groups %}
+    <div class="section" id="{{ group.id }}">
+      <div class="section__header"><h1 class="section__title">{{ group.title }}</h1></div>
+      <div class="section__body dtoj-grid">
+        {% for cell in group.cells %}
+        <a class="dtoj-card" href="{{ url('dtoj_wiki_article', slug=cell.id) }}">
+          <h3>{{ cell.title }}</h3>
+          <p class="dtoj-muted">占位文章</p>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
