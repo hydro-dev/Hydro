@@ -21,7 +21,7 @@ const loaders = {
   i18n: async () => {
     const { setLocaleData } = await import('./nls');
     let resource;
-    const lang = UserContext.viewLang;
+    const lang = UiContext.viewLang;
     if (lang === 'zh') {
       resource = await import('monaco-editor-nls/locale/zh-hans.json');
     } else if (lang === 'zh_TW') {
