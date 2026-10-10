@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T02:55:00Z",
+  "title": "Design System: 青石练习场",
+  "extensions": {
+    "colorMeta": {
+      "field": { "role": "neutral", "displayName": "场地", "canonical": "#e8eef5" },
+      "field-soft": { "role": "neutral", "displayName": "软场地", "canonical": "#f4f7fb" },
+      "ink": { "role": "neutral", "displayName": "墨", "canonical": "#111827" },
+      "muted": { "role": "neutral", "displayName": "备注", "canonical": "#5f6b7a" },
+      "line": { "role": "neutral", "displayName": "线", "canonical": "rgba(30, 41, 59, 0.09)" },
+      "surface": { "role": "neutral", "displayName": "雾面", "canonical": "rgba(248, 250, 252, 0.8)" },
+      "surface-strong": { "role": "neutral", "displayName": "亮雾面", "canonical": "rgba(255, 255, 255, 0.9)" },
+      "brand": { "role": "primary", "displayName": "训练蓝", "canonical": "#2563eb" },
+      "brand-deep": { "role": "primary", "displayName": "深蓝", "canonical": "#1e40af" },
+      "mint": { "role": "primary", "displayName": "青", "canonical": "#6fa7b3" },
+      "gold": { "role": "secondary", "displayName": "金", "canonical": "#bfa46a" },
+      "gold-deep": { "role": "secondary", "displayName": "深金", "canonical": "#8e7341" },
+      "path": { "role": "neutral", "displayName": "路径夜", "canonical": "#172237" },
+      "path-ink": { "role": "neutral", "displayName": "路径字", "canonical": "#f6f8fd" },
+      "pass-ink": { "role": "status", "displayName": "通过绿", "canonical": "#145c32" },
+      "pass-wash": { "role": "status", "displayName": "通过底", "canonical": "#e5f2ea" },
+      "warn-ink": { "role": "status", "displayName": "待定褐", "canonical": "#6a4b00" },
+      "warn-wash": { "role": "status", "displayName": "待定底", "canonical": "#f8f1dc" },
+      "fail-ink": { "role": "status", "displayName": "错误红", "canonical": "#8a1f1f" },
+      "fail-wash": { "role": "status", "displayName": "错误底", "canonical": "#f8e6e6" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "首页站名，衬线，蓝到青。" },
+      "headline": { "displayName": "Headline", "purpose": "路径区和资料区的大标题。" },
+      "title": { "displayName": "Title", "purpose": "卡片标题。" },
+      "body": { "displayName": "Body", "purpose": "卡片说明。" },
+      "label": { "displayName": "Label", "purpose": "站名上方小字和倒计时短标签。" },
+      "mono": { "displayName": "Mono", "purpose": "倒计时天数。" }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 28px 70px rgba(28, 39, 64, 0.1)", "purpose": "普通卡片。" },
+      { "name": "soft", "value": "0 16px 40px rgba(28, 39, 64, 0.07)", "purpose": "首屏和次要卡片。" },
+      { "name": "primary", "value": "0 12px 24px rgba(37, 99, 235, 0.16)", "purpose": "主按钮。" }
+    ],
+    "motion": [
+      { "name": "lift", "value": "transform 0.18s ease", "purpose": "卡片和按钮悬停上移。" }
+    ],
+    "breakpoints": [
+      { "name": "shell", "value": "1180px" },
+      { "name": "phone", "value": "600px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "首页唯一的蓝青填充动作。",
+      "html": "<a class=\"ds-btn-primary\">进入题库</a>",
+      "css": ".ds-btn-primary { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; padding: 0 16px; border-radius: 12px; border: 0; color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; background: linear-gradient(110deg, #2563eb, #6fa7b3); box-shadow: 0 12px 24px rgba(37, 99, 235, 0.16); } .ds-btn-primary:hover { transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(69, 104, 214, 0.16), 0 16px 40px rgba(28, 39, 64, 0.07); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "首屏上的其余动作。",
+      "html": "<a class=\"ds-btn-secondary\">参加比赛</a>",
+      "css": ".ds-btn-secondary { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; margin-top: 10px; padding: 0 16px; border-radius: 12px; border: 1px solid rgba(30, 41, 59, 0.09); color: #1e40af; background: rgba(248, 250, 252, 0.9); font-size: 14px; font-weight: 700; text-decoration: none; } .ds-btn-secondary:hover { transform: translateY(-1px); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(69, 104, 214, 0.16); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "雾面白卡片。",
+      "html": "<article class=\"ds-card\"><h3>倒计时</h3><p>三场日期，数字用等宽。</p></article>",
+      "css": ".ds-card { border-radius: 24px; padding: 24px; background: rgba(248, 250, 252, 0.8); border: 1px solid rgba(30, 41, 59, 0.09); box-shadow: 0 28px 70px rgba(28, 39, 64, 0.1); color: #111827; } .ds-card h3 { margin: 0; font-family: \"Source Han Serif SC\", \"Noto Serif SC\", \"Songti SC\", serif; font-size: 22px; font-weight: 800; letter-spacing: -0.04em; } .ds-card p { margin: 12px 0 0; color: #5f6b7a; font-size: 14px; line-height: 1.9; } .ds-card:hover { transform: translateY(-1px); }"
+    },
+    {
+      "name": "Check-in",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "标题行、虚线奶油内嵌、底部浅色动作。",
+      "html": "<article class=\"ds-check\"><header><h3>每日打卡</h3><span class=\"ds-claim\">领羊币</span></header><div class=\"ds-dash\"><p>奖励说明</p></div><button type=\"button\">签到</button></article>",
+      "css": ".ds-check { border-radius: 24px; padding: 20px; background: #fff; border: 1px solid rgba(30, 41, 59, 0.09); color: #111827; } .ds-check header { display: flex; align-items: center; justify-content: space-between; gap: 12px; } .ds-check h3 { margin: 0; font-size: 22px; font-weight: 800; } .ds-claim { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; background: #f6f1e6; color: #3f4a3a; font-size: 13px; font-weight: 700; } .ds-dash { margin-top: 16px; padding: 18px; border-radius: 16px; border: 1px dashed rgba(191, 164, 106, 0.7); background: #fbf7f1; text-align: center; color: #8e7341; } .ds-check button { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px; border: 0; border-radius: 12px; background: #fffaf3; color: #2563eb; font-weight: 700; }"
+    },
+    {
+      "name": "Countdown number",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "主倒计时数字。第二组改成深金。",
+      "html": "<span class=\"ds-count\">86</span>",
+      "css": ".ds-count { font-family: \"JetBrains Mono\", \"Cascadia Code\", monospace; font-size: 30px; font-weight: 900; line-height: 1; color: #1e40af; }"
+    },
+    {
+      "name": "Path band",
+      "kind": "custom",
+      "refersTo": "hero",
+      "description": "四段路径共用的深色块。",
+      "html": "<section class=\"ds-path\"><h2>学习路径</h2><p>题库、课程、比赛、复盘。</p></section>",
+      "css": ".ds-path { padding: 42px; border-radius: 22px; background: #172237; color: #f6f8fd; box-shadow: 0 30px 64px rgba(23, 34, 55, 0.18); } .ds-path h2 { margin: 0; font-family: \"Source Han Serif SC\", \"Noto Serif SC\", \"Songti SC\", serif; font-size: 32px; letter-spacing: -0.045em; } .ds-path p { margin: 12px 0 0; color: #abb9ce; font-size: 14px; line-height: 1.8; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "冷色训练台",
+    "overview": "首页按 [dtoj.team](https://dtoj.team/) 2026-10-10 的桌面卡片记录。底是冷灰蓝。站名用衬线，颜色落在训练蓝上，下面只留一条短的蓝青线。主动作是一枚拉满宽度的按钮，从品牌蓝过渡到青。打卡和倒计时各自一种卡片：打卡是虚线奶油内嵌，倒计时是奶油底上的白条。\n\n本站品牌仍是「青石练习场」。参考站的站名、商标、联系人、二维码、邮箱和公告原文不进入这套系统。这里记的是分区、颜色、字体和组件，不是文案。\n\n窄屏（600px 及以下）参考站会收成白底、去掉漂浮符号、主按钮改成一块深青。桌面规则优先；窄屏只减装饰，不换一套色。",
+    "keyCharacteristics": [
+      "冷灰蓝场地，白卡片浮在上面，阴影很轻、偏移向下。",
+      "站名是衬线、训练蓝。蓝青渐变只给短线和那一枚主按钮。金色只给倒计时的第二组。",
+      "先是居中的入口卡片，然后是打卡和倒计时两种卡片，最后用深色块把题库、课程、比赛、复盘串起来。"
+    ],
+    "rules": [
+      { "name": "The One Entrance Rule", "body": "一屏里从蓝过渡到青的填充只有那一枚主按钮和站名下的短线。次按钮、领羊币、打卡底部动作和倒计时卡片保持浅底。", "section": "colors" },
+      { "name": "The Serif Once Rule", "body": "衬线只给站名、区块大标题和卡片标题。按钮、芯片、倒计时附注和正文保持无衬线。", "section": "typography" },
+      { "name": "The Path Band Rule", "body": "题库、课程、比赛、复盘放在同一块深色里，用步骤而不是四张相同的白卡片。", "section": "layout" },
+      { "name": "The Soft Drop Rule", "body": "阴影只有垂直偏移和长模糊。不用贴边的硬阴影，也不用彩色光晕当装饰。", "section": "elevation" }
+    ],
+    "dos": [
+      "Do 用场地色 `#e8eef5` 做首页底，卡片用雾面白。",
+      "Do 把站名设成衬线、训练蓝，蓝青渐变只留在短线和那一枚拉满宽度的主按钮上。",
+      "Do 让倒计时数字使用等宽字体。预计中的主数字用训练蓝，第二组用深金，已经结束的一格不要放大数字。",
+      "Do 让打卡卡使用虚线奶油内嵌、彩色小图标和奶油胶囊，而不是另一枚蓝青按钮。",
+      "Do 把四段学习路径放进同一块深色，而不是四张并列白卡。"
+    ],
+    "donts": [
+      "Don't 使用参考站的站名、商标、联系人、二维码、邮箱或公告原文。",
+      "Don't 再加第二枚蓝青填充按钮。",
+      "Don't 把金色用到主按钮或站名上。",
+      "Don't 在窄屏保留漂浮符号和标题渐变；收到白底和一块深色主按钮即可。"
+    ]
+  }
+}

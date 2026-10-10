@@ -1,0 +1,24 @@
+{% set page_name = "dtoj_wiki_article" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>{{ title }}</h2>
+            <p>{{ group }}</p>
+          </div>
+        </header>
+        <div class="dtoj-pad">
+          <p>这是一篇占位文章。正文库还没有接上，所以这里没有条目内容。</p>
+          <p class="dtoj-back"><a href="{{ url('dtoj_wiki') }}">返回 WIKI</a></p>
+        </div>
+      </article>
+      {% include "dtoj_library.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

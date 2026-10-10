@@ -1,0 +1,26 @@
+{% set page_name = pageName %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>{{ title }}</h2>
+            <p>这是什么</p>
+          </div>
+        </header>
+        <div class="dtoj-pad">
+          <p>{{ about }}</p>
+          <h3>奖励占位</h3>
+          <p>{{ reward }}</p>
+          <p class="dtoj-back"><a href="{{ url('homepage') }}">返回首页</a></p>
+        </div>
+      </article>
+      {% include "dtoj_library.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

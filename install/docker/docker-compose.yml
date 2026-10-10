@@ -14,7 +14,9 @@ services:
       retries: 5
       start_period: 30s
   oj-backend:
-    build: ./backend
+    build:
+      context: ../..
+      dockerfile: install/docker/backend/Dockerfile
     container_name: oj-backend
     restart: always
     depends_on:
@@ -35,7 +37,9 @@ services:
       start_interval: 5s
 
   oj-judge:
-    build: ./judge
+    build:
+      context: ../..
+      dockerfile: install/docker/judge/Dockerfile
     container_name: oj-judge
     restart: always
     privileged: true

@@ -1,0 +1,96 @@
+{% set page_name = "dtoj_record" %}
+{% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <form method="get">
+        <article class="dtoj-panel">
+          <header class="dtoj-panel-head">
+            <div>
+              <h2>筛选</h2>
+              <p>按题目、提交者、语言、状态和页码筛选。看别人的记录沿用站内权限。</p>
+            </div>
+          </header>
+          <div class="dtoj-pad">
+            <div class="dtoj-fields">
+              <label>提交者<input class="textbox" name="uidOrName" value="{{ uidOrName }}"></label>
+              <label>题目<input class="textbox" name="pid" value="{{ pid }}"></label>
+              <label>语言
+                <select class="select" name="lang">
+                  <option value="">全部</option>
+                  {% for item in langs %}
+                  <option value="{{ item.id }}" {% if lang == item.id %}selected{% endif %}>{{ item.display }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>状态
+                <select class="select" name="status">
+                  <option value="">全部</option>
+                  {% for item in statuses %}
+                  <option value="{{ item.id }}" {% if status == item.id %}selected{% endif %}>{{ _(item.text) }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            </div>
+            <div class="dtoj-actions">
+              <button type="submit" class="dtoj-go">筛选</button>
+              <a class="dtoj-alt" href="{{ url('record_main') }}">重置</a>
+            </div>
+          </div>
+        </article>
+      </form>
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>评测队列</h2>
+          </div>
+        </header>
+        <div class="dtoj-table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>分数</th>
+                <th>用时</th>
+                <th>内存</th>
+                <th>语言</th>
+                <th>题目</th>
+                <th>提交者</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in records %}
+              <tr>
+                <td>
+                  <span class="dtoj-status" data-status="{{ row.code }}">
+                    <a href="{{ url('record_detail', rid=row.id) }}">{{ _(row.statusKey) }}</a>
+                    {% if row.progress is number %} {{ row.progress }}%{% endif %}
+                  </span>
+                </td>
+                <td>{{ row.score }}</td>
+                <td>{{ row.time }}</td>
+                <td>{{ row.memory }}</td>
+                <td>{{ row.lang }}</td>
+                <td>
+                  {% if row.problemLink %}
+                  <a href="{{ url('problem_detail', pid=row.problemLink) }}">{{ row.problem }}</a>
+                  {% else %}
+                  {{ row.problem }}
+                  {% endif %}
+                </td>
+                <td>{{ row.user }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {{ paginator.render(page, pages, add_qs=qs) }}
+      </article>
+      {% include "dtoj_library.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

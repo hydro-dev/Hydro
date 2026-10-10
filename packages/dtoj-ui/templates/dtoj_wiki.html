@@ -1,0 +1,37 @@
+{% set page_name = "dtoj_wiki" %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>知识库索引</h2>
+            <p>这里是索引格子，不是题目列表，也没有正文库。</p>
+          </div>
+        </header>
+      </article>
+      {% for group in groups %}
+      <article class="dtoj-panel" id="{{ group.id }}">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>{{ group.title }}</h2>
+          </div>
+        </header>
+        <div class="dtoj-room">
+          {% for cell in group.cells %}
+          <a class="dtoj-tile" href="{{ url('dtoj_wiki_article', slug=cell.id) }}">
+            <h3>{{ cell.title }}</h3>
+            <p>占位文章</p>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+      {% include "dtoj_library.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

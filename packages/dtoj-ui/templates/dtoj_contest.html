@@ -1,0 +1,76 @@
+{% set page_name = "dtoj_contest" %}
+{% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
+{% block content %}
+{% include "dtoj_style.html" %}
+<div class="row">
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>比赛</h2>
+            <p>这些标签没有对应字段，点选只切换高亮，卡片列表不跟着变。</p>
+          </div>
+        </header>
+        <nav class="dtoj-tabs" aria-label="比赛分页">
+          {% for t in tabs %}
+          <a class="{% if tab == t %}on{% endif %}" href="{{ url('contest_main', query={tab: t}) }}" {% if tab == t %}aria-current="page"{% endif %}>{{ t }}</a>
+          {% endfor %}
+        </nav>
+        <div class="dtoj-row">
+          {% for c in contests %}
+          <a class="dtoj-meet" href="{{ url('dtoj_contest_detail', tid=c.id) }}">
+            <p class="dtoj-count-tag">{{ c.group }}{% if featured and c.id == featured.id %} · 主推{% endif %}</p>
+            <h3>{{ c.title }}</h3>
+            <p>{% if c.beginAt %}{{ datetimeSpan(c.beginAt, false, 'YYYY-M-D H:mm')|safe }}{% else %}—{% endif %} 至 {% if c.endAt %}{{ datetimeSpan(c.endAt, false, 'YYYY-M-D H:mm')|safe }}{% else %}—{% endif %}</p>
+            <p class="dtoj-meet-stats"><b>{{ c.hours }}</b> 小时 · <b>{{ c.problems }}</b> 题 · <b>{{ c.people }}</b> 人</p>
+            <p>{{ c.rule }} · {{ c.access }}</p>
+            <span class="dtoj-meet-go">查看比赛</span>
+          </a>
+          {% else %}
+          <p class="dtoj-pad">这一页没有比赛。</p>
+          {% endfor %}
+        </div>
+      </article>
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>{{ tab }}</h2>
+          </div>
+        </header>
+        <div class="dtoj-table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>开始</th>
+                <th>比赛</th>
+                <th>时长</th>
+                <th>题量</th>
+                <th>赛制</th>
+                <th>人数</th>
+                <th>方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in contests %}
+              <tr>
+                <td>{% if c.beginAt %}{{ datetimeSpan(c.beginAt, false, 'YYYY-M-D H:mm')|safe }}{% else %}—{% endif %}</td>
+                <td><a href="{{ url('dtoj_contest_detail', tid=c.id) }}">{{ c.title }}</a></td>
+                <td>{{ c.hours }} 小时</td>
+                <td>{{ c.problems }}</td>
+                <td>{{ c.rule }}</td>
+                <td>{{ c.people }}</td>
+                <td>{{ c.access }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {{ paginator.render(page, pages, add_qs=qs) }}
+      </article>
+      {% include "dtoj_library.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}
