@@ -1,21 +1,154 @@
 <style>
-  .dtoj-hero { display: flex; justify-content: space-between; gap: 16px; align-items: center; flex-wrap: wrap; }
-  .dtoj-brand { font-size: 1.6rem; margin: 0 0 4px; }
-  .dtoj-muted { color: #667; margin: 0; }
-  .dtoj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-  .dtoj-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-  .dtoj-card { border: 1px solid #e3e6ea; border-radius: 10px; padding: 12px 14px; background: #fff; }
-  .dtoj-card h2, .dtoj-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .dtoj-page,
+  .dtoj-skin {
+    --ink: #1c2833;
+    --muted: #3e4c59;
+    --accent: #2f5d82;
+    --wash: #f4f7f8;
+    --note: #e7f0f6;
+    --note-ink: #143044;
+    --line: #d5dde4;
+    --s1: 4px;
+    --s2: 8px;
+    --s3: 12px;
+    --s4: 16px;
+    --s5: 24px;
+    --s6: 32px;
+    color: var(--ink);
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  .dtoj-page { display: flex; flex-direction: column; gap: var(--s6); }
+  .dtoj-page ::selection,
+  .dtoj-skin ::selection { background: #d5e4f0; color: var(--ink); }
+  .dtoj-page :focus-visible,
+  .dtoj-skin :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dtoj-page > .section,
+  .dtoj-skin .section { margin: 0; }
+  .dtoj-page .section__title,
+  .dtoj-skin .section__title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+  .dtoj-hero { display: flex; justify-content: space-between; gap: var(--s4); align-items: flex-end; flex-wrap: wrap; }
+  .dtoj-hero h2 { margin: 0 0 var(--s2); font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
+  .dtoj-hero-copy { max-width: 68ch; }
+  .dtoj-brand { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 var(--s2); }
+  .dtoj-muted { color: var(--muted); margin: 0; }
+  .dtoj-check { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); }
+  .dtoj-block { display: flex; flex-direction: column; gap: var(--s2); }
+  .dtoj-block > h2 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
+  .dtoj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--s3); }
+  .dtoj-grid--paths { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .dtoj-scroll { display: flex; gap: var(--s3); overflow-x: auto; padding-bottom: var(--s2); scrollbar-color: #8aa0b3 transparent; }
+  .dtoj-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: var(--s3) var(--s4);
+    background: #fff;
+    color: inherit;
+    text-decoration: none;
+  }
+  a.dtoj-card:hover { border-color: var(--accent); }
+  .dtoj-card h2, .dtoj-card h3 { margin: 0 0 var(--s1); font-size: 1.125rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.02em; }
+  .dtoj-lead .dtoj-card h3 { font-size: 1.25rem; font-weight: 700; }
+  .dtoj-quiet .dtoj-card { background: var(--wash); padding: var(--s2) var(--s3); }
+  .dtoj-quiet .dtoj-card h2, .dtoj-quiet .dtoj-card h3 { font-size: 1rem; font-weight: 600; }
   .dtoj-scroll .dtoj-card { flex: 0 0 240px; }
-  .dtoj-feature { border: 2px solid #3d6f99; }
-  .dtoj-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-  .dtoj-chip { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #eef2f5; color: #234; text-decoration: none; }
-  .dtoj-chip.on { background: #3d6f99; color: #fff; }
-  .dtoj-meta { color: #556; font-size: 0.92rem; margin: 4px 0; }
-  .dtoj-tree { list-style: none; margin: 0; padding: 0; }
-  .dtoj-tree li { margin: 0; }
-  .dtoj-tree a { display: block; padding: 6px 8px 6px 14px; border-left: 3px solid #d5dde4; text-decoration: none; }
-  .dtoj-tree a.on { border-left-color: #3d6f99; background: #f3f7fb; font-weight: 600; }
-  .dtoj-num { font-size: 1.8rem; margin: 0; }
-  .dtoj-tag { display: inline-block; margin-right: 4px; padding: 0 6px; border-radius: 4px; background: #eef2f5; }
+  .dtoj-feature { border-color: var(--accent); }
+  .dtoj-static { cursor: default; }
+  .dtoj-feed { display: flex; flex-direction: column; gap: var(--s3); }
+  .dtoj-chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin: 0; }
+  .dtoj-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: var(--s2) var(--s3);
+    border-radius: 999px;
+    background: var(--wash);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .dtoj-chip.on { background: var(--accent); color: #fff; }
+  .dtoj-label { margin: var(--s3) 0 0; font-size: 0.875rem; font-weight: 700; line-height: 1.4; }
+  .dtoj-meta { color: var(--muted); font-size: 0.875rem; line-height: 1.45; margin: var(--s1) 0; }
+  .section__body.no-padding > .dtoj-note { margin: var(--s3) var(--s4); }
+  .dtoj-note {
+    margin: 0 0 var(--s3);
+    padding: var(--s2) var(--s3);
+    background: var(--note);
+    color: var(--note-ink);
+    border-radius: 8px;
+    max-width: 68ch;
+  }
+  .dtoj-prose { max-width: 68ch; }
+  .dtoj-prose h2 { margin: var(--s4) 0 var(--s2); font-size: 1.125rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+  .dtoj-prose h2:first-child { margin-top: 0; }
+  .dtoj-prose p { margin: 0 0 var(--s3); }
+  .dtoj-tree { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s1); }
+  .dtoj-tree a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: var(--s2) var(--s3);
+    border-radius: 8px;
+    text-decoration: none;
+  }
+  .dtoj-tree a.on { background: var(--note); color: var(--note-ink); font-weight: 700; }
+  .dtoj-num { font-size: 1.5rem; font-weight: 700; line-height: 1.1; margin: 0; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .dtoj-quiet .dtoj-num { font-size: 1.25rem; }
+  .dtoj-tag { display: inline-block; margin: 0 var(--s1) var(--s1) 0; padding: 0 var(--s2); border-radius: 4px; background: var(--wash); font-size: 0.875rem; }
+  .dtoj-table-scroll { overflow-x: auto; }
+  .dtoj-page .data-table,
+  .dtoj-skin .data-table { font-variant-numeric: tabular-nums; }
+  .dtoj-status, .dtoj-level { display: inline-block; padding: 0 var(--s2); border-radius: 4px; font-weight: 600; }
+  .dtoj-status[data-status="通过"] { background: #e5f2ea; color: #145c32; }
+  .dtoj-status[data-status="部分分"],
+  .dtoj-status[data-status="运行中"] { background: #f8f1dc; color: #6a4b00; }
+  .dtoj-status[data-status="答案错误"],
+  .dtoj-status[data-status="编译错误"] { background: #f8e6e6; color: #8a1f1f; }
+  .dtoj-level[data-level="入门"] { background: #e5f2ea; color: #145c32; }
+  .dtoj-level[data-level="普及"] { background: #e7f0f6; color: #143044; }
+  .dtoj-level[data-level="提高"] { background: #f8f1dc; color: #6a4b00; }
+  .dtoj-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--s3) var(--s4); margin: 0 0 var(--s4); }
+  .dtoj-facts div { display: flex; flex-direction: column; gap: var(--s1); }
+  .dtoj-facts dt { margin: 0; font-size: 0.875rem; font-weight: 700; color: var(--muted); }
+  .dtoj-facts dd { margin: 0; font-size: 1.0625rem; font-variant-numeric: tabular-nums; }
+  .dtoj-chapters { margin: var(--s2) 0 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: var(--s2); max-width: 40rem; }
+  .dtoj-announce { display: flex; flex-direction: column; gap: var(--s4); }
+  .dtoj-announce h3 { margin: 0 0 var(--s1); font-size: 1.125rem; font-weight: 600; }
+  .dtoj-announce p { margin: 0; max-width: 68ch; }
+  .dtoj-page pre,
+  .dtoj-skin pre {
+    font-family: ui-monospace, "Sarasa Mono SC", "Noto Sans Mono", monospace;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    background: var(--wash);
+    color: var(--ink);
+    padding: var(--s3) var(--s4);
+    border-radius: 8px;
+    overflow-x: auto;
+    max-width: 68ch;
+  }
+  .dtoj-page button:disabled,
+  .dtoj-page input:disabled,
+  .dtoj-skin button:disabled,
+  .dtoj-skin input:disabled { cursor: not-allowed; }
+  .dtoj-back { margin: var(--s4) 0 0; }
+  .dtoj-library { margin: 0; font-size: 0.875rem; }
+  .dtoj-skin .dtoj-library { margin-top: var(--s4); }
+  .dtoj-library a { color: var(--accent); }
+  @media (max-width: 1100px) {
+    .nav__item { padding-left: 10px; padding-right: 10px; }
+  }
+  @media (max-width: 800px) {
+    .dtoj-grid--paths { grid-template-columns: 1fr 1fr; }
+    .dtoj-brand { font-size: 1.5rem; }
+  }
+  @media (max-width: 520px) {
+    .dtoj-grid,
+    .dtoj-grid--paths { grid-template-columns: 1fr; }
+  }
 </style>

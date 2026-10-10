@@ -4,10 +4,12 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">等级分</h1></div>
       <div class="section__body no-padding">
+        <p class="dtoj-note">示例榜，没有接上站内 rating。翻页样式在，数据不变。</p>
+        <div class="dtoj-table-scroll">
         <table class="data-table">
           <thead>
             <tr>
@@ -26,10 +28,11 @@
             {% endfor %}
           </tbody>
         </table>
+        </div>
         {{ paginator.render(page, pages) }}
-        <p class="dtoj-muted" style="padding:0 12px 12px">示例榜，没有接上站内 rating。翻页样式在，数据不变。</p>
       </div>
     </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

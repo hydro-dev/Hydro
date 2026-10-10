@@ -3,7 +3,7 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">热门课程</h1></div>
       <div class="section__body">
@@ -21,19 +21,21 @@
     <div class="section">
       <div class="section__header"><h1 class="section__title">筛选</h1></div>
       <div class="section__body">
-        <p class="dtoj-meta">方向</p>
+        <p class="dtoj-note">筛选条只切换高亮，下面的课程列表不跟着变。</p>
+        <p class="dtoj-label">方向</p>
         <div class="dtoj-chips">
+          <a class="dtoj-chip{% if not direction %} on{% endif %}" href="{{ url('training_main', query={kind: kind}) }}" {% if not direction %}aria-current="true"{% endif %}>全部</a>
           {% for d in directions %}
-          <a class="dtoj-chip{% if direction == d %} on{% endif %}" href="{{ url('training_main', query={direction: d, kind: kind}) }}">{{ d }}</a>
+          <a class="dtoj-chip{% if direction == d %} on{% endif %}" href="{{ url('training_main', query={direction: d, kind: kind}) }}" {% if direction == d %}aria-current="true"{% endif %}>{{ d }}</a>
           {% endfor %}
         </div>
-        <p class="dtoj-meta">类型</p>
+        <p class="dtoj-label">类型</p>
         <div class="dtoj-chips">
+          <a class="dtoj-chip{% if not kind %} on{% endif %}" href="{{ url('training_main', query={direction: direction}) }}" {% if not kind %}aria-current="true"{% endif %}>全部</a>
           {% for k in kinds %}
-          <a class="dtoj-chip{% if kind == k %} on{% endif %}" href="{{ url('training_main', query={direction: direction, kind: k}) }}">{{ k }}</a>
+          <a class="dtoj-chip{% if kind == k %} on{% endif %}" href="{{ url('training_main', query={direction: direction, kind: k}) }}" {% if kind == k %}aria-current="true"{% endif %}>{{ k }}</a>
           {% endfor %}
         </div>
-        <p class="dtoj-muted">筛选条只切换高亮，下面的课程列表不跟着变。</p>
       </div>
     </div>
     <div class="section">
@@ -61,6 +63,7 @@
         <p class="dtoj-muted">这一期不校验密钥，按钮不会提交。</p>
       </div>
     </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

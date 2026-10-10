@@ -3,11 +3,12 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">题库</h1></div>
       <div class="section__body no-padding">
-        <p class="dtoj-muted" style="padding:12px 12px 0">插件自己的列表示例。原来的题库仍在 /p。</p>
+        <p class="dtoj-note">插件自己的列表示例。原来的题库仍在 /p。</p>
+        <div class="dtoj-table-scroll">
         <table class="data-table">
           <thead>
             <tr>
@@ -21,13 +22,15 @@
             <tr>
               <td>{{ p.name }}</td>
               <td>{% for tag in p.tags %}<span class="dtoj-tag">{{ tag }}</span>{% endfor %}</td>
-              <td>{{ p.level }}</td>
+              <td><span class="dtoj-level" data-level="{{ p.level }}">{{ p.level }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}
