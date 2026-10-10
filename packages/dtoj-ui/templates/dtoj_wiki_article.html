@@ -3,15 +3,16 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">{{ title }}</h1></div>
-      <div class="section__body">
+      <div class="section__body dtoj-prose">
         <p class="dtoj-meta">{{ group }}</p>
         <p>这是一篇占位文章。正文库还没有接上，所以这里没有条目内容。</p>
-        <p><a href="{{ url('dtoj_wiki') }}">返回 WIKI</a></p>
+        <p class="dtoj-back"><a href="{{ url('dtoj_wiki') }}">返回 WIKI</a></p>
       </div>
     </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

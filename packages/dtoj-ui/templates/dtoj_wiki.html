@@ -3,7 +3,7 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">知识库索引</h1></div>
       <div class="section__body">
@@ -23,6 +23,7 @@
       </div>
     </div>
     {% endfor %}
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

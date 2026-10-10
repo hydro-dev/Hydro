@@ -3,23 +3,26 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">{{ contest.title }}</h1></div>
       <div class="section__body">
-        <p class="dtoj-meta">标签 {{ contest.tab }}</p>
-        <p>组别：{{ contest.group }}</p>
-        <p>时长：{{ contest.hours }} 小时</p>
-        <p>题量：{{ contest.problems }}</p>
-        <p>人数：{{ contest.people }}</p>
-        <p>赛制：{{ contest.rule }}</p>
-        <p>公开或邀请码：{{ contest.access }}</p>
-        <p>开始：{{ contest.begin }}</p>
-        <p>结束：{{ contest.end }}</p>
-        <p class="dtoj-muted">详情只有这些示例字段，没有题目，也不校验邀请码。</p>
-        <p><a href="{{ url('contest_main') }}">返回比赛</a></p>
+        <dl class="dtoj-facts">
+          <div><dt>标签</dt><dd>{{ contest.tab }}</dd></div>
+          <div><dt>组别</dt><dd>{{ contest.group }}</dd></div>
+          <div><dt>时长</dt><dd>{{ contest.hours }} 小时</dd></div>
+          <div><dt>题量</dt><dd>{{ contest.problems }}</dd></div>
+          <div><dt>人数</dt><dd>{{ contest.people }}</dd></div>
+          <div><dt>赛制</dt><dd>{{ contest.rule }}</dd></div>
+          <div><dt>公开或邀请码</dt><dd>{{ contest.access }}</dd></div>
+          <div><dt>开始</dt><dd>{{ contest.begin }}</dd></div>
+          <div><dt>结束</dt><dd>{{ contest.end }}</dd></div>
+        </dl>
+        <p class="dtoj-note">详情只有这些示例字段，没有题目，也不校验邀请码。</p>
+        <p class="dtoj-back"><a href="{{ url('contest_main') }}">返回比赛</a></p>
       </div>
     </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

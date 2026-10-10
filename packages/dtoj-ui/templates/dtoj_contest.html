@@ -3,23 +3,25 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">筛选</h1></div>
-      <div class="section__body dtoj-chips">
-        {% for t in tabs %}
-        <a class="dtoj-chip{% if tab == t %} on{% endif %}" href="{{ url('contest_main', query={tab: t}) }}">{{ t }}</a>
-        {% endfor %}
+      <div class="section__body">
+        <p class="dtoj-note">标签只切换高亮，卡片列表不跟着变。</p>
+        <div class="dtoj-chips">
+          {% for t in tabs %}
+          <a class="dtoj-chip{% if tab == t %} on{% endif %}" href="{{ url('contest_main', query={tab: t}) }}" {% if tab == t %}aria-current="true"{% endif %}>{{ t }}</a>
+          {% endfor %}
+        </div>
       </div>
     </div>
     <a class="dtoj-card dtoj-feature" href="{{ url('dtoj_contest_detail', tid=featured.id) }}">
-      <p class="dtoj-meta">主推 · {{ featured.tab }}</p>
       <h2>{{ featured.title }}</h2>
-      <p class="dtoj-meta">组别 {{ featured.group }} · 时长 {{ featured.hours }} 小时 · 题量 {{ featured.problems }} · 人数 {{ featured.people }}</p>
+      <p class="dtoj-meta">主推 · {{ featured.tab }} · 组别 {{ featured.group }} · 时长 {{ featured.hours }} 小时 · 题量 {{ featured.problems }} · 人数 {{ featured.people }}</p>
       <p class="dtoj-meta">赛制 {{ featured.rule }} · {{ featured.access }}</p>
       <p class="dtoj-meta">{{ featured.begin }} 至 {{ featured.end }}</p>
     </a>
-    <div class="dtoj-grid" style="margin-top:12px">
+    <div class="dtoj-grid">
       {% for c in contests %}
       <a class="dtoj-card" href="{{ url('dtoj_contest_detail', tid=c.id) }}">
         <h3>{{ c.title }}</h3>
@@ -30,7 +32,7 @@
       </a>
       {% endfor %}
     </div>
-    <p class="dtoj-muted">标签只切换高亮，卡片列表不跟着变。</p>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

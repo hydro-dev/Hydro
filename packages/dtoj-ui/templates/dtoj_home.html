@@ -3,29 +3,43 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__body dtoj-hero">
-        <div>
+        <div class="dtoj-hero-copy">
           <h1 class="dtoj-brand">{{ brand }}</h1>
           <p class="dtoj-muted">本地练习站的界面占位，商标和联系方式不在这里。</p>
         </div>
-        <div>
-          <p class="dtoj-meta">打卡条 · 已连续 {{ streak }} 天（示例）</p>
-          <button type="button" class="primary button">今日打卡</button>
+        <div class="dtoj-check">
+          <p class="dtoj-meta">已连续 {{ streak }} 天（示例）</p>
+          <button type="button" class="button" disabled>今日打卡</button>
         </div>
       </div>
     </div>
-    <div class="dtoj-grid">
-      {% for item in countdowns %}
-      <div class="dtoj-card">
-        <h2>{{ item.name }} 倒计时</h2>
-        <p class="dtoj-num">{{ item.days }}</p>
-        <p class="dtoj-muted">天（写死的示例）</p>
+    <section class="dtoj-block dtoj-lead">
+      <h2>学习路径</h2>
+      <div class="dtoj-grid dtoj-grid--paths">
+        {% for item in paths %}
+        <a class="dtoj-card" href="{{ item.href }}">
+          <h3>{{ item.title }}</h3>
+          <p class="dtoj-muted">{{ item.text }}</p>
+        </a>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-    <div class="section" style="margin-top:12px">
+    </section>
+    <section class="dtoj-block dtoj-quiet">
+      <h2>赛事倒计时</h2>
+      <div class="dtoj-grid">
+        {% for item in countdowns %}
+        <div class="dtoj-card">
+          <h3>{{ item.name }}</h3>
+          <p class="dtoj-num">{{ item.days }}</p>
+          <p class="dtoj-muted">天（写死的示例）</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    <div class="section">
       <div class="section__body dtoj-hero">
         <div>
           <h2>羊币余额</h2>
@@ -38,34 +52,29 @@
         </div>
       </div>
     </div>
-    <h2>四项活动</h2>
-    <div class="dtoj-grid">
-      {% for item in activities %}
-      <a class="dtoj-card" href="{{ item.href }}">
-        <h3>{{ item.title }}</h3>
-        <p class="dtoj-muted">{{ item.about }}</p>
-      </a>
-      {% endfor %}
-    </div>
-    <div class="section" style="margin-top:12px">
+    <section class="dtoj-block dtoj-quiet">
+      <h2>四项活动</h2>
+      <div class="dtoj-grid">
+        {% for item in activities %}
+        <a class="dtoj-card" href="{{ item.href }}">
+          <h3>{{ item.title }}</h3>
+          <p class="dtoj-muted">{{ item.about }}</p>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    <div class="section">
       <div class="section__header"><h1 class="section__title">公告</h1></div>
-      <div class="section__body">
+      <div class="section__body dtoj-announce">
         {% for item in announcements %}
-        <h3>{{ item.title }}</h3>
-        <p>{{ item.body }}</p>
+        <div>
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.body }}</p>
+        </div>
         {% endfor %}
       </div>
     </div>
-    <h2>学习路径</h2>
-    <div class="dtoj-grid">
-      {% for item in paths %}
-      <a class="dtoj-card" href="{{ item.href }}">
-        <h3>{{ item.title }}</h3>
-        <p class="dtoj-muted">{{ item.text }}</p>
-      </a>
-      {% endfor %}
-    </div>
-    <div class="section" style="margin-top:12px">
+    <div class="section">
       <div class="section__header"><h1 class="section__title">资料入口</h1></div>
       <div class="section__body dtoj-chips">
         {% for group in wikiGroups %}
@@ -73,6 +82,7 @@
         {% endfor %}
       </div>
     </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

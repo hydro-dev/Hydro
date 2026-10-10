@@ -3,7 +3,7 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <form method="get">
       <div class="section">
         <div class="section__header">
@@ -40,12 +40,12 @@
               </label>
             </div>
           </div>
-          <p class="dtoj-muted">筛选条在，但不会改变下面的示例行。</p>
+          <p class="dtoj-note">筛选条在，但不会改变下面的示例行。</p>
         </div>
       </div>
     </form>
     <div class="section">
-      <div class="section__body no-padding">
+      <div class="section__body no-padding dtoj-table-scroll">
         <table class="data-table">
           <thead>
             <tr>
@@ -61,7 +61,7 @@
           <tbody>
             {% for row in records %}
             <tr>
-              <td>{{ row.status }}</td>
+              <td><span class="dtoj-status" data-status="{{ row.status }}">{{ row.status }}</span></td>
               <td>{{ row.score }}</td>
               <td>{{ row.time }}</td>
               <td>{{ row.memory }}</td>
@@ -74,6 +74,7 @@
         </table>
       </div>
     </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

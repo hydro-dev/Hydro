@@ -3,17 +3,21 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns">
+  <div class="medium-12 columns dtoj-page">
     <div class="section">
       <div class="section__header"><h1 class="section__title">社区广场</h1></div>
-      <div class="section__body dtoj-chips">
-        {% for t in tabs %}
-        <a class="dtoj-chip{% if tab == t %} on{% endif %}" href="{{ url('dtoj_community', query={tab: t}) }}">{{ t }}</a>
-        {% endfor %}
+      <div class="section__body">
+        <p class="dtoj-note">标签只切换高亮，帖子列表不跟着变。</p>
+        <div class="dtoj-chips">
+          {% for t in tabs %}
+          <a class="dtoj-chip{% if tab == t %} on{% endif %}" href="{{ url('dtoj_community', query={tab: t}) }}" {% if tab == t %}aria-current="true"{% endif %}>{{ t }}</a>
+          {% endfor %}
+        </div>
       </div>
     </div>
+    <div class="dtoj-feed">
     {% for p in posts %}
-    <a class="dtoj-card" href="{{ url('dtoj_community_detail', id=p.id) }}" style="display:block;margin-bottom:12px">
+    <a class="dtoj-card" href="{{ url('dtoj_community_detail', id=p.id) }}">
       <h2>{{ p.title }}</h2>
       <p class="dtoj-meta">{{ p.author }} · {{ p.time }}</p>
       <p>
@@ -23,6 +27,8 @@
       <p class="dtoj-meta">浏览 {{ p.views }} · 点赞 {{ p.likes }}</p>
     </a>
     {% endfor %}
+    </div>
+    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}
