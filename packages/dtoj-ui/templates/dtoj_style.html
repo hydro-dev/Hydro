@@ -104,11 +104,11 @@
   .dtoj-page .data-table,
   .dtoj-skin .data-table { font-variant-numeric: tabular-nums; }
   .dtoj-status, .dtoj-level { display: inline-block; padding: 0 var(--s2); border-radius: 4px; font-weight: 600; }
-  .dtoj-status[data-status="通过"] { background: #e5f2ea; color: #145c32; }
-  .dtoj-status[data-status="部分分"],
-  .dtoj-status[data-status="运行中"] { background: #f8f1dc; color: #6a4b00; }
-  .dtoj-status[data-status="答案错误"],
-  .dtoj-status[data-status="编译错误"] { background: #f8e6e6; color: #8a1f1f; }
+  .dtoj-status[data-status="pass"] { background: #e5f2ea; color: #145c32; }
+  .dtoj-status[data-status="progress"],
+  .dtoj-status[data-status="pending"] { background: #f8f1dc; color: #6a4b00; }
+  .dtoj-status[data-status="fail"] { background: #f8e6e6; color: #8a1f1f; }
+  .dtoj-status a { color: inherit; text-decoration: none; }
   .dtoj-level[data-level="入门"] { background: #e5f2ea; color: #145c32; }
   .dtoj-level[data-level="普及"] { background: #e7f0f6; color: #143044; }
   .dtoj-level[data-level="提高"] { background: #f8f1dc; color: #6a4b00; }

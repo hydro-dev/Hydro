@@ -1,5 +1,6 @@
 {% set page_name = "dtoj_problems" %}
 {% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
@@ -7,7 +8,7 @@
     <div class="section">
       <div class="section__header"><h1 class="section__title">题库</h1></div>
       <div class="section__body no-padding">
-        <p class="dtoj-note">插件自己的列表示例。原来的题库仍在 /p。</p>
+        <p class="dtoj-note">名称、标签、难度来自现有题库。原来的题库仍在 /p。</p>
         <div class="dtoj-table-scroll">
         <table class="data-table">
           <thead>
@@ -20,14 +21,15 @@
           <tbody>
             {% for p in problems %}
             <tr>
-              <td>{{ p.name }}</td>
+              <td><a href="{{ url('problem_detail', pid=p.link) }}">{{ p.title }}</a></td>
               <td>{% for tag in p.tags %}<span class="dtoj-tag">{{ tag }}</span>{% endfor %}</td>
-              <td><span class="dtoj-level" data-level="{{ p.level }}">{{ p.level }}</span></td>
+              <td><span class="dtoj-level">{{ p.level }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
         </div>
+        {{ paginator.render(page, pages) }}
       </div>
     </div>
     {% include "dtoj_library.html" %}

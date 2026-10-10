@@ -1,5 +1,6 @@
 {% set page_name = "dtoj_discuss" %}
 {% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row dtoj-skin">
@@ -8,8 +9,16 @@
       <div class="section__header"><h1 class="section__title">分类</h1></div>
       <div class="section__body">
         <ul class="dtoj-tree">
-          {% for n in nodes %}
-          <li><a class="{% if node == n %}on{% endif %}" href="{{ url('discussion_main', query={node: n}) }}" {% if node == n %}aria-current="true"{% endif %}>{{ n }}</a></li>
+          <li><a class="{% if not node %}on{% endif %}" href="{{ url('discussion_main') }}" {% if not node %}aria-current="true"{% endif %}>全部</a></li>
+          {% for g in groups %}
+          <li>
+            <p class="dtoj-label">{{ g.category }}</p>
+            <ul class="dtoj-tree">
+              {% for n in g.nodes %}
+              <li><a class="{% if node == n.id %}on{% endif %}" href="{{ url('discussion_main', query={node: n.id}) }}" {% if node == n.id %}aria-current="true"{% endif %}>{{ n.id }}</a></li>
+              {% endfor %}
+            </ul>
+          </li>
           {% endfor %}
         </ul>
       </div>
@@ -19,15 +28,16 @@
     <div class="section">
       <div class="section__header"><h1 class="section__title">讨论</h1></div>
       <div class="section__body">
-        <p class="dtoj-note">当前高亮：{{ node }}。换分类只改高亮，列表不跟着变。</p>
+        <p class="dtoj-note">左侧是站内讨论节点。点一个节点，列表只留该节点下的帖子。</p>
         <div class="dtoj-feed">
         {% for t in threads %}
-        <div class="dtoj-card dtoj-static">
+        <a class="dtoj-card{% if t.highlight %} dtoj-feature{% endif %}" href="{{ url('discussion_detail', did=t.id) }}">
           <h3>{{ t.title }}</h3>
-          <p class="dtoj-meta">{{ t.author }} · {{ t.time }} · {{ t.node }} · {{ t.replies }} 条回复</p>
-        </div>
+          <p class="dtoj-meta">{{ t.author }} · {{ datetimeSpan(t.time)|safe }} · {{ t.node }} · {{ t.replies }} 条回复 · {{ t.views }} 次浏览</p>
+        </a>
         {% endfor %}
         </div>
+        {{ paginator.render(page, pages, add_qs=qs) }}
       </div>
     </div>
     {% include "dtoj_library.html" %}
