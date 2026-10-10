@@ -3,31 +3,37 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns dtoj-page">
-    <div class="section">
-      <div class="section__header"><h1 class="section__title">{{ course.title }}</h1></div>
-      <div class="section__body dtoj-prose">
-        <p>{{ course.brief }}</p>
-        <p class="dtoj-meta">{{ course.chapters }} 章 · {{ course.problems }} 道练习</p>
-        <p class="dtoj-note">章节只列出标题和题号，没有讲义正文。</p>
-        <ol class="dtoj-chapters">
-          {% for ch in chapters %}
-          <li>
-            第 {{ ch.index }} 章 {{ ch.title }}
-            {% if ch.pids.length %}
-            <span class="dtoj-meta">题号
-              {% for pid in ch.pids %}
-              <a href="{{ url('problem_detail', pid=pid) }}">{{ pid }}</a>
-              {% endfor %}
-            </span>
-            {% endif %}
-          </li>
-          {% endfor %}
-        </ol>
-        <p class="dtoj-back"><a href="{{ url('training_main') }}">返回训练</a></p>
-      </div>
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>{{ course.title }}</h2>
+            <p>{{ course.chapters }} 章 · {{ course.problems }} 道练习</p>
+          </div>
+        </header>
+        <div class="dtoj-pad">
+          <p>{{ course.brief }}</p>
+          <p>章节只列出标题和题号，没有讲义正文。</p>
+          <ol class="dtoj-chapters">
+            {% for ch in chapters %}
+            <li>
+              第 {{ ch.index }} 章 {{ ch.title }}
+              {% if ch.pids.length %}
+              <span class="dtoj-meta">题号
+                {% for pid in ch.pids %}
+                <a href="{{ url('problem_detail', pid=pid) }}">{{ pid }}</a>
+                {% endfor %}
+              </span>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ol>
+          <p class="dtoj-back"><a href="{{ url('training_main') }}">返回训练</a></p>
+        </div>
+      </article>
+      {% include "dtoj_library.html" %}
     </div>
-    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

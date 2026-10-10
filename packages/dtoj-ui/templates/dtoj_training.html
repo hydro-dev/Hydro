@@ -4,73 +4,91 @@
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
-  <div class="medium-12 columns dtoj-page">
-    <div class="section">
-      <div class="section__header"><h1 class="section__title">热门课程</h1></div>
-      <div class="section__body">
-        <div class="dtoj-scroll">
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>热门课程</h2>
+          </div>
+        </header>
+        <div class="dtoj-row">
           {% for c in hot %}
-          <a class="dtoj-card" href="{{ url('dtoj_training_detail', tid=c.id) }}">
+          <a class="dtoj-tile" href="{{ url('dtoj_training_detail', tid=c.id) }}">
             <h3>{{ c.title }}</h3>
-            <p class="dtoj-muted">{{ c.brief }}</p>
-            <p class="dtoj-meta">{{ c.chapters }} 章 · {{ c.problems }} 道练习</p>
+            <p>{{ c.brief }}</p>
+            <p>{{ c.chapters }} 章 · {{ c.problems }} 道练习</p>
           </a>
+          {% else %}
+          <p class="dtoj-pad">没有置顶课程。</p>
           {% endfor %}
         </div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section__header"><h1 class="section__title">筛选</h1></div>
-      <div class="section__body">
-        <p class="dtoj-note">方向和类型没有对应字段，点选只切换高亮。标题搜索会筛选列表。</p>
-        <form method="get">
-          {% if direction %}<input type="hidden" name="direction" value="{{ direction }}">{% endif %}
-          {% if kind %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
-          <label>标题<input class="textbox" name="q" value="{{ q }}"></label>
-          <button type="submit" class="button">搜索</button>
-        </form>
-        <p class="dtoj-label">方向</p>
-        <div class="dtoj-chips">
-          <a class="dtoj-chip{% if not direction %} on{% endif %}" href="{{ url('training_main', query={kind: kind, q: q}) }}" {% if not direction %}aria-current="true"{% endif %}>全部</a>
-          {% for d in directions %}
-          <a class="dtoj-chip{% if direction == d %} on{% endif %}" href="{{ url('training_main', query={direction: d, kind: kind, q: q}) }}" {% if direction == d %}aria-current="true"{% endif %}>{{ d }}</a>
-          {% endfor %}
+      </article>
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>筛选</h2>
+            <p>方向和类型没有对应字段，点选只切换高亮。标题搜索会筛选列表。</p>
+          </div>
+        </header>
+        <div class="dtoj-pad">
+          <form method="get" class="dtoj-join">
+            {% if direction %}<input type="hidden" name="direction" value="{{ direction }}">{% endif %}
+            {% if kind %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
+            <label class="dtoj-field">标题<input class="textbox" name="q" value="{{ q }}"></label>
+            <button type="submit" class="dtoj-go">搜索</button>
+          </form>
+          <p class="dtoj-count-tag">方向</p>
+          <div class="dtoj-chips">
+            <a class="dtoj-chip{% if not direction %} on{% endif %}" href="{{ url('training_main', query={kind: kind, q: q}) }}" {% if not direction %}aria-current="true"{% endif %}>全部</a>
+            {% for d in directions %}
+            <a class="dtoj-chip{% if direction == d %} on{% endif %}" href="{{ url('training_main', query={direction: d, kind: kind, q: q}) }}" {% if direction == d %}aria-current="true"{% endif %}>{{ d }}</a>
+            {% endfor %}
+          </div>
+          <p class="dtoj-count-tag">类型</p>
+          <div class="dtoj-chips">
+            <a class="dtoj-chip{% if not kind %} on{% endif %}" href="{{ url('training_main', query={direction: direction, q: q}) }}" {% if not kind %}aria-current="true"{% endif %}>全部</a>
+            {% for k in kinds %}
+            <a class="dtoj-chip{% if kind == k %} on{% endif %}" href="{{ url('training_main', query={direction: direction, kind: k, q: q}) }}" {% if kind == k %}aria-current="true"{% endif %}>{{ k }}</a>
+            {% endfor %}
+          </div>
         </div>
-        <p class="dtoj-label">类型</p>
-        <div class="dtoj-chips">
-          <a class="dtoj-chip{% if not kind %} on{% endif %}" href="{{ url('training_main', query={direction: direction, q: q}) }}" {% if not kind %}aria-current="true"{% endif %}>全部</a>
-          {% for k in kinds %}
-          <a class="dtoj-chip{% if kind == k %} on{% endif %}" href="{{ url('training_main', query={direction: direction, kind: k, q: q}) }}" {% if kind == k %}aria-current="true"{% endif %}>{{ k }}</a>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section__header">
-        <h1 class="section__title">全部课程</h1>
-      </div>
-      <div class="section__body">
-        <div class="dtoj-grid">
+      </article>
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>全部课程</h2>
+          </div>
+        </header>
+        <div class="dtoj-room">
           {% for c in courses %}
-          <a class="dtoj-card" href="{{ url('dtoj_training_detail', tid=c.id) }}">
+          <a class="dtoj-tile" href="{{ url('dtoj_training_detail', tid=c.id) }}">
             <h3>{{ c.title }}</h3>
-            <p class="dtoj-muted">{{ c.brief }}</p>
-            <p class="dtoj-meta">{{ c.chapters }} 章 · {{ c.problems }} 道练习</p>
+            <p>{{ c.brief }}</p>
+            <p>{{ c.chapters }} 章 · {{ c.problems }} 道练习</p>
           </a>
+          {% else %}
+          <p class="dtoj-pad">没有课程。</p>
           {% endfor %}
         </div>
         {{ paginator.render(page, pages, add_qs=qs) }}
-      </div>
+      </article>
+      <article class="dtoj-panel">
+        <header class="dtoj-panel-head">
+          <div>
+            <h2>密钥加入</h2>
+            <p>不校验密钥，按钮不会提交。</p>
+          </div>
+        </header>
+        <div class="dtoj-pad">
+          <div class="dtoj-join">
+            <input class="textbox" type="text" placeholder="课程密钥" disabled>
+            <button type="button" class="dtoj-sign" disabled>加入课程</button>
+          </div>
+        </div>
+      </article>
+      {% include "dtoj_library.html" %}
     </div>
-    <div class="section">
-      <div class="section__header"><h1 class="section__title">密钥加入</h1></div>
-      <div class="section__body">
-        <input class="textbox" type="text" placeholder="课程密钥" disabled>
-        <button type="button" class="button" disabled>加入课程</button>
-        <p class="dtoj-muted">不校验密钥，按钮不会提交。</p>
-      </div>
-    </div>
-    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

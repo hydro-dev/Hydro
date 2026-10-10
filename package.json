@@ -65,6 +65,7 @@
         "wtfnode": "^0.10.1"
     },
     "resolutions": {
+        "content-disposition": "1.0.1",
         "mongodb": "^7.0.0",
         "@types/express-serve-static-core": "patch:@types/express-serve-static-core@npm%3A4.19.6#~/.yarn/patches/@types-express-serve-static-core-npm-4.19.6-cc0017aaf4.patch"
     }

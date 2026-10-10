@@ -72,9 +72,25 @@ export const posts = [
 ];
 
 export const countdowns = [
-    { name: 'CSP-J', days: 86 },
-    { name: 'CSP-S', days: 86 },
-    { name: 'NOIP', days: 142 },
+    {
+        split: true,
+        left: { tag: 'CSP-J/S 2026', title: '第一轮', state: '已结束', when: '2026-09-18' },
+        right: { tag: 'CSP-J/S 2027', title: '第一轮 · 预估', days: 343, when: '预计 2027-09-18' },
+    },
+    {
+        tone: 'gold',
+        tag: 'CSP-J/S 2026',
+        title: '第二轮',
+        days: 20,
+        note: '距第二轮还剩 20 天（示例）',
+    },
+    {
+        tone: 'blue',
+        tag: 'NOIP 2026',
+        title: '正式比赛 · 11 月 28 日',
+        days: 49,
+        note: '距 NOIP 2026 还剩 49 天（示例）',
+    },
 ];
 
 export const activities = [

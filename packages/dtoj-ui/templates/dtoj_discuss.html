@@ -3,44 +3,55 @@
 {% import "components/paginator.html" as paginator with context %}
 {% block content %}
 {% include "dtoj_style.html" %}
-<div class="row dtoj-skin">
-  <div class="medium-3 columns">
-    <div class="section">
-      <div class="section__header"><h1 class="section__title">分类</h1></div>
-      <div class="section__body">
-        <ul class="dtoj-tree">
-          <li><a class="{% if not node %}on{% endif %}" href="{{ url('discussion_main') }}" {% if not node %}aria-current="true"{% endif %}>全部</a></li>
-          {% for g in groups %}
-          <li>
-            <p class="dtoj-label">{{ g.category }}</p>
+<div class="row">
+  <div class="medium-12 columns dtoj-page dtoj-home">
+    <div class="dtoj-shell">
+      <div class="dtoj-board is-side">
+        <article class="dtoj-panel">
+          <header class="dtoj-panel-head">
+            <div>
+              <h2>分类</h2>
+            </div>
+          </header>
+          <div class="dtoj-pad">
             <ul class="dtoj-tree">
-              {% for n in g.nodes %}
-              <li><a class="{% if node == n.id %}on{% endif %}" href="{{ url('discussion_main', query={node: n.id}) }}" {% if node == n.id %}aria-current="true"{% endif %}>{{ n.id }}</a></li>
+              <li><a class="{% if not node %}on{% endif %}" href="{{ url('discussion_main') }}" {% if not node %}aria-current="true"{% endif %}>全部</a></li>
+              {% for g in groups %}
+              <li>
+                <p class="dtoj-count-tag">{{ g.category }}</p>
+                <ul class="dtoj-tree">
+                  {% for n in g.nodes %}
+                  <li><a class="{% if node == n.id %}on{% endif %}" href="{{ url('discussion_main', query={node: n.id}) }}" {% if node == n.id %}aria-current="true"{% endif %}>{{ n.id }}</a></li>
+                  {% endfor %}
+                </ul>
+              </li>
               {% endfor %}
             </ul>
-          </li>
-          {% endfor %}
-        </ul>
+          </div>
+        </article>
+        <article class="dtoj-panel">
+          <header class="dtoj-panel-head">
+            <div>
+              <h2>讨论</h2>
+              <p>左侧是站内讨论节点。点一个节点，列表只留该节点下的帖子。</p>
+            </div>
+          </header>
+          <div class="dtoj-room">
+            {% for t in threads %}
+            <a class="dtoj-tile" href="{{ url('discussion_detail', did=t.id) }}">
+              <h3>{{ t.title }}</h3>
+              <p>{{ t.author }} · {{ datetimeSpan(t.time)|safe }}</p>
+              <p>{{ t.node }} · {{ t.replies }} 条回复 · {{ t.views }} 次浏览</p>
+            </a>
+            {% else %}
+            <p class="dtoj-pad">没有帖子。</p>
+            {% endfor %}
+          </div>
+          {{ paginator.render(page, pages, add_qs=qs) }}
+        </article>
       </div>
+      {% include "dtoj_library.html" %}
     </div>
-  </div>
-  <div class="medium-9 columns">
-    <div class="section">
-      <div class="section__header"><h1 class="section__title">讨论</h1></div>
-      <div class="section__body">
-        <p class="dtoj-note">左侧是站内讨论节点。点一个节点，列表只留该节点下的帖子。</p>
-        <div class="dtoj-feed">
-        {% for t in threads %}
-        <a class="dtoj-card{% if t.highlight %} dtoj-feature{% endif %}" href="{{ url('discussion_detail', did=t.id) }}">
-          <h3>{{ t.title }}</h3>
-          <p class="dtoj-meta">{{ t.author }} · {{ datetimeSpan(t.time)|safe }} · {{ t.node }} · {{ t.replies }} 条回复 · {{ t.views }} 次浏览</p>
-        </a>
-        {% endfor %}
-        </div>
-        {{ paginator.render(page, pages, add_qs=qs) }}
-      </div>
-    </div>
-    {% include "dtoj_library.html" %}
   </div>
 </div>
 {% endblock %}

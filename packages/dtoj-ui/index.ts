@@ -107,10 +107,15 @@ class DtojDataHandler extends DtojPageHandler {
 
 class DtojHomeHandler extends DtojPageHandler {
     async get() {
+        const u = this.user;
+        const guest = !u || !u._id;
+        const name = guest ? '示例同学' : String(u.uname || '示例同学');
         this.view('dtoj_home', {
             brand,
             coin: 256,
             streak: 6,
+            who: name,
+            mark: name.slice(0, 1),
             countdowns,
             activities,
             announcements,
