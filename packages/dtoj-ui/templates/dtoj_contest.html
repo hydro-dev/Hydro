@@ -1,5 +1,6 @@
 {% set page_name = "dtoj_contest" %}
 {% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
 {% block content %}
 {% include "dtoj_style.html" %}
 <div class="row">
@@ -7,7 +8,7 @@
     <div class="section">
       <div class="section__header"><h1 class="section__title">筛选</h1></div>
       <div class="section__body">
-        <p class="dtoj-note">标签只切换高亮，卡片列表不跟着变。</p>
+        <p class="dtoj-note">这些标签没有对应字段，点选只切换高亮，卡片列表不跟着变。</p>
         <div class="dtoj-chips">
           {% for t in tabs %}
           <a class="dtoj-chip{% if tab == t %} on{% endif %}" href="{{ url('contest_main', query={tab: t}) }}" {% if tab == t %}aria-current="true"{% endif %}>{{ t }}</a>
@@ -15,23 +16,26 @@
         </div>
       </div>
     </div>
+    {% if featured %}
     <a class="dtoj-card dtoj-feature" href="{{ url('dtoj_contest_detail', tid=featured.id) }}">
       <h2>{{ featured.title }}</h2>
-      <p class="dtoj-meta">主推 · {{ featured.tab }} · 组别 {{ featured.group }} · 时长 {{ featured.hours }} 小时 · 题量 {{ featured.problems }} · 人数 {{ featured.people }}</p>
+      <p class="dtoj-meta">组别 {{ featured.group }} · 时长 {{ featured.hours }} 小时 · 题量 {{ featured.problems }} · 人数 {{ featured.people }}</p>
       <p class="dtoj-meta">赛制 {{ featured.rule }} · {{ featured.access }}</p>
-      <p class="dtoj-meta">{{ featured.begin }} 至 {{ featured.end }}</p>
+      <p class="dtoj-meta">{% if featured.beginAt %}{{ datetimeSpan(featured.beginAt, false, 'YYYY-M-D H:mm')|safe }}{% else %}—{% endif %} 至 {% if featured.endAt %}{{ datetimeSpan(featured.endAt, false, 'YYYY-M-D H:mm')|safe }}{% else %}—{% endif %}</p>
     </a>
+    {% endif %}
     <div class="dtoj-grid">
       {% for c in contests %}
       <a class="dtoj-card" href="{{ url('dtoj_contest_detail', tid=c.id) }}">
         <h3>{{ c.title }}</h3>
-        <p class="dtoj-meta">{{ c.tab }} · 组别 {{ c.group }}</p>
+        <p class="dtoj-meta">组别 {{ c.group }}</p>
         <p class="dtoj-meta">时长 {{ c.hours }} 小时 · 题量 {{ c.problems }} · 人数 {{ c.people }}</p>
         <p class="dtoj-meta">赛制 {{ c.rule }} · {{ c.access }}</p>
-        <p class="dtoj-meta">{{ c.begin }} 至 {{ c.end }}</p>
+        <p class="dtoj-meta">{% if c.beginAt %}{{ datetimeSpan(c.beginAt, false, 'YYYY-M-D H:mm')|safe }}{% else %}—{% endif %} 至 {% if c.endAt %}{{ datetimeSpan(c.endAt, false, 'YYYY-M-D H:mm')|safe }}{% else %}—{% endif %}</p>
       </a>
       {% endfor %}
     </div>
+    {{ paginator.render(page, pages, add_qs=qs) }}
     {% include "dtoj_library.html" %}
   </div>
 </div>
