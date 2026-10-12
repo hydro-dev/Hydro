@@ -1,0 +1,44 @@
+{% import "components/user.html" as user with context %}
+{% import "components/paginator.html" as paginator with context %}
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('manage_blog') }}</h1>
+  </div>
+  <div class="section__body no-padding">
+    {% if not ddocs.length %}
+      <p class="placeholder">{{ _('No blogs yet.') }}</p>
+    {% else %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ _('blog_id') }}</th>
+            <th>{{ _('Owner') }}</th>
+            <th>{{ _('Title') }}</th>
+            <th>{{ _('blog_replies') }}</th>
+            <th>{{ _('blog_views') }}</th>
+            <th>{{ _('blog_updated') }}</th>
+            <th>{{ _('blog_actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- for ddoc in ddocs -%}
+          {% set udoc = udocs[ddoc.owner] %}
+          <tr>
+            <td>{{ ddoc.docId }}</td>
+            <td>{% if udoc %}{{ user.render_inline(udoc, avatar=false, modbadge=false) }}{% else %}{{ ddoc.owner }}{% endif %}</td>
+            <td><a href="{{ url('blog_detail', uid=ddoc.owner, did=ddoc.docId) }}" class="typo-a" data-emoji-enabled>{{ ddoc.title }}</a></td>
+            <td>{{ ddoc.nReply }}</td>
+            <td>{{ ddoc.views }}</td>
+            <td>{{ datetimeSpan(ddoc.updateAt)|safe }}</td>
+            <td><a href="{{ url('blog_edit', uid=ddoc.owner, did=ddoc.docId) }}" class="typo-a">{{ _('Edit') }}</a></td>
+          </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+      {{ paginator.render(page, pcount) }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
