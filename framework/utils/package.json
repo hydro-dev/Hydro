@@ -14,9 +14,9 @@
     },
     "dependencies": {
         "@hydrooj/register": "workspace:^",
-        "cac": "^7.0.0",
+        "cac": "^7.1.0",
         "fs-extra": "^11.4.1",
-        "js-yaml": "^5.4.2",
+        "js-yaml": "^5.4.3",
         "reggol": "^2.1.0",
         "search-query-parser": "^1.6.0",
         "systeminformation": "^5.33.15"

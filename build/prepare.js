@@ -70,8 +70,7 @@ for (const name of ['plugins', 'modules']) {
     if (!fs.existsSync(path.resolve(process.cwd(), name))) {
         fs.mkdirSync(path.resolve(process.cwd(), name));
     }
-    // Write an empty file to make eslint happy
-    fs.writeFileSync(path.resolve(process.cwd(), name, 'nop.ts'), 'export default {};\n');
+    fs.writeFileSync(path.resolve(process.cwd(), name, 'nop.ts'), 'export default {};\n// For prettier\nexport const format = (a: any) => a;\n');
     fs.writeFileSync(
         path.resolve(process.cwd(), name, 'vue-types.d.ts'),
         'declare module "*.vue" {\n  const content: any;\n  export default content;\n}\n',

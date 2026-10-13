@@ -42,7 +42,7 @@ export default class Editor extends DOMAttachedObject {
     const {
       onChange, language = 'markdown',
       theme = `vs-${getTheme()}`,
-      model = `file://model-${Math.random().toString(16)}`,
+      model = `file://model-${Math.random().toString(16).slice(2)}.${language}`,
       autoResize = true, autoLayout = true,
       hide = [], lineNumbers = 'on',
     } = this.options;

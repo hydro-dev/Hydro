@@ -6,18 +6,18 @@ import { forwardRef } from 'react';
 import { api } from 'vj/utils';
 
 const cache = {};
-let pending = [];
+const pending = new Set<string>();
 let callbacks = [];
 const dispatch = _.debounce(async () => {
-  const targets = pending;
-  pending = [];
+  const targets = Array.from(pending);
+  pending.clear();
   const users = await api('users', { auto: targets }, ['_id', 'uname', 'displayName']);
   for (const user of users) cache[user._id] = user;
   for (const callback of callbacks) callback();
   callbacks = [];
 }, 300);
 const loadUsers = async (ids: string[]) => {
-  pending.push(...ids);
+  for (const id of ids) pending.add(id);
   dispatch();
   await new Promise((resolve) => callbacks.push(resolve));
   return ids.map((id) => cache[id]);

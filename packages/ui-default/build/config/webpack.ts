@@ -291,6 +291,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       }),
       new ExtractCssPlugin({
         filename: `[name]-${version}.css?[fullhash:6]`,
+        ignoreOrder: true,
       }),
       new WebpackManifestPlugin({}),
       new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$)/ }),
