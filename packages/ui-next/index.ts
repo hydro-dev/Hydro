@@ -286,7 +286,6 @@ export async function apply(ctx: Context) {
             await buildVersions();
         });
         ctx.on('app/i18n/update', buildI18n);
-        ctx.on('system/setting-loaded', buildCodeLangs);
         ctx.on('system/setting', buildCodeLangs);
 
         const vite = await createServer({
@@ -394,8 +393,8 @@ export async function apply(ctx: Context) {
         };
         ctx.on('app/watch/change', triggerHotUpdate);
         ctx.on('app/watch/unlink', triggerHotUpdate);
-        ctx.on('system/setting-loaded', buildCodeLangs);
         ctx.on('system/setting', debouncedBuild);
         ctx.on('app/i18n/update', debouncedBuild);
     }
+    ctx.inject(['model:setting'], buildCodeLangs);
 }
