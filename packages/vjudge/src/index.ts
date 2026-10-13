@@ -184,6 +184,8 @@ declare module 'cordis' {
 }
 
 class VJudgeService extends Service {
+    static inject = ['model:setting']; // Make sure langs are loaded before any consumer starts
+
     constructor(ctx: Context) {
         super(ctx, 'vjudge');
     }
@@ -297,9 +299,13 @@ export async function apply(ctx: Context) {
             },
         ]);
     });
-    ctx.inject(['vjudge', 'model:setting'], async (c) => {
+    ctx.inject(['vjudge'], async (c) => {
         for (const [k, v] of Object.entries(providers)) {
-            if (!SystemModel.get(`vjudge.builtin-${k}-disable`)) c.vjudge.addProvider(k, v);
+            try {
+                if (!SystemModel.get(`vjudge.builtin-${k}-disable`)) c.vjudge.addProvider(k, v);
+            } catch (e) {
+                logger.error(`Error adding provider ${k}: ${e}`);
+            }
         }
         c.inject(['check'], ({ check }) => {
             check.addChecker('Vjudge', async (_ctx, log, warn, error) => {
