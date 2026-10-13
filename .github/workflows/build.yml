@@ -47,7 +47,7 @@ jobs:
       run: |
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
-        yarn set version 4.13.0
+        yarn set version 4.18.1
         yarn
         yarn dedupe
         node build/prepare.js
