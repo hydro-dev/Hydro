@@ -9,7 +9,8 @@ We welcome contributions, including those developed with the assistance of gener
    4. Repeated violations will lead to an account block.
 2. Authentic engagement. The pull request process is collaborative and iterative. Contributors are expected to actively engage with reviewer feedback.
 3. Consistency with existing style. In the context of Generative AI, this particularly means conveying information (comments, documentation, etc) in a style the reviewer and user will understand.
-4. Always keep things simple. Use minimal changes to do the job.
+4. Always keep things simple (including commit messages). Use minimal changes to do the job.
+5. NEVER cite any agents in the commit co-author, but you are allowed to state them in the pull request description.
 
 ## Source Code
 
