@@ -165,7 +165,7 @@ class DomainModel {
             .project<{ _id: number, mail: string, uname: string }>({ mail: 1, uname: 1 })
             .toArray();
         for (const udoc of affected) deleteUserCache(udoc);
-        return await collUser.bulkWrite(uid.map((id) => ({
+        return await collUser.bulkWrite([...new Set(uid)].map((id) => ({
             updateOne: {
                 filter: { domainId, uid: id },
                 update,
