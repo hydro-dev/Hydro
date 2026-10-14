@@ -160,11 +160,18 @@ class DomainModel {
             deleteUserCache(udoc);
             return res;
         }
+        if (!uid.length) return undefined;
         const affected = await UserModel.getMulti({ _id: { $in: uid } })
             .project<{ _id: number, mail: string, uname: string }>({ mail: 1, uname: 1 })
             .toArray();
         for (const udoc of affected) deleteUserCache(udoc);
-        return await collUser.updateMany({ domainId, uid: { $in: uid } }, update, { upsert: true });
+        return await collUser.bulkWrite([...new Set(uid)].map((id) => ({
+            updateOne: {
+                filter: { domainId, uid: id },
+                update,
+                upsert: true,
+            },
+        })));
     }
 
     static async setJoin(domainId: string, uid: MaybeArray<number>, join: boolean) {
