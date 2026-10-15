@@ -230,6 +230,7 @@ export default class Editor extends DOMAttachedObject {
           setTimeout(debouncedTrigger, 100);
         }}
         onUploadImg={async (files, callback) => {
+          if (!files.length) return null;
           let ext: string;
           const matches = files[0].type.match(/^image\/(png|jpg|jpeg|gif)$/i);
           if (matches) {
