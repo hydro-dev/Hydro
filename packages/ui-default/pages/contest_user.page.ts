@@ -61,7 +61,7 @@ const page = new NamedPage('contest_user', () => {
         pjax.request({ push: false });
       }
     } catch (error) {
-      Notification.error([error.message, ...error.params].join(' '));
+      Notification.error([error.message, ...(error.params || [])].join(' '));
     }
   }
 
