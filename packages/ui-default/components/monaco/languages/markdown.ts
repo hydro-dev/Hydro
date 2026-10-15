@@ -62,7 +62,7 @@ monaco.languages.registerCodeLensProvider('markdown', {
 monaco.languages.registerCompletionItemProvider('markdown', {
   async provideCompletionItems(model, position) {
     const word = model.getWordAtPosition(position);
-    if (word.word.length < 2) return { suggestions: [] };
+    if (!word || word.word.length < 2) return { suggestions: [] };
     const prefix = model.getValueInRange({
       startLineNumber: position.lineNumber,
       endLineNumber: position.lineNumber,
