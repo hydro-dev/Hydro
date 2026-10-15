@@ -227,7 +227,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     let cnt = 0;
     const reg = /\{\{ (input|select|multiselect|textarea|dropdown)\(\d+(-\d+)?\)(?:\[([^\]]*)\])? \}\}/g;
     $('.problem-content .typo').children().each((i, e) => {
-      if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
+      if (e.tagName === 'PRE' && !e.children[0]?.className.includes('#input')) return;
       const questions = [];
       let q;
       while (q = reg.exec(e.textContent)) questions.push(q); // eslint-disable-line no-cond-assign
