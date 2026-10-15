@@ -80,6 +80,7 @@ function addInvisibles(grammar) {
 
 function handlerInvisiblesToken(tokens, name) {
   const value = tokens[name];
+  if (!value) return;
   const type = Prism.util.type(value);
   if (type === 'RegExp') {
     const inside = {};
