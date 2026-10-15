@@ -28,6 +28,7 @@ const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], async 
 
   async function update() {
     const val = $($('.select.filter')).val();
+    if (val == null) return;
     if (val === 'all') {
       $('.data-table tbody tr').show();
       (await read()).forEach((uid) => $(`.star.user--${uid}`).closest('tr').addClass('star-highlight'));
