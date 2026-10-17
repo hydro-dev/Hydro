@@ -3,9 +3,6 @@ declare module '*.svg?react' {
   const content: ComponentType;
   export default content;
 }
-
-// webpack runtime free variable (mapped to __webpack_require__.p)
-declare var __webpack_public_path__: string;
 declare module '*.vue' {
   export default {} as any;
 }
