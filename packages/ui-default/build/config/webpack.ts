@@ -124,10 +124,10 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     output: {
       path: root('public'),
       publicPath: '/', // overwrite in entry.js
-      // no workerPublicPath: worker URLs resolve against the runtime public
-      // path (UiContext.cdn_prefix, set in entry.js) so monaco workers and the
-      // chunks they importScripts load from the CDN; same-origin workers
-      // (messages) pin the path back to '/' at their construction site.
+      // Workers stay same-origin: classic worker script requests carry no
+      // Origin header, so cross-origin CDN CORS (echo-based) never applies.
+      // Self-contained same-origin workers keep plain HTTP caching.
+      workerPublicPath: '/',
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,

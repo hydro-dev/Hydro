@@ -13,27 +13,83 @@ import { i18n, request } from 'vj/utils';
 
 export { renderMarkdown } from 'monaco-editor/esm/vs/base/browser/markdownRenderer';
 
+// Classic worker *entry* scripts are fetched in same-origin mode — a
+// cross-origin CDN can never serve them (verified: even ACAO * fails). But
+// importScripts inside a worker is CORS-mode and CDN-friendly. So: emit the
+// entries through these literal constructors (webpack needs the exact
+// `new Worker(new URL(literal, import.meta.url))` shape; `name` pins a stable
+// manifest key), then at runtime fetch the tiny same-origin entry (~2KB),
+// rewrite its importScripts base to the CDN, and construct a blob worker.
+// Big shared chunks (monaco core, MBs) all load from the CDN.
+const EMITTERS: Record<string, () => Worker> = {
+  editorWorkerService: () => new Worker(
+    new URL('monaco-editor/editor/editor.worker.js', import.meta.url),
+    { type: 'module', name: 'editorWorker' },
+  ),
+  yaml: () => new Worker(
+    new URL('monaco-yaml/yaml.worker.js', import.meta.url),
+    { type: 'module', name: 'yamlWorker' },
+  ),
+  typescript: () => new Worker(
+    new URL('monaco-editor/languages/features/typescript/ts.worker.js', import.meta.url),
+    { type: 'module', name: 'tsWorker' },
+  ),
+  css: () => new Worker(
+    new URL('monaco-editor/languages/features/css/css.worker.js', import.meta.url),
+    { type: 'module', name: 'cssWorker' },
+  ),
+  html: () => new Worker(
+    new URL('monaco-editor/languages/features/html/html.worker.js', import.meta.url),
+    { type: 'module', name: 'htmlWorker' },
+  ),
+  json: () => new Worker(
+    new URL('monaco-editor/languages/features/json/json.worker.js', import.meta.url),
+    { type: 'module', name: 'jsonWorker' },
+  ),
+};
+void EMITTERS;
+
+const WORKER_NAMES: Record<string, string> = {
+  editorWorkerService: 'editorWorker',
+  yaml: 'yamlWorker',
+  typescript: 'tsWorker',
+  javascript: 'tsWorker',
+  css: 'cssWorker',
+  scss: 'cssWorker',
+  less: 'cssWorker',
+  html: 'htmlWorker',
+  handlebars: 'htmlWorker',
+  razor: 'htmlWorker',
+  json: 'jsonWorker',
+};
+
+let manifestPromise: Promise<Record<string, string>> | null = null;
+function getManifest() {
+  // Pragma: no-cache keeps the service worker from serving a stale manifest
+  manifestPromise ||= fetch(`${location.origin}/manifest.json`, { headers: { Pragma: 'no-cache' } })
+    .then((r) => r.json());
+  return manifestPromise;
+}
+
 self.MonacoEnvironment = {
-  getWorker(workerId: string, label: string): Worker {
-    if (label === 'editorWorkerService') {
-      return new Worker(new URL('monaco-editor/editor/editor.worker.js', import.meta.url), { type: 'module' });
-    }
-    if (label === 'yaml') {
-      return new Worker(new URL('monaco-yaml/yaml.worker.js', import.meta.url), { type: 'module' });
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return new Worker(new URL('monaco-editor/languages/features/typescript/ts.worker.js', import.meta.url), { type: 'module' });
-    }
-    if (['css', 'scss', 'less'].includes(label)) {
-      return new Worker(new URL('monaco-editor/languages/features/css/css.worker.js', import.meta.url), { type: 'module' });
-    }
-    if (['html', 'handlebars', 'razor'].includes(label)) {
-      return new Worker(new URL('monaco-editor/languages/features/html/html.worker.js', import.meta.url), { type: 'module' });
-    }
-    if (label === 'json') {
-      return new Worker(new URL('monaco-editor/languages/features/json/json.worker.js', import.meta.url), { type: 'module' });
-    }
-    throw new Error(`Unknown monaco worker label: ${label}`);
+  // Both call sites (monaco internal createWebWorker / WebWorkerService)
+  // accept promise-like worker descriptors.
+  async getWorker(workerId: string, label: string): Promise<Worker> {
+    const name = WORKER_NAMES[label];
+    if (!name) throw new Error(`Unknown monaco worker label: ${label}`);
+    const manifest = await getManifest();
+    const file = manifest[`${name}.js`];
+    if (!file) throw new Error(`Worker chunk ${name}.js not found in manifest`);
+    const code = await (await fetch(new URL(file, location.origin), { headers: { Pragma: 'no-cache' } })).text();
+    // The emitted worker runtime prefixes shared-chunk names with '/' —
+    // inside a blob worker that base is unusable anyway, so resolve every
+    // importScripts argument against the CDN instead (big chunks stay off
+    // the origin; importScripts is CORS-mode so the CDN's echo CORS works).
+    const base = new URL(UiContext.cdn_prefix, location.origin).toString();
+    const shim = 'const __is=self.importScripts;self.importScripts=function(){'
+      + 'for(var i=0;i<arguments.length;i++){arguments[i]=new URL(arguments[i],'
+      + `'${base}').href}return __is.apply(self,arguments)};`;
+    return new Worker(URL.createObjectURL(new Blob([shim + code], { type: 'application/javascript' })));
   },
 } as monaco.Environment;
 
