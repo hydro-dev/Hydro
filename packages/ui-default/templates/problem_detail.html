@@ -28,7 +28,7 @@
 </script>
 {% if not tdoc %}
   {% block ogp %}
-    {% set preferredLang = handler.request.query.lang or handler.user.viewLang or handler.session.viewLang %}
+    {% set preferredLang = handler.request.query.lang or UiContext.viewLang %}
     {% set renderredContent = pdoc.content|content(preferredLang, pdoc.html) %}
     {% set langs = pdoc.content|contentLang %}
     {% for k in langs %}
@@ -126,7 +126,7 @@
           <div class="section__tab-header-wrapper">
             <ul class="section__tab-header flex-row">
               {% for k in pdoc.content|contentLang %}
-              <a class="section__tab-header-item {{'tab--active' if (handler.request.query.lang or handler.user.viewLang or handler.session.viewLang or (pdoc.content|contentLang)[0] ) == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
+              <a class="section__tab-header-item {{'tab--active' if (handler.request.query.lang or UiContext.viewLang or (pdoc.content|contentLang)[0] ) == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
                 {{ handler.ctx.i18n.get('__langname', k) or _('Unknown language') }}
               </a>
               {% endfor %}

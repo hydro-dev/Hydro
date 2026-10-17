@@ -45,6 +45,7 @@ export default async (ctx: KoaContext, next: Next) => {
         : ctx.cookies.get('sid') || ctx.query.sid; // FIXME maybe a better way for shared conn?
     const session = sid ? await token.get(sid instanceof Array ? sid[0] : sid, token.TYPE_SESSION) : null;
     ctx.session = Object.create(session || { uid: 0, scope: PERM.PERM_ALL.toString() });
+    if (ctx.session.viewLang) UiContext.viewLang = ctx.session.viewLang;
     await next();
     const request = ctx.HydroContext.request;
     const ua = request.headers['user-agent'] || '';
