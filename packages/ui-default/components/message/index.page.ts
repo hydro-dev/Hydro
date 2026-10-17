@@ -67,7 +67,18 @@ const onmessage = (msg) => {
 
 const initWorkerMode = (endpoint) => {
   console.log('Messages: using SharedWorker');
-  const worker = new SharedWorker(new URL('./worker.ts', import.meta.url), { name: 'HydroMessagesWorker' });
+  // The messages worker must be same-origin (it carries authenticated state);
+  // with workerPublicPath removed from the webpack config, worker chunk URLs
+  // resolve against the runtime public path (CDN), so pin it to the origin
+  // for the duration of this synchronous constructor call.
+  const savedPublicPath = __webpack_public_path__;
+  __webpack_public_path__ = '/';
+  let worker: SharedWorker;
+  try {
+    worker = new SharedWorker(new URL('./worker.ts', import.meta.url), { name: 'HydroMessagesWorker' });
+  } finally {
+    __webpack_public_path__ = savedPublicPath;
+  }
   worker.port.start();
   window.addEventListener('beforeunload', () => {
     worker.port.postMessage({ type: 'unload' });

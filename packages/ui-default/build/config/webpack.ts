@@ -124,7 +124,10 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     output: {
       path: root('public'),
       publicPath: '/', // overwrite in entry.js
-      workerPublicPath: '/',
+      // no workerPublicPath: worker URLs resolve against the runtime public
+      // path (UiContext.cdn_prefix, set in entry.js) so monaco workers and the
+      // chunks they importScripts load from the CDN; same-origin workers
+      // (messages) pin the path back to '/' at their construction site.
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,
