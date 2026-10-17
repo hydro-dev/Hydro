@@ -52,7 +52,8 @@ function findOverrideContent(dir: string, base: string) {
     if (!files.length) return null;
     for (const file of files) {
         const match = file.match(`^${base}(?:_|.)([a-zA-Z_]+)\\.(md|pdf)$`);
-        const lang = match[1];
+        let lang = match[1];
+        if (lang.toLowerCase() === 'zh_cn') lang = 'zh';
         const ext = match[2];
         if (ext === 'pdf') languages[lang] = `@[PDF](file://${file})`;
         else languages[lang] = fs.readFileSync(path.join(dir, file), 'utf8');
