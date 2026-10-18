@@ -1,3 +1,102 @@
+import { ValidationError } from '../error';
+import type { ProblemDoc } from '../interface';
+
+export interface StatementEntry {
+    name: string;
+    lang: string;
+    content?: string;
+    file?: string;
+    render?: any;
+}
+
+export interface RenderCtx {
+    pdoc: ProblemDoc;
+    tid?: string;
+}
+
+export interface CompileCtx extends RenderCtx {
+    readAdditionalFile: (name: string) => Promise<Buffer>;
+}
+
+export interface Renderer {
+    render(entry: StatementEntry, ctx: RenderCtx): string;
+    compile?(entry: StatementEntry, ctx: CompileCtx): Promise<any>;
+}
+
+// statement name: safe filename with extension, no path separators
+const NAME_RE = /^\w[\w .()-]*\.[A-Za-z0-9]{1,16}$/;
+
+export function extensionOf(name: string) {
+    const i = name.lastIndexOf('.');
+    return i === -1 ? '' : name.slice(i + 1).toLowerCase();
+}
+
+/**
+ * Parse content field into statement entries.
+ * - New format `{"x.md": {lang, content|file}}` → entries as-is
+ * - Legacy `{lang: content}` → normalized entries (name `${lang}.${md|html}`)
+ * - Plain string / arrays / malformed → null (caller renders legacy)
+ */
+export function parseStatements(content: string, html = false): StatementEntry[] | null {
+    if (!content || typeof content !== 'string') return null;
+    let parsed: any;
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        return null;
+    }
+    if (typeof parsed !== 'object' || parsed instanceof Array || parsed === null) return null;
+    const entries: StatementEntry[] = [];
+    for (const [name, value] of Object.entries<any>(parsed)) {
+        if (typeof value === 'string') {
+            entries.push({ name: `${name}.${html ? 'html' : 'md'}`, lang: name, content: value });
+        } else if (typeof value === 'object' && value && typeof value.lang === 'string') {
+            entries.push({ name, ...value });
+        } else return null;
+    }
+    return entries;
+}
+
+export function normalizeStatements(content: string, lang: string, html = false): StatementEntry[] {
+    if (!content) return [];
+    return parseStatements(content, html) ?? [{ name: `problem_${lang}.${html ? 'html' : 'md'}`, lang, content }];
+}
+
+/**
+ * Parse user-submitted content (edit/create handlers).
+ * Plain strings are legacy submissions → null (caller decides whether to allow).
+ * A JSON object must be a valid new-format statement map; malformed entries throw
+ * instead of silently falling back to legacy rendering.
+ */
+export function parseSubmittedStatements(content: string, availableFiles: string[]): StatementEntry[] | null {
+    if (!content || typeof content !== 'string' || !content.trim().startsWith('{')) return null;
+    let parsed: any;
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        throw new ValidationError('statement.json');
+    }
+    if (typeof parsed !== 'object' || parsed instanceof Array || parsed === null) return null;
+    const entries: StatementEntry[] = [];
+    const names = new Set<string>();
+    for (const [name, value] of Object.entries<any>(parsed)) {
+        if (typeof value !== 'object' || value === null || typeof value.lang !== 'string') {
+            throw new ValidationError('statement.entry', null, name);
+        }
+        const entry = { name, ...value };
+        if (!NAME_RE.test(entry.name)) throw new ValidationError('statement.name', null, entry.name);
+        if (names.has(entry.name)) throw new ValidationError('statement.duplicate', null, entry.name);
+        names.add(entry.name);
+        if (!entry.lang) throw new ValidationError('statement.lang', null, entry.name);
+        const hasContent = typeof entry.content === 'string' && entry.content.length > 0;
+        const hasFile = typeof entry.file === 'string' && entry.file.length > 0;
+        if (!hasContent && !hasFile) throw new ValidationError('statement.empty', null, entry.name);
+        if (hasFile && !availableFiles.includes(entry.file)) throw new ValidationError('statement.file', null, entry.file);
+        entries.push(entry);
+    }
+    return entries;
+}
+
 export interface ProblemSource {
     background?: string;
     description?: string;

@@ -96,6 +96,8 @@ export default async function uploadFiles(endpoint = '', files: File[] | FileLis
   } catch (e) {
     console.error(e);
     Notification.error(i18n('File upload failed: {0}', e.toString()));
+    // rethrow so callers can skip their success path (e.g. adding a statement entry)
+    throw e;
   } finally {
     await delay(500);
     dialog.close();

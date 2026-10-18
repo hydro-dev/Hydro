@@ -1139,3 +1139,16 @@ Your browser does not support WebAuthn or you are not in secure context.: 您的
 Your Device: 你的设备
 Your permission: 您的权限
 Your role: 您的角色
+Add Markdown Statement: 添加 Markdown 题面
+Upload PDF Statement: 上传 PDF 题面
+Delete Statement: 删除题面
+Filename (with extension): 文件名（含扩展名）
+Duplicate statement filename.: 题面文件名重复。
+'Invalid statement filename: {0}': 题面文件名不合法：{0}
+No statement yet. Use the + button in the tab bar to add one.: 暂无题面，请使用上方标签栏的 ＋ 按钮添加。
+This statement is a binary file stored in additional files.: 该题面为二进制文件，存储在附加文件中。
+Please rename it on the edit page after creating the problem.: 请在创建题目后在编辑页重命名。
+Confirm deleting this statement?: 确认删除这条题面？
+Statement {0} is empty.: 题面 {0} 内容为空。
+File {0} referenced by statement {1} does not exist.: 题面 {1} 引用的文件 {0} 不存在。
+Unknown language: 未知语言

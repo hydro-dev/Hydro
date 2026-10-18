@@ -27,7 +27,7 @@
   {% endif %}
   {% if not renderredContent %}
     {% set preferredLang = handler.request.query.lang or handler.user.viewLang or handler.session.viewLang %}
-    {% set renderredContent = pdoc.content|content(preferredLang, pdoc.html) %}
+    {% set renderredContent = statements|statementRender(preferredLang, handler.request.query.file, pdoc, handler.request.query.tid) %}
   {% endif %}
   {{ renderredContent|safe }}
 </div>

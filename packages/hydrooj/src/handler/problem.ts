@@ -22,6 +22,7 @@ import {
 import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
 } from '../interface';
+import { parseSubmittedStatements } from '../lib/content';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -379,11 +380,13 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     @query('tid', Types.ObjectId, true)
     @query('pjax', Types.Boolean)
     async get(...args: any[]) {
+        const statements = await problem.getStatements(this.pdoc);
         // Navigate to current additional file download
         // e.g. ![img](file://a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json || args[2]) {
-            this.response.body.pdoc.content = this.response.body.pdoc.content
-                .replace(/file:\/\/([^ \n)\\"]+)/g, (str: string) => {
+            for (const s of statements) {
+                if (!s.content) continue;
+                s.content = s.content.replace(/file:\/\/([^ \n)\\"]+)/g, (str: string) => {
                     const info = str.match(/file:\/\/([^ \n)\\"]+)/);
                     const fileinfo = info[1];
                     let filename = fileinfo.split('?')[0]; // remove querystring
@@ -394,14 +397,34 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                     if (!args[1]) return `./${this.pdoc.docId}/file/${fileinfo}`;
                     return `./${this.pdoc.docId}/file/${fileinfo}${fileinfo.includes('?') ? '&' : '?'}tid=${args[1]}`;
                 });
+            }
         }
+        const stmtLangs = [...new Set(statements.map((s) => s.lang).filter(Boolean))];
+        if (!stmtLangs.length) {
+            let content: any;
+            try {
+                content = JSON.parse(this.pdoc.content);
+            } catch (e) { }
+            if (content && typeof content === 'object') stmtLangs.push(...Object.keys(content));
+        }
+        const preferredLang = this.request.query.lang || this.user.viewLang || this.session.viewLang;
+        const language = preferredLang || stmtLangs[0];
+        let candidates = statements.filter((s) => s.lang === language);
+        if (!candidates.length) candidates = statements.filter((s) => s.lang?.startsWith(language));
+        const activeLang = (candidates[0] || statements[0])?.lang || language;
+        candidates = statements.filter((s) => s.lang === activeLang);
+        if (!candidates.length) candidates = statements.filter((s) => s.lang?.startsWith(activeLang));
+        const stmtFiles = (candidates.length ? candidates : statements).map((s) => s.name);
+        const data = {
+            pdoc: this.pdoc, tdoc: this.tdoc, statements, stmtLangs, preferredLang, activeLang, stmtFiles,
+        };
+        Object.assign(this.response.body, data);
         this.response.body.page_name = this.tdoc
             ? this.tdoc.rule === 'homework'
                 ? 'homework_detail_problem'
                 : 'contest_detail_problem'
             : 'problem_detail';
         if (args[2]) {
-            const data = { pdoc: this.pdoc, tdoc: this.tdoc };
             this.response.body = {
                 title: this.renderTitle(this.response.body.page_name),
                 fragments: [
@@ -621,6 +644,10 @@ export class ProblemManageHandler extends ProblemDetailHandler {
 export class ProblemEditHandler extends ProblemManageHandler {
     async get() {
         this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
+        this.response.body.statements = await problem.getStatements(this.pdoc);
+        this.UiContext.statements = this.response.body.statements.map(({
+            name, lang, content, file,
+        }) => ({ name, lang, content, file }));
         this.response.body.statementLangs = this.ctx.i18n.langs(false);
         this.response.template = 'problem_edit.html';
     }
@@ -638,8 +665,9 @@ export class ProblemEditHandler extends ProblemManageHandler {
     ) {
         if (typeof newPid !== 'string') newPid = `P${newPid}`;
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new ProblemAlreadyExistError(newPid);
+        parseSubmittedStatements(content, (this.pdoc.additional_file || []).map((i) => i.name));
         const $update: Partial<ProblemDoc> = {
-            title, content, pid: newPid, hidden, tag: tag ?? [], difficulty, html: false,
+            title, content, pid: newPid, hidden, tag: tag ?? [], difficulty,
         };
         const pdoc = await problem.edit(domainId, this.pdoc.docId, $update);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
@@ -996,12 +1024,13 @@ export class ProblemStatisticsHandler extends ProblemDetailHandler {
 
 export class ProblemCreateHandler extends Handler {
     async get() {
-        this.response.body.statementLangs = this.ctx.i18n.langs(false);
-        this.response.template = 'problem_edit.html';
         this.response.body = {
             page_name: 'problem_create',
             additional_file: [],
+            statements: [],
+            statementLangs: this.ctx.i18n.langs(false),
         };
+        this.response.template = 'problem_edit.html';
     }
 
     @post('title', Types.Title)
@@ -1016,8 +1045,10 @@ export class ProblemCreateHandler extends Handler {
     ) {
         if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
-        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], { hidden, difficulty });
+        const entries = parseSubmittedStatements(content, this.user._files.map((i) => i.name));
+        const docId = await problem.add(domainId, pid, title, '', this.user._id, tag ?? [], { hidden, difficulty });
         const files = new Set(Array.from(content.matchAll(/file:\/\/([\w-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
+        for (const entry of entries || []) if (entry.file) files.add(entry.file);
         const tasks = [];
         for (const file of files) {
             if (this.user._files.find((i) => i.name === file)) {
@@ -1029,6 +1060,7 @@ export class ProblemCreateHandler extends Handler {
             }
         }
         await Promise.all(tasks);
+        await problem.edit(domainId, docId, { content });
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }
@@ -1044,6 +1076,12 @@ export const ProblemApi = {
             const pdoc = await problem.get(args.domainId, args.id);
             if (!pdoc) return null;
             if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            (pdoc as any).statements = await problem.getStatements(pdoc);
+            if (pdoc.reference) {
+                const source = await problem.get(pdoc.reference.domainId, pdoc.reference.pid, ['additional_file']);
+                if (!source) throw new ProblemNotFoundError(pdoc.reference.domainId, pdoc.reference.pid);
+                pdoc.additional_file = source.additional_file;
+            }
             return pdoc;
         },
     ),
