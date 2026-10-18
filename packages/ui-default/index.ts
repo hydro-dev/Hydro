@@ -5,6 +5,7 @@ import {
   SettingModel, SystemModel, Types, UserModel, yaml,
 } from 'hydrooj';
 import convert from 'schemastery-jsonschema';
+import { presetRenderers } from './backendlib/contentRenderer';
 import markdown from './backendlib/markdown';
 import { TemplateService } from './backendlib/template';
 
@@ -172,6 +173,9 @@ export const Config = Schema.object({
 });
 
 export function apply(ctx: Context, config: ReturnType<typeof Config>) {
+  for (const [ext, renderer] of Object.entries(presetRenderers)) {
+    ctx.provideModule('contentRenderer', ext, renderer);
+  }
   ctx.inject(['setting'], (c) => {
     c.setting.PreferenceSetting(
       SettingModel.Setting('setting_display', 'rounded', false, 'boolean', 'Rounded Corners'),
