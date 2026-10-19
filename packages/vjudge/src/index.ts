@@ -102,7 +102,7 @@ class AccountService {
                 try {
                     const res = await this.api.getProblem(pid, meta);
                     if (!res) continue;
-                    const docId = await ProblemModel.add(domainId, targetPid, res.title, res.content, 1, res.tag);
+                    const docId = await ProblemModel.add(domainId, targetPid, res.title, '', 1, res.tag);
                     if (res.difficulty) await ProblemModel.edit(domainId, docId, { difficulty: res.difficulty });
                     for (const key in res.files) {
                         await ProblemModel.addAdditionalFile(domainId, docId, key, res.files[key]);
@@ -110,6 +110,7 @@ class AccountService {
                     for (const key in res.data) {
                         await ProblemModel.addTestdata(domainId, docId, key, res.data[key]);
                     }
+                    await ProblemModel.edit(domainId, docId, { content: res.content });
                     if (res.solution) await SolutionModel.add(domainId, docId, 1, res.solution);
                     logger.info(`${domainId}: problem ${pid} sync done -> ${targetPid}(${docId})`);
                 } finally {

@@ -126,7 +126,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
             },
             files,
             tag: tagList,
-            content: html,
+            content: JSON.stringify({ 'zh.html': { lang: 'zh', content: html } }),
         };
     }
 

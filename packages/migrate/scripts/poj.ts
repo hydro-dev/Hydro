@@ -161,9 +161,10 @@ export async function run({
                         report({ message: `failed to read file: ${path.join(imageDir, file[1])}` });
                     }
                 }
+                const lang = SystemModel.get('server.language') || 'zh';
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
-                    pdoc.title, content,
+                    pdoc.title, JSON.stringify({ [`problem_${lang}.html`]: { lang, content } }),
                     1, pdoc.source?.trim().length ? pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i) : [],
                     { hidden: pdoc.defunct === 'Y' },
                 );
@@ -177,7 +178,6 @@ export async function run({
                 config: `time: ${pdoc.time_limit}ms
 memory: ${pdoc.memory_limit}k`,
                 owner: 1,
-                html: true,
             });
             if (pdoc.sample_Program) {
                 await SolutionModel.add(domainId, pidMap[pdoc.problem_id], 1, pdoc.sample_Program);

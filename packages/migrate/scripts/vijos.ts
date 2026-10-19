@@ -4,7 +4,7 @@ import mongodb, { Db, FindCursor } from 'mongodb';
 import {
     db as dst,
     DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
-    RecordDoc, TestCase, TrainingNode,
+    parseStatements, ProblemModel, RecordDoc, TestCase, TrainingNode,
 } from 'hydrooj';
 
 const map = {};
@@ -325,7 +325,7 @@ function addSpace(content: string) {
 async function fix(doc) {
     await dst.collection('document').updateOne(
         { _id: doc._id },
-        { $set: { pid: doc.pid || doc.docId.toString(), content: addSpace(doc.content) } },
+        { $set: { pid: doc.pid || doc.docId.toString() } },
     );
 }
 
@@ -402,12 +402,15 @@ async function task(name: any, src: Db, report: Report) {
         if (!docs.length) break;
         const res = [];
         for (const doc of docs) {
+            const isProblem = name === 'document' && doc.doc_type === DocumentModel.TYPE_PROBLEM;
+            const content = isProblem ? doc.content || '' : undefined;
             let d: any = {};
             if (typeof tasks[name].call === 'function') {
                 d = await tasks[name](doc);
             } else {
                 const mapper = tasks[name];
                 for (const key in doc) {
+                    if (isProblem && (key === 'content' || key === 'html')) continue;
                     if (typeof mapper[key] === 'string') {
                         d[mapper[key]] = doc[key];
                     } else if (mapper[key] === null) {
@@ -431,10 +434,11 @@ async function task(name: any, src: Db, report: Report) {
                         docWithoutId[key] = d[key];
                     }
                 }
-                if (d.domainId && d.docId && d.docType) {
-                    const query: any = { domainId: d.domainId, docId: d.docId, docType: d.docType };
-                    if (d.uid) query.uid = d.uid;
-                    res.push((async () => {
+                const insert = isProblem ? { ...d, content: '' } : d;
+                res.push((async () => {
+                    if (d.domainId && d.docId && d.docType) {
+                        const query: any = { domainId: d.domainId, docId: d.docId, docType: d.docType };
+                        if (d.uid) query.uid = d.uid;
                         const data = await dst.collection(name).findOne(query);
                         if (data) {
                             await dst.collection(name).updateOne(query, { $set: docWithoutDid });
@@ -445,20 +449,36 @@ async function task(name: any, src: Db, report: Report) {
                                     _id: d._id,
                                 }, { $set: docWithoutId });
                             } else {
-                                await dst.collection(name).insertOne(d);
+                                await dst.collection(name).insertOne(insert);
                             }
                         } else {
-                            await dst.collection(name).insertOne(d);
+                            await dst.collection(name).insertOne(insert);
                         }
-                    })());
-                } else if (d._id) {
-                    res.push(dst.collection(name).updateOne({
-                        _id: d._id,
-                    }, { $set: docWithoutId }, { upsert: true }));
-                } else res.push(dst.collection(name).insertOne(d));
+                    } else if (d._id) {
+                        await dst.collection(name).updateOne({
+                            _id: d._id,
+                        }, {
+                            $set: docWithoutId,
+                            ...isProblem ? { $setOnInsert: { content: '' } } : {},
+                        }, { upsert: true });
+                    } else await dst.collection(name).insertOne(insert);
+                    if (isProblem) {
+                        const text = addSpace(content);
+                        const lang = global.Hydro.model.system.get('server.language') || 'zh';
+                        const entries = parseStatements(text, !!doc.html) ?? [{
+                            name: `problem_${lang}.${doc.html ? 'html' : 'md'}`, lang, content: text,
+                        }];
+                        await ProblemModel.edit(d.domainId, d.docId, {
+                            content: JSON.stringify(Object.fromEntries(entries.map(({ name: entryName, ...entry }) => [entryName, entry]))),
+                        });
+                    }
+                })());
             }
         }
-        await Promise.all(res).catch((e) => report({ message: `${e}\n${e.stack}` }));
+        await Promise.all(res).catch((e) => {
+            if (name === 'document') throw e;
+            return report({ message: `${e}\n${e.stack}` });
+        });
         if (i > lastProgress) {
             await report({ progress: i });
             lastProgress = i;

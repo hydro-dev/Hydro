@@ -4,7 +4,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import {
     buildContent, Context, extractZip, FileTooLargeError, fs, Handler, PERM,
-    ProblemConfigFile, ProblemModel, randomstring, Schema, ValidationError, yaml, Zip,
+    ProblemConfigFile, ProblemModel, randomstring, Schema, SystemModel, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-qduoj');
@@ -76,8 +76,10 @@ class ImportQduojHandler extends Handler {
                     return true;
                 };
                 if (!await isValidPid(pdoc.display_id)) pdoc.display_id = null;
+                const lang = SystemModel.get('server.language') || 'zh';
                 const pid = await ProblemModel.add(
-                    domainId, pdoc.display_id, pdoc.title, content,
+                    domainId, pdoc.display_id, pdoc.title,
+                    JSON.stringify({ [`problem_${lang}.html`]: { lang, content } }),
                     this.user._id, pdoc.tags || [],
                 );
                 const config: ProblemConfigFile = {
@@ -113,10 +115,7 @@ class ImportQduojHandler extends Handler {
                     config.checker = 'checker.cc';
                     config.checker_type = 'qduoj';
                 }
-                tasks.push(
-                    ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))),
-                    ProblemModel.edit(domainId, pid, { html: true }),
-                );
+                tasks.push(ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))));
                 await Promise.all(tasks);
                 cnt++;
             }

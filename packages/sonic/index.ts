@@ -4,7 +4,7 @@ import {
 } from 'sonic-channel';
 import {
     Context, iterateAllProblem, iterateAllProblemInDomain,
-    Logger, ProblemModel, Schema, Service, SystemModel,
+    Logger, ProblemDoc, ProblemModel, Schema, Service, SystemModel,
 } from 'hydrooj';
 
 declare module 'cordis' {
@@ -58,10 +58,16 @@ export class SonicService extends Service {
         yield () => this.search.close();
         this.ingest.connect(getHandler('ingest', this));
         yield () => this.ingest.close();
+        const updateContent = async (pdoc: ProblemDoc) => {
+            const content = (await ProblemModel.getStatements(pdoc)).map((entry) => entry.content).filter(Boolean).join('\n');
+            const id = `${pdoc.domainId}/${pdoc.docId}`;
+            await this.flusho('problem', `${pdoc.domainId}@content`, id);
+            if (content) await this.push('problem', `${pdoc.domainId}@content`, id, content);
+        };
         yield this.ctx.on('problem/add', async (doc, docId) => {
             Promise.all([
                 this.push('problem', `${doc.domainId}@title`, `${doc.domainId}/${docId}`, `${doc.pid || ''} ${doc.title} ${doc.tag?.join(' ')}`),
-                this.push('problem', `${doc.domainId}@content`, `${doc.domainId}/${docId}`, doc.content.toString()),
+                updateContent({ ...doc, docId } as ProblemDoc),
             ]).catch((e) => logger.error(e));
         });
         yield this.ctx.on('problem/edit', async (pdoc) => {
@@ -69,16 +75,23 @@ export class SonicService extends Service {
             Promise.all([
                 this.flusho('problem', `${pdoc.domainId}@title`, id)
                     .then(() => this.push('problem', `${pdoc.domainId}@title`, id, `${pdoc.pid || ''} ${pdoc.title} ${pdoc.tag?.join(' ')}`)),
-                this.flusho('problem', `${pdoc.domainId}@content`, id)
-                    .then(() => this.push('problem', `${pdoc.domainId}@content`, id, pdoc.content.toString())),
+                updateContent(pdoc),
             ]).catch((e) => logger.error(e));
+        });
+        yield this.ctx.on('problem/setStatements', async (domainId, docId) => {
+            try {
+                const pdoc = await ProblemModel.get(domainId, docId);
+                if (pdoc) await updateContent(pdoc);
+            } catch (e) {
+                logger.error(e);
+            }
         });
         yield this.ctx.on('problem/delete', async (domainId, docId) => {
             const id = `${domainId}/${docId}`;
             await Promise.all([
                 this.flusho('problem', `${domainId}@title`, id),
                 this.flusho('problem', `${domainId}@content`, id),
-            ]);
+            ]).catch((e) => logger.error(e));
         });
         yield this.ctx.provideModule('problemSearch', 'sonic', async (domainId, query, opts) => {
             const limit = opts?.limit || SystemModel.get('pagination.problem');
@@ -117,12 +130,11 @@ export class SonicService extends Service {
                             'problem', `${pdoc.domainid}@title`, `${pdoc.domainId}/${pdoc.docId}`,
                             `${pdoc.pid || ''} ${pdoc.title} ${pdoc.tag.join(' ')}`,
                         ),
-                        pdoc.content.toString()
-                        && this.push('problem', `${pdoc.domainId}@content`, `${pdoc.domainId}/${pdoc.docId}`, pdoc.content.toString()),
+                        updateContent(pdoc),
                     ]).catch((e) => console.log(`${pdoc.domainId}/${pdoc.docId}`, e));
                 };
-                if (domainId) await iterateAllProblemInDomain(domainId, ['title', 'content'], cb);
-                else await iterateAllProblem(['title', 'content', 'tag'], cb);
+                if (domainId) await iterateAllProblemInDomain(domainId, ['title', 'content', 'html', 'tag', 'reference'], cb);
+                else await iterateAllProblem(['title', 'content', 'html', 'tag', 'reference'], cb);
                 return true;
             },
         );
