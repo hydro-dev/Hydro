@@ -18,7 +18,7 @@ import type {
     Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
 import type { StatementEntry } from '../lib/content';
-import { extensionOf, normalizeStatements } from '../lib/content';
+import { normalizeStatements } from '../lib/content';
 import { parseConfig } from '../lib/testdataConfig';
 import bus from '../service/bus';
 import db from '../service/db';
@@ -197,7 +197,7 @@ export class ProblemModel {
         args.docType = document.TYPE_PROBLEM;
         args.domainId = domainId;
         args.docId = docId;
-        if (entries.length) await ProblemModel.setStatements(args as ProblemDoc, entries);
+        if (entries.length) await ProblemModel.setStatements(domainId, docId, entries, false, args.reference);
         bus.emit('problem/add', args, result);
         return result;
     }
@@ -220,27 +220,25 @@ export class ProblemModel {
         }));
     }
 
-    static async setStatements(pdoc: ProblemDoc, entries: StatementEntry[], forceCompile = false) {
-        const { domainId, docId } = pdoc;
+    static async setStatements(
+        domainId: string, docId: number, entries: StatementEntry[], forceCompile = false,
+        reference?: ProblemDoc['reference'],
+    ): Promise<ProblemDoc> {
         const existing = await collStatement.find({ domainId, docId }).toArray();
         const prevByName = new Map(existing.map((r) => [r.name, r]));
         const ops: Promise<any>[] = [];
         for (const entry of entries) {
             const prev = prevByName.get(entry.name);
             let render = forceCompile ? undefined : prev?.render;
-            const renderer = global.Hydro?.module?.contentRenderer?.[extensionOf(entry.name)];
+            const renderer = global.Hydro?.module?.contentRenderer?.[entry.name.split('.').pop()];
             if (renderer?.compile && typeof entry.content === 'string' && (forceCompile || prev?.content !== entry.content)) {
                 try {
                     render = await renderer.compile(entry, {
-                        pdoc,
                         readAdditionalFile: async (name) => streamToBuffer(
-                            await storage.get(
-                                `problem/${pdoc.reference?.domainId || domainId}/${pdoc.reference?.pid || docId}/additional_file/${name}`,
-                            ),
+                            await storage.get(`problem/${reference?.domainId ?? domainId}/${reference?.pid ?? docId}/additional_file/${name}`),
                         ),
                     });
                 } catch (e) {
-                    // wasm/typst diagnostics may carry no message: keep the stringified form
                     render = { error: e?.message || String(e).slice(0, 500) };
                 }
             }
@@ -260,10 +258,21 @@ export class ProblemModel {
         await Promise.all(ops);
         const removed = existing.filter((r) => !entries.some((e) => e.name === r.name));
         if (removed.length) await collStatement.deleteMany({ domainId, docId, name: { $in: removed.map((r) => r.name) } });
-        await document.set(domainId, document.TYPE_PROBLEM, docId, { content: '' }, { html: '' });
-        pdoc.content = '';
-        delete pdoc.html;
+        const $set: Partial<ProblemDoc> = { content: '' };
+        const $unset: Partial<Record<Field, '' | true | 1>> = { html: '' };
+        await bus.parallel('document/set', domainId, document.TYPE_PROBLEM, docId, $set, $unset);
+        $set.content = '';
+        delete $set.html;
+        delete $unset.content;
+        $unset.html = '';
+        const result = await document.coll.findOneAndUpdate(
+            { domainId, docType: document.TYPE_PROBLEM, docId },
+            { $set, $unset },
+            { returnDocument: 'after' },
+        ) as ProblemDoc;
+        if (!result) throw new ProblemNotFoundError(domainId, docId);
         bus.emit('problem/setStatements', domainId, docId, entries);
+        return result;
     }
 
     static async get(
@@ -328,10 +337,17 @@ export class ProblemModel {
         const entries = typeof content === 'string'
             ? normalizeStatements(content, SystemModel.get('server.language') || 'zh')
             : null;
-        const result = Object.keys(metadata).length || Object.keys($unset).length
+        const metadataResult = Object.keys(metadata).length || Object.keys($unset).length
             ? await document.set(domainId, document.TYPE_PROBLEM, _id, metadata, $unset)
-            : await document.get(domainId, document.TYPE_PROBLEM, _id);
-        if (entries) await ProblemModel.setStatements(result, entries);
+            : null;
+        let reference = metadataResult?.reference;
+        if (!metadataResult && entries?.some((entry) => typeof entry.content === 'string'
+            && global.Hydro?.module?.contentRenderer?.[entry.name.split('.').pop()]?.compile)) {
+            reference = (await document.get(domainId, document.TYPE_PROBLEM, _id, ['reference']))?.reference;
+        }
+        const result = entries
+            ? await ProblemModel.setStatements(domainId, _id, entries, false, reference)
+            : metadataResult || await document.get(domainId, document.TYPE_PROBLEM, _id);
         bus.emit('problem/edit', result);
         return result;
     }
@@ -775,8 +791,7 @@ export class ProblemModel {
                     if (!f.isFile()) continue;
                     await ProblemModel.addAdditionalFile(ddoc._id, docId, f.name, loc);
                 }
-                const current = await ProblemModel.get(ddoc._id, docId);
-                await ProblemModel.setStatements(current, statements, true);
+                await ProblemModel.setStatements(ddoc._id, docId, statements, true);
                 await ProblemModel.edit(ddoc._id, docId, {
                     title: title.trim(),
                     tag,
@@ -898,10 +913,6 @@ export class ProblemModel {
 }
 
 export async function apply(ctx: Context) {
-    await db.ensureIndexes(
-        collStatement,
-        { key: { domainId: 1, docId: 1, name: 1 }, name: 'basic', unique: true },
-    );
     ctx.on('problem/addTestdata', async (domainId, docId, name) => {
         if (!['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(name)) return;
         const buf = await storage.get(`problem/${domainId}/${docId}/testdata/${name}`);
@@ -920,6 +931,10 @@ export async function apply(ctx: Context) {
             await ProblemModel.edit(domainId, docId, { config: (await streamToBuffer(buf)).toString() });
         }
     });
+    await db.ensureIndexes(
+        collStatement,
+        { key: { domainId: 1, docId: 1, name: 1 }, name: 'basic', unique: true },
+    );
 }
 
 global.Hydro.model.problem = ProblemModel;

@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { confirm } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Notification from 'vj/components/notification';
-import { getStatementKinds, resolveStatementEditor } from 'vj/components/statement/editors';
+import { resolveStatementEditor, statementKinds as kinds } from 'vj/components/statement/editors';
 import uploadFiles from 'vj/components/upload';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request, tpl } from 'vj/utils';
@@ -189,16 +189,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   }
 
   const draft = parseDraft(String($field.val() || ''));
-  let entries = draft;
-  // an empty draft ([]) is valid and must not fall back to server data
-  if (entries === null) {
-    entries = (UiCtx.statements || []).map((s) => ({
-      name: s.name,
-      lang: s.lang,
-      ...(s.content !== undefined ? { content: s.content } : {}),
-      ...(s.file ? { file: s.file } : {}),
-    }));
-  }
+  const entries = draft ?? parseDraft($field[0].defaultValue) ?? [];
 
   if (isCreate && draft === null) {
     entries.push({
@@ -238,14 +229,12 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
     let i = 1;
     while (hasName(name)) name = `problem_${lang}_${++i}.${ext}`;
     entries.push({ name, lang, content: '' });
-    serialize();
-    activeName = name;
-    refreshUI();
+    refreshUI(name);
   }
 
   // no display:none here: the Drop instance manages the menu's visibility itself
   const $kindMenu = $(tpl`<ol class="menu"></ol>`).appendTo('body');
-  getStatementKinds().forEach((kind) => {
+  for (const kind of kinds) {
     $(tpl`<a class="menu__link" data-kind="${kind.id}" href="javascript:;">${i18n(kind.label)}</a>`)
       .on('click', () => {
         $('a[name="statement-add"]').data('vjDropdownInstance')?.dropInstance?.close();
@@ -253,13 +242,12 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
         else if (kind.accept) $('#statement-file-input').attr('accept', kind.accept).trigger('click');
       })
       .appendTo($('<li class="menu__item"></li>').appendTo($kindMenu));
-  });
+  }
 
   function deleteEntry(name) {
     const e = entries.find((x) => x.name === name);
     _.pull(entries, e);
     if (activeName === name) activeName = entries[0]?.name || null;
-    serialize();
     refreshUI();
   }
 
@@ -318,10 +306,8 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
           }
           e.file = newName;
         }
-        activeName = newName;
         e.name = newName;
-        serialize();
-        refreshUI();
+        refreshUI(newName);
       });
     const $lang = $('<select class="inline compact select"></select>');
     // an unknown lang code (e.g. from an imported problem) still gets its own option,
@@ -358,6 +344,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
 
   refreshUI = (name) => {
     if (name !== undefined) activeName = name;
+    serialize();
     renderTabs();
     renderProps();
     renderEditor();
@@ -380,13 +367,10 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
     }
     knownFiles.add(name);
     entries.push({ name, lang: activeEntry()?.lang || defaultLang(), file: name });
-    serialize();
-    activeName = name;
-    refreshUI();
+    refreshUI(name);
     ev.target.value = '';
   });
 
-  serialize();
   refreshUI();
 
   $('#statement-tabs').on('click', '.section__tab-header-item', (ev) => {
