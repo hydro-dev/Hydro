@@ -22,7 +22,7 @@ import {
 import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
 } from '../interface';
-import { parseSubmittedStatements } from '../lib/content';
+import { normalizeStatements, parseSubmittedStatements } from '../lib/content';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -645,9 +645,6 @@ export class ProblemEditHandler extends ProblemManageHandler {
     async get() {
         this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
         this.response.body.statements = await problem.getStatements(this.pdoc);
-        this.UiContext.statements = this.response.body.statements.map(({
-            name, lang, content, file,
-        }) => ({ name, lang, content, file }));
         this.response.body.statementLangs = this.ctx.i18n.langs(false);
         this.response.template = 'problem_edit.html';
     }
@@ -1045,10 +1042,11 @@ export class ProblemCreateHandler extends Handler {
     ) {
         if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
-        const entries = parseSubmittedStatements(content, this.user._files.map((i) => i.name));
+        const entries = parseSubmittedStatements(content, this.user._files.map((i) => i.name))
+            ?? normalizeStatements(content, system.get('server.language') || 'zh');
         const docId = await problem.add(domainId, pid, title, '', this.user._id, tag ?? [], { hidden, difficulty });
         const files = new Set(Array.from(content.matchAll(/file:\/\/([\w-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
-        for (const entry of entries || []) if (entry.file) files.add(entry.file);
+        for (const entry of entries) if (entry.file) files.add(entry.file);
         const tasks = [];
         for (const file of files) {
             if (this.user._files.find((i) => i.name === file)) {
@@ -1060,7 +1058,7 @@ export class ProblemCreateHandler extends Handler {
             }
         }
         await Promise.all(tasks);
-        await problem.edit(domainId, docId, { content });
+        await problem.setStatements(domainId, docId, entries);
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }

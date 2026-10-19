@@ -85,15 +85,8 @@ export interface StatementKind {
   accept?: string; // upload kinds: file input accept pattern
 }
 
-const kinds: StatementKind[] = [];
-
-export function registerStatementKind(kind: StatementKind) {
-  kinds.push(kind);
-}
-
-export function getStatementKinds(): StatementKind[] {
-  return kinds;
-}
-
-registerStatementKind({ id: 'markdown', label: 'Add Markdown Statement', extension: 'md' });
-registerStatementKind({ id: 'pdf', label: 'Upload PDF Statement', accept: 'application/pdf,.pdf' });
+export const statementKinds: StatementKind[] = [
+  { id: 'markdown', label: 'Add Markdown Statement', extension: 'md' },
+  { id: 'html', label: 'Add HTML Statement', extension: 'html' },
+  { id: 'pdf', label: 'Upload PDF Statement', accept: 'application/pdf,.pdf' },
+];

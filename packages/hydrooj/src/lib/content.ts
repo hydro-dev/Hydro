@@ -14,7 +14,7 @@ export interface RenderCtx {
     tid?: string;
 }
 
-export interface CompileCtx extends RenderCtx {
+export interface CompileCtx {
     readAdditionalFile: (name: string) => Promise<Buffer>;
 }
 
@@ -25,11 +25,6 @@ export interface Renderer {
 
 // statement name: safe filename with extension, no path separators
 const NAME_RE = /^\w[\w .()-]*\.[A-Za-z0-9]{1,16}$/;
-
-export function extensionOf(name: string) {
-    const i = name.lastIndexOf('.');
-    return i === -1 ? '' : name.slice(i + 1).toLowerCase();
-}
 
 /**
  * Parse content field into statement entries.
