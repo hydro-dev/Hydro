@@ -147,7 +147,7 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
                 } else html += node.innerHTML;
             }
             if (lang in langs) {
-                contents[langs[lang]] = html;
+                contents[`${langs[lang]}.html`] = { lang: langs[lang], content: html };
             }
         }
         return {

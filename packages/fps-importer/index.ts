@@ -39,9 +39,9 @@ class FpsProblemImportHandler extends Handler {
             }
             const title = decodeHTML(p.title.join(' '));
             const tags = _.filter(p.source, (i: string) => i.trim()).flatMap((i) => i.split(' ')).filter((i) => i);
-            const pid = await ProblemModel.add(domainId, null, title, content, this.user._id, tags);
+            const lang = SystemModel.get('server.language') || 'zh';
+            const pid = await ProblemModel.add(domainId, null, title, '', this.user._id, tags);
             const tasks: Promise<any>[] = [ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config)))];
-            if (!markdown) tasks.push(ProblemModel.edit(domainId, pid, { html: true }));
             const addTestdata = (node: any, index: string, ext: string) => {
                 if (!node || !['object', 'string'].includes(typeof node)) return; // Ignore file not exist
                 const id = node.$?.name || `${index}`;
@@ -69,9 +69,11 @@ class FpsProblemImportHandler extends Handler {
                     tasks.push(ProblemModel.addAdditionalFile(domainId, pid, filename, Buffer.from(img.base64[0], 'base64')));
                     content = content.replace(img.src[0], `file://${filename}`);
                 }
-                await ProblemModel.edit(domainId, pid, { content });
             }
             await Promise.all(tasks);
+            await ProblemModel.edit(domainId, pid, {
+                content: JSON.stringify({ [`problem_${lang}.${markdown ? 'md' : 'html'}`]: { lang, content } }),
+            });
             if (p.solution) {
                 let s = '';
                 for (const sol of p.solution) {
