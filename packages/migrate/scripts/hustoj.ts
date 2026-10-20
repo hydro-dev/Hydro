@@ -226,7 +226,7 @@ export async function run({
                 const lang = SystemModel.get('server.language') || 'zh';
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
-                    pdoc.title, JSON.stringify({ [`problem_${lang}.${markdown ? 'md' : 'html'}`]: { lang, content } }),
+                    pdoc.title, JSON.stringify([{ name: `problem_${lang}.${markdown ? 'md' : 'html'}`, lang, content }]),
                     1, pdoc.source?.trim().length ? pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i) : [],
                     { hidden: pdoc.defunct === 'Y' },
                 );

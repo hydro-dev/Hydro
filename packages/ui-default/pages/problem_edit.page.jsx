@@ -163,7 +163,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   const langs = UiCtx.statementLangs || {};
   const isCreate = !!UiCtx.problemCreate;
   const $field = $('textarea[name="content"]');
-  const defaultLang = () => UserContext.viewLang || i18n('__id');
+  const defaultLang = UserContext.viewLang || i18n('__id');
 
   // Parse a submitted-shape JSON string into entries (null when not statement JSON).
   // Used both for the server-rendered initial value and for restoring the draft
@@ -171,20 +171,13 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   function parseDraft(val) {
     try {
       const parsed = JSON.parse(val);
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
-      const out = [];
-      for (const [name, v] of Object.entries(parsed)) {
-        if (typeof v !== 'object' || v === null || typeof v.lang !== 'string') return null;
-        out.push({
-          name,
-          lang: v.lang,
-          ...(v.content !== undefined ? { content: v.content } : {}),
-          ...(v.file ? { file: v.file } : {}),
-        });
+      if (!Array.isArray(parsed)) return null;
+      for (const v of parsed) {
+        if (typeof v !== 'object' || v === null || typeof v.name !== 'string' || typeof v.lang !== 'string') return null;
       }
-      return out;
+      return parsed;
     } catch (e) {
-      return null;
+      return [{ name: 'problem.md', lang: defaultLang, content: '' }];
     }
   }
 
@@ -193,8 +186,8 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
 
   if (isCreate && draft === null) {
     entries.push({
-      name: `problem_${defaultLang()}.md`,
-      lang: defaultLang(),
+      name: `problem_${defaultLang}.md`,
+      lang: defaultLang,
       content: String($field.val() || ''),
     });
   }
@@ -206,25 +199,12 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   let editorHandle = null;
   // assigned after the render functions are defined; kept as a variable to avoid forward references
   let refreshUI = () => { };
-
-  function serialize() {
-    const obj = {};
-    for (const e of entries) {
-      obj[e.name] = e.content !== undefined
-        ? { lang: e.lang, content: e.content }
-        : { lang: e.lang, file: e.file };
-    }
-    $field.val(JSON.stringify(obj));
-  }
-
-  function activeEntry() {
-    return entries.find((e) => e.name === activeName);
-  }
-
+  const serialize = () => $field.val(JSON.stringify(entries));
+  const activeEntry = () => entries.find((e) => e.name === activeName);
   const hasName = (n) => entries.some((e) => e.name === n);
 
   function addTextEntry(ext) {
-    const lang = activeEntry()?.lang || defaultLang();
+    const lang = activeEntry()?.lang || defaultLang;
     let name = `problem_${lang}.${ext}`;
     let i = 1;
     while (hasName(name)) name = `problem_${lang}_${++i}.${ext}`;
@@ -366,7 +346,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
       return;
     }
     knownFiles.add(name);
-    entries.push({ name, lang: activeEntry()?.lang || defaultLang(), file: name });
+    entries.push({ name, lang: activeEntry()?.lang || defaultLang, file: name });
     refreshUI(name);
     ev.target.value = '';
   });

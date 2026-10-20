@@ -4,7 +4,7 @@ import mongodb, { Db, FindCursor } from 'mongodb';
 import {
     db as dst,
     DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
-    parseStatements, ProblemModel, RecordDoc, TestCase, TrainingNode,
+    ProblemModel, RecordDoc, SystemModel, TestCase, TrainingNode,
 } from 'hydrooj';
 
 const map = {};
@@ -463,13 +463,12 @@ async function task(name: any, src: Db, report: Report) {
                         }, { upsert: true });
                     } else await dst.collection(name).insertOne(insert);
                     if (isProblem) {
-                        const text = addSpace(content);
-                        const lang = global.Hydro.model.system.get('server.language') || 'zh';
-                        const entries = parseStatements(text, !!doc.html) ?? [{
-                            name: `problem_${lang}.${doc.html ? 'html' : 'md'}`, lang, content: text,
-                        }];
                         await ProblemModel.edit(d.domainId, d.docId, {
-                            content: JSON.stringify(Object.fromEntries(entries.map(({ name: entryName, ...entry }) => [entryName, entry]))),
+                            content: JSON.stringify([{
+                                name: 'problem.md',
+                                lang: SystemModel.get('server.language') || 'zh',
+                                content: addSpace(content),
+                            }]),
                         });
                     }
                 })());

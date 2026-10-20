@@ -644,7 +644,12 @@ export class ProblemManageHandler extends ProblemDetailHandler {
 export class ProblemEditHandler extends ProblemManageHandler {
     async get() {
         this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
-        this.response.body.statements = await problem.getStatements(this.pdoc);
+        // strip row metadata and compile artifacts: the edit form round-trips these
+        this.response.body.statementsJSON = JSON.stringify(
+            (await problem.getStatements(this.pdoc)).map((
+                { _id, domainId, docType, docId, render, ...entry },
+            ) => entry),
+        );
         this.response.body.statementLangs = this.ctx.i18n.langs(false);
         this.response.template = 'problem_edit.html';
     }
@@ -1024,7 +1029,7 @@ export class ProblemCreateHandler extends Handler {
         this.response.body = {
             page_name: 'problem_create',
             additional_file: [],
-            statements: [],
+            statementsJSON: '[]',
             statementLangs: this.ctx.i18n.langs(false),
         };
         this.response.template = 'problem_edit.html';

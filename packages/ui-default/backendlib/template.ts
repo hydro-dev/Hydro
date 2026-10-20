@@ -82,12 +82,6 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('jsesc', (self) => jsesc(self, { isScriptContext: true }));
     this.addFilter('bitand', (self, val) => self & val);
     this.addFilter('toString', (self, s) => (typeof self === 'string' ? self : JSON.stringify(self, replacer(s))));
-    this.addFilter('statementSubmitJson', (statements: any[]) => JSON.stringify(
-      Object.fromEntries((statements || []).map((s) => [
-        s.name,
-        s.content !== undefined ? { lang: s.lang, content: s.content } : { lang: s.lang, file: s.file },
-      ])),
-    ));
     this.addFilter('content', (content, language, html) => {
       let s: any = '';
       try {

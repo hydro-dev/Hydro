@@ -28,9 +28,9 @@ const NAME_RE = /^\w[\w .()-]*\.[A-Za-z0-9]{1,16}$/;
 
 /**
  * Parse content field into statement entries.
- * - New format `{"x.md": {lang, content|file}}` → entries as-is
+ * - Statement list `[{name, lang, content|file}]` → entries as-is
  * - Legacy `{lang: content}` → normalized entries (name `${lang}.${md|html}`)
- * - Plain string / arrays / malformed → null (caller renders legacy)
+ * - Plain string / malformed → null (caller renders legacy)
  */
 export function parseStatements(content: string, html = false): StatementEntry[] | null {
     if (!content || typeof content !== 'string') return null;
@@ -40,14 +40,18 @@ export function parseStatements(content: string, html = false): StatementEntry[]
     } catch {
         return null;
     }
-    if (typeof parsed !== 'object' || parsed instanceof Array || parsed === null) return null;
+    if (Array.isArray(parsed)) {
+        for (const value of parsed) {
+            if (typeof value !== 'object' || value === null
+                || typeof value.name !== 'string' || typeof value.lang !== 'string') return null;
+        }
+        return parsed;
+    }
+    if (typeof parsed !== 'object' || parsed === null) return null;
     const entries: StatementEntry[] = [];
-    for (const [name, value] of Object.entries<any>(parsed)) {
-        if (typeof value === 'string') {
-            entries.push({ name: `${name}.${html ? 'html' : 'md'}`, lang: name, content: value });
-        } else if (typeof value === 'object' && value && typeof value.lang === 'string') {
-            entries.push({ name, ...value });
-        } else return null;
+    for (const [lang, value] of Object.entries<any>(parsed)) {
+        if (typeof value !== 'string') return null;
+        entries.push({ name: `${lang}.${html ? 'html' : 'md'}`, lang, content: value });
     }
     return entries;
 }
@@ -60,25 +64,24 @@ export function normalizeStatements(content: string, lang: string, html = false)
 /**
  * Parse user-submitted content (edit/create handlers).
  * Plain strings are legacy submissions → null (caller decides whether to allow).
- * A JSON object must be a valid new-format statement map; malformed entries throw
+ * A JSON array must be a valid statement list; malformed entries throw
  * instead of silently falling back to legacy rendering.
  */
 export function parseSubmittedStatements(content: string, availableFiles: string[]): StatementEntry[] | null {
-    if (!content || typeof content !== 'string' || !content.trim().startsWith('{')) return null;
+    if (!content || typeof content !== 'string' || !content.trim().startsWith('[')) return null;
     let parsed: any;
     try {
         parsed = JSON.parse(content);
     } catch {
         throw new ValidationError('statement.json');
     }
-    if (typeof parsed !== 'object' || parsed instanceof Array || parsed === null) return null;
-    const entries: StatementEntry[] = [];
+    if (!Array.isArray(parsed)) return null;
     const names = new Set<string>();
-    for (const [name, value] of Object.entries<any>(parsed)) {
-        if (typeof value !== 'object' || value === null || typeof value.lang !== 'string') {
-            throw new ValidationError('statement.entry', null, name);
+    for (const entry of parsed) {
+        if (typeof entry !== 'object' || entry === null
+            || typeof entry.name !== 'string' || typeof entry.lang !== 'string') {
+            throw new ValidationError('statement.entry');
         }
-        const entry = { name, ...value };
         if (!NAME_RE.test(entry.name)) throw new ValidationError('statement.name', null, entry.name);
         if (names.has(entry.name)) throw new ValidationError('statement.duplicate', null, entry.name);
         names.add(entry.name);
@@ -87,9 +90,8 @@ export function parseSubmittedStatements(content: string, availableFiles: string
         const hasFile = typeof entry.file === 'string' && entry.file.length > 0;
         if (!hasContent && !hasFile) throw new ValidationError('statement.empty', null, entry.name);
         if (hasFile && !availableFiles.includes(entry.file)) throw new ValidationError('statement.file', null, entry.file);
-        entries.push(entry);
     }
-    return entries;
+    return parsed;
 }
 
 export interface ProblemSource {
