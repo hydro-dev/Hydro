@@ -55,7 +55,7 @@ async function handleClickUpload(
     Notification.warn(i18n('No file selected.'));
     return;
   }
-  await uploadFiles(endpoint, files, { pjax: true, type, sidebar });
+  await uploadFiles(endpoint, files, { pjax: true, type, sidebar }).catch(() => null);
 }
 
 async function handleClickRename(ev) {
