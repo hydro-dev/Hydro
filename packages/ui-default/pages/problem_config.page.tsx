@@ -37,7 +37,7 @@ const page = new NamedPage('problem_config', () => {
           },
         });
       },
-    });
+    }).catch(() => null);
   }
 
   async function handleClickRename(ev: JQuery.ClickEvent<Document, undefined, any, any>) {

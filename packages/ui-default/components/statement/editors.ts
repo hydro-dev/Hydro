@@ -1,3 +1,4 @@
+import type { StatementEntry } from 'hydrooj';
 import $ from 'jquery';
 import EditorComponent from 'vj/components/editor/index';
 import { i18n, tpl } from 'vj/utils';
@@ -6,13 +7,7 @@ import { i18n, tpl } from 'vj/utils';
 // Plugins register custom editors per extension (e.g. a typst editor with preview);
 // unknown extensions fall back to the plain text editor.
 
-export interface StatementEntryLike {
-  name: string;
-  lang: string;
-  content?: string;
-  file?: string;
-  render?: any;
-}
+export interface StatementEntryLike extends StatementEntry { }
 
 export interface StatementEditorHandle {
   onChange(callback: (value: string) => void): void;
@@ -51,6 +46,7 @@ const textEditor: StatementEditorFactory = ({ entry, $container }) => {
     },
     destroy() {
       editor.destroy();
+      editor.model?.dispose();
     },
   };
 };

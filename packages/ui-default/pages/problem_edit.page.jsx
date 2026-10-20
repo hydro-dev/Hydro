@@ -159,9 +159,8 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   parseCategorySelection();
 
   // ---------- statements ----------
-  const UiCtx = window.UiContext || {};
-  const langs = UiCtx.statementLangs || {};
-  const isCreate = !!UiCtx.problemCreate;
+  const langs = UiContext.statementLangs || {};
+  const isCreate = !!UiContext.problemCreate;
   const $field = $('textarea[name="content"]');
   const defaultLang = UserContext.viewLang || i18n('__id');
 
@@ -171,29 +170,23 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   function parseDraft(val) {
     try {
       const parsed = JSON.parse(val);
-      if (!Array.isArray(parsed)) return null;
-      for (const v of parsed) {
-        if (typeof v !== 'object' || v === null || typeof v.name !== 'string' || typeof v.lang !== 'string') return null;
-      }
+      if (!Array.isArray(parsed) || !parsed.every(
+        (v) => typeof v === 'object' && v && typeof v.name === 'string' && typeof v.lang === 'string')
+      ) return null;
       return parsed;
     } catch (e) {
-      return [{ name: 'problem.md', lang: defaultLang, content: '' }];
+      return null;
     }
   }
 
-  const draft = parseDraft(String($field.val() || ''));
-  const entries = draft ?? parseDraft($field[0].defaultValue) ?? [];
-
-  if (isCreate && draft === null) {
-    entries.push({
-      name: `problem_${defaultLang}.md`,
-      lang: defaultLang,
-      content: String($field.val() || ''),
-    });
-  }
+  const entries = parseDraft(($field.val() || '').toString()) ?? parseDraft($field[0].defaultValue) ?? [{
+    name: `problem_${defaultLang}.md`,
+    lang: defaultLang,
+    content: String($field.val() || ''),
+  }];
 
   // file names known to exist: server-provided additional files plus uploads from this session
-  const knownFiles = new Set((UiCtx.additionalFiles || []).map((f) => f.name));
+  const knownFiles = new Set((UiContext.additionalFiles || []).map((f) => f.name));
 
   let activeName = entries[0]?.name || null;
   let editorHandle = null;

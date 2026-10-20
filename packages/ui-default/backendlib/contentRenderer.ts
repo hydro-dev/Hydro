@@ -1,5 +1,4 @@
 import type { Renderer, StatementEntry } from 'hydrooj';
-import { ValidationError } from 'hydrooj';
 import { escape } from 'lodash';
 import markdown from './markdown';
 import { ensureTag, xss } from './markdown-it-xss';
@@ -18,6 +17,6 @@ export const presetRenderers: Record<string, Renderer> = {
 
 export function renderStatement(entry: StatementEntry, ctx: any) {
   const renderer = global.Hydro?.module?.contentRenderer?.[entry.name.split('.').pop()];
-  if (!renderer) throw new ValidationError('statement.format', null, entry.name);
+  if (typeof renderer?.render !== 'function') return `<pre>${escape(entry.content || '')}</pre>`;
   return renderer.render(entry, ctx);
 }

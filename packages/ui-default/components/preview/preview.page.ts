@@ -175,7 +175,7 @@ export async function previewFile(ev?, type = '') {
     type: sidebarType || type,
     sidebar,
     pjax: true,
-  });
+  }).catch(() => null);
   return null;
 }
 
