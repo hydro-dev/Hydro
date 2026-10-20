@@ -271,7 +271,7 @@ export async function run({
                 const lang = SystemModel.get('server.language') || 'zh';
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.id}`, pdoc.title,
-                    JSON.stringify({ [`problem_${lang}.${markdown ? 'md' : 'html'}`]: { lang, content } }),
+                    JSON.stringify([{ name: `problem_${lang}.${markdown ? 'md' : 'html'}`, lang, content }]),
                     1, tags, { hidden: pdoc.status === 1 },
                 );
                 pidMap[pdoc.id] = pid;

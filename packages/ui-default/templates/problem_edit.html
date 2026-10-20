@@ -56,7 +56,7 @@
           <div class="flex-row nojs--hide" id="statement-props" style="margin:8px 0"></div>
           <div class="nojs--hide" id="statement-editor-area"></div>
           <input type="file" id="statement-file-input" style="display:none">
-          <textarea name="content" class="textbox hasjs--hide" data-markdown-upload style="height: 500px">{% if pdoc %}{{ statements|statementSubmitJson }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
+          <textarea name="content" class="textbox hasjs--hide" data-markdown-upload style="height: 500px">{% if pdoc %}{{ statementsJSON }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
           <script>
           {{ set(UiContext, {
             statementLangs: statementLangs,

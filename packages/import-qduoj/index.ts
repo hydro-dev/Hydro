@@ -79,7 +79,7 @@ class ImportQduojHandler extends Handler {
                 const lang = SystemModel.get('server.language') || 'zh';
                 const pid = await ProblemModel.add(
                     domainId, pdoc.display_id, pdoc.title,
-                    JSON.stringify({ [`problem_${lang}.html`]: { lang, content } }),
+                    JSON.stringify([{ name: `problem_${lang}.html`, lang, content }]),
                     this.user._id, pdoc.tags || [],
                 );
                 const config: ProblemConfigFile = {

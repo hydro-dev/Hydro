@@ -72,7 +72,7 @@ class FpsProblemImportHandler extends Handler {
             }
             await Promise.all(tasks);
             await ProblemModel.edit(domainId, pid, {
-                content: JSON.stringify({ [`problem_${lang}.${markdown ? 'md' : 'html'}`]: { lang, content } }),
+                content: JSON.stringify([{ name: `problem_${lang}.${markdown ? 'md' : 'html'}`, lang, content }]),
             });
             if (p.solution) {
                 let s = '';
