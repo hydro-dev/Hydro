@@ -5,7 +5,12 @@ import {
 } from 'hydrooj';
 
 const indexOmit = ['_id', 'docType', 'data', 'additional_file', 'config', 'stats', 'assign'];
-const processDocument = (doc: Partial<ProblemDoc>) => {
+const processDocument = async (pdoc: Partial<ProblemDoc>) => {
+    const doc = {
+        ...pdoc,
+        tag: pdoc.tag?.slice(),
+        content: (await ProblemModel.getStatements(pdoc as ProblemDoc)).map((entry) => entry.content).filter(Boolean).join('\n'),
+    };
     doc.content &&= doc.content.replace(/[[\]【】()（）]/g, ' ');
     doc.title &&= doc.title.replace(/[[\]【】()（）]/g, ' ')
         .replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
@@ -83,7 +88,7 @@ export default class ElasticSearchService extends Service {
             await this.client.index({
                 index: 'problem',
                 id: `${pdoc.domainId}/${pdoc.docId}`,
-                document: processDocument(pdoc),
+                document: await processDocument(pdoc),
             });
         };
         if (domainId) await iterateAllProblemInDomain(domainId, ProblemModel.PROJECTION_PUBLIC, cb);
@@ -94,25 +99,32 @@ export default class ElasticSearchService extends Service {
 
     async [Service.init]() {
         await this.client.nodes.stats();
-        this.ctx.on('problem/add', async (doc, docId) => {
-            await this.client.index({
-                index: 'problem',
-                id: `${doc.domainId}/${docId}`,
-                document: processDocument(doc),
-            });
-        });
-        this.ctx.on('problem/edit', async (pdoc) => {
-            await this.client.index({
-                index: 'problem',
-                id: `${pdoc.domainId}/${pdoc.docId}`,
-                document: processDocument(pdoc),
-            });
+        const indexProblem = async (pdoc: Partial<ProblemDoc>, docId = pdoc.docId) => {
+            try {
+                await this.client.index({
+                    index: 'problem',
+                    id: `${pdoc.domainId}/${docId}`,
+                    document: await processDocument({ ...pdoc, docId }),
+                });
+            } catch (e) {
+                this.ctx.logger.error(e);
+            }
+        };
+        this.ctx.on('problem/add', indexProblem);
+        this.ctx.on('problem/edit', indexProblem);
+        this.ctx.on('problem/setStatements', async (domainId, docId) => {
+            try {
+                const pdoc = await ProblemModel.get(domainId, docId);
+                if (pdoc) await indexProblem(pdoc);
+            } catch (e) {
+                this.ctx.logger.error(e);
+            }
         });
         this.ctx.on('problem/delete', async (domainId, docId) => {
             await this.client.delete({
                 index: 'problem',
                 id: `${domainId}/${docId}`,
-            });
+            }).catch((e) => this.ctx.logger.error(e));
         });
         this.ctx.addScript(
             'ensureElasticSearch', 'Elastic problem search re-index',

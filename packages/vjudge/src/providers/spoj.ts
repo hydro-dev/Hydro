@@ -77,7 +77,7 @@ langs: ${JSON.stringify(langs)}`),
             },
             files,
             tag: Array.from(document.querySelectorAll('[data-tagid]')).map((i) => i.childNodes[0].nodeValue.substr(1, 999)),
-            content: document.querySelector('#problem-body').innerHTML.trim(),
+            content: JSON.stringify({ 'en.html': { lang: 'en', content: document.querySelector('#problem-body').innerHTML.trim() } }),
         };
     }
 

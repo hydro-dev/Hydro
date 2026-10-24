@@ -268,10 +268,12 @@ export async function run({
                 }
                 const tags = pdoc.tags?.split(',')?.map((i) => i.trim())?.filter((i) => i);
                 if (pdoc.source) tags.push(...pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i));
+                const lang = SystemModel.get('server.language') || 'zh';
                 const pid = await ProblemModel.add(
-                    domainId, `P${pdoc.id}`, pdoc.title, content, 1, tags, { hidden: pdoc.status === 1 },
+                    domainId, `P${pdoc.id}`, pdoc.title,
+                    JSON.stringify([{ name: `problem_${lang}.${markdown ? 'md' : 'html'}`, lang, content }]),
+                    1, tags, { hidden: pdoc.status === 1 },
                 );
-                if (!markdown) await ProblemModel.edit(domainId, pid, { html: true });
                 pidMap[pdoc.id] = pid;
                 await Promise.all(Object.keys(files).map((filename) => ProblemModel.addAdditionalFile(domainId, pid, filename, files[filename])));
                 if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for problem ${pid}` });

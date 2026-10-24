@@ -17,6 +17,8 @@ import { FileUploadError, NotFoundError, ProblemNotFoundError, ValidationError }
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
+import type { StatementEntry } from '../lib/content';
+import { normalizeStatements } from '../lib/content';
 import { parseConfig } from '../lib/testdataConfig';
 import bus from '../service/bus';
 import db from '../service/db';
@@ -35,6 +37,15 @@ import SystemModel from './system';
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
+export interface ProblemStatementDoc extends StatementEntry {
+    _id: ObjectId;
+    domainId: string;
+    docType: number;
+    docId: number;
+}
+
+const collStatement = db.collection('problem.statement');
+
 const logger = new Logger('problem');
 function sortable(source: string, namespaces: Record<string, string>) {
     const [namespace, pid] = source.includes('-') ? source.split('-') : ['default', source];
@@ -48,10 +59,10 @@ function findOverrideContent(dir: string, base: string) {
     if (files.includes(`${base}.md`)) return fs.readFileSync(path.join(dir, `${base}.md`), 'utf8');
     if (files.includes(`${base}.pdf`)) return `@[PDF](file://${base}.pdf)`;
     const languages = {};
-    files = files.filter((i) => new RegExp(`^${base}(?:_|.)([a-zA-Z_]+)\\.(md|pdf)$`).test(i));
+    files = files.filter((i) => new RegExp(`^${base}(?:_|\\.)([a-zA-Z_-]+)\\.(md|pdf)$`).test(i));
     if (!files.length) return null;
     for (const file of files) {
-        const match = file.match(`^${base}(?:_|.)([a-zA-Z_]+)\\.(md|pdf)$`);
+        const match = file.match(`^${base}(?:_|\\.)([a-zA-Z_-]+)\\.(md|pdf)$`);
         const lang = match[1];
         const ext = match[2];
         if (ext === 'pdf') languages[lang] = `@[PDF](file://${file})`;
@@ -112,7 +123,6 @@ export class ProblemModel {
         owner: 1,
         title: '*',
         content: '',
-        html: false,
         nSubmit: 0,
         nAccept: 0,
         tag: [],
@@ -133,7 +143,6 @@ export class ProblemModel {
         owner: 1,
         title: '*',
         content: 'Deleted Problem',
-        html: false,
         nSubmit: 0,
         nAccept: 0,
         tag: [],
@@ -180,12 +189,89 @@ export class ProblemModel {
         if (meta.difficulty) args.difficulty = meta.difficulty;
         if (meta.reference) args.reference = meta.reference;
         await bus.parallel('problem/before-add', domainId, content, owner, docId, args);
-        const result = await document.add(domainId, content, owner, document.TYPE_PROBLEM, docId, null, null, args);
-        args.content = content;
+        const entries = normalizeStatements(args.content ?? content, SystemModel.get('server.language') || 'zh');
+        args.content = '';
+        delete args.html;
+        const result = await document.add(domainId, '', owner, document.TYPE_PROBLEM, docId, null, null, args);
         args.owner = owner;
         args.docType = document.TYPE_PROBLEM;
         args.domainId = domainId;
-        await bus.emit('problem/add', args, result);
+        args.docId = docId;
+        if (entries.length) await ProblemModel.setStatements(domainId, docId, entries, false, args.reference);
+        bus.emit('problem/add', args, result);
+        return result;
+    }
+
+    static async getStatements(pdoc: ProblemDoc, followRedirect = true): Promise<ProblemStatementDoc[]> {
+        const rows = await collStatement.find({ domainId: pdoc.domainId, docId: pdoc.docId }).sort({ _id: 1 }).toArray();
+        if (rows.length) return rows;
+        const entries = normalizeStatements(pdoc.content || '', SystemModel.get('server.language') || 'zh', pdoc.html);
+        if (!entries.length && followRedirect && pdoc.reference) {
+            const source = await ProblemModel.get(pdoc.reference.domainId, pdoc.reference.pid);
+            if (!source) throw new ProblemNotFoundError(pdoc.reference.domainId, pdoc.reference.pid);
+            return ProblemModel.getStatements(source, false);
+        }
+        return entries.map((entry) => ({
+            _id: new ObjectId(),
+            domainId: pdoc.domainId,
+            docType: document.TYPE_PROBLEM,
+            docId: pdoc.docId,
+            ...entry,
+        }));
+    }
+
+    static async setStatements(
+        domainId: string, docId: number, entries: StatementEntry[], forceCompile = false,
+        reference?: ProblemDoc['reference'],
+    ): Promise<ProblemDoc> {
+        const existing = await collStatement.find({ domainId, docId }).toArray();
+        const prevByName = new Map(existing.map((r) => [r.name, r]));
+        const ops: Promise<any>[] = [];
+        for (const entry of entries) {
+            const prev = prevByName.get(entry.name);
+            let render = forceCompile ? undefined : prev?.render;
+            const renderer = global.Hydro?.module?.contentRenderer?.[entry.name.split('.').pop()];
+            if (renderer?.compile && typeof entry.content === 'string' && (forceCompile || prev?.content !== entry.content)) {
+                try {
+                    render = await renderer.compile(entry, {
+                        readAdditionalFile: async (name) => streamToBuffer(
+                            await storage.get(`problem/${reference?.domainId ?? domainId}/${reference?.pid ?? docId}/additional_file/${name}`),
+                        ),
+                    });
+                } catch (e) {
+                    render = { error: e?.message || String(e).slice(0, 500) };
+                }
+            }
+            const doc: any = {
+                _id: prev?._id ?? new ObjectId(),
+                domainId,
+                docType: document.TYPE_PROBLEM,
+                docId,
+                name: entry.name,
+                lang: entry.lang,
+            };
+            if (entry.content !== undefined) doc.content = entry.content;
+            if (entry.file) doc.file = entry.file;
+            if (render !== undefined) doc.render = render;
+            ops.push(collStatement.replaceOne({ domainId, docId, name: entry.name }, doc, { upsert: true }));
+        }
+        await Promise.all(ops);
+        const removed = existing.filter((r) => !entries.some((e) => e.name === r.name));
+        if (removed.length) await collStatement.deleteMany({ domainId, docId, name: { $in: removed.map((r) => r.name) } });
+        const $set: Partial<ProblemDoc> = { content: '' };
+        const $unset: Partial<Record<Field, '' | true | 1>> = { html: '' };
+        await bus.parallel('document/set', domainId, document.TYPE_PROBLEM, docId, $set, $unset);
+        $set.content = '';
+        delete $set.html;
+        delete $unset.content;
+        $unset.html = '';
+        const result = await document.coll.findOneAndUpdate(
+            { domainId, docType: document.TYPE_PROBLEM, docId },
+            { $set, $unset },
+            { returnDocument: 'after' },
+        ) as ProblemDoc;
+        if (!result) throw new ProblemNotFoundError(domainId, docId);
+        bus.emit('problem/setStatements', domainId, docId, entries);
         return result;
     }
 
@@ -233,10 +319,10 @@ export class ProblemModel {
         return document.getMultiStatus(domainId, document.TYPE_PROBLEM, query);
     }
 
-    static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
+    static async edit(domainId: string, _id: number, $set: Partial<Omit<ProblemDoc, 'html'>>): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
         const ddoc = await DomainModel.get(domainId);
-        const $unset = delpid ? { pid: '' } : {};
+        const $unset: Partial<Record<Field, '' | true | 1>> = delpid ? { pid: '' } : {};
         if (delpid) {
             delete $set.pid;
             $set.sort = sortable(`P${_id}`, ddoc.namespaces);
@@ -244,8 +330,25 @@ export class ProblemModel {
             $set.sort = sortable($set.pid, ddoc.namespaces);
         }
         await bus.parallel('problem/before-edit', $set, $unset);
-        const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, $unset);
-        await bus.emit('problem/edit', result);
+        const { content, ...metadata } = $set as Partial<ProblemDoc>;
+        delete metadata.html;
+        delete $unset.content;
+        delete $unset.html;
+        const entries = typeof content === 'string'
+            ? normalizeStatements(content, SystemModel.get('server.language') || 'zh')
+            : null;
+        const metadataResult = Object.keys(metadata).length || Object.keys($unset).length
+            ? await document.set(domainId, document.TYPE_PROBLEM, _id, metadata, $unset)
+            : null;
+        let reference = metadataResult?.reference;
+        if (!metadataResult && entries?.some((entry) => typeof entry.content === 'string'
+            && global.Hydro?.module?.contentRenderer?.[entry.name.split('.').pop()]?.compile)) {
+            reference = (await document.get(domainId, document.TYPE_PROBLEM, _id, ['reference']))?.reference;
+        }
+        const result = entries
+            ? await ProblemModel.setStatements(domainId, _id, entries, false, reference)
+            : metadataResult || await document.get(domainId, document.TYPE_PROBLEM, _id);
+        bus.emit('problem/edit', result);
         return result;
     }
 
@@ -258,7 +361,7 @@ export class ProblemModel {
         const $set = { hidden: hidden || original.hidden, reference: { domainId, pid: _id } } as any;
         if (typeof original.difficulty === 'number') $set.difficulty = original.difficulty;
         return await ProblemModel.add(
-            target, pid, original.title, original.content,
+            target, pid, original.title, '',
             original.owner, original.tag, $set,
         );
     }
@@ -284,6 +387,7 @@ export class ProblemModel {
         const res = await Promise.all([
             document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
             document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
+            collStatement.deleteMany({ domainId, docId }),
             storage.list(`problem/${domainId}/${docId}/`)
                 .then((items) => storage.del(items.map((item) => `problem/${domainId}/${docId}/${item.name}`))),
             bus.parallel('problem/delete', domainId, docId),
@@ -551,9 +655,48 @@ export class ProblemModel {
                     }
                     if (!await isValidPid(pid)) pid = undefined;
                 }
-                let overrideContent = findOverrideContent(path.join(tmpdir, i), 'problem');
-                overrideContent ||= findOverrideContent(path.join(tmpdir, i, 'statement'), 'problem');
-                overrideContent ||= findOverrideContent(path.join(tmpdir, i, 'problem_statement'), 'problem');
+                const hasStatements = Object.hasOwn(pdoc, 'statements');
+                const manifest = (pdoc as ProblemDoc & { statements?: unknown }).statements;
+                const statements: StatementEntry[] = [];
+                const sources = new Set<string>();
+                if (hasStatements) {
+                    if (!Array.isArray(manifest)) throw new ValidationError('statements');
+                    const names = new Set<string>();
+                    const additionalFiles = await getFiles('additional_file');
+                    for (const entry of manifest) {
+                        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new ValidationError('statement.entry');
+                        if (typeof entry.name !== 'string' || entry.name.trim() !== entry.name
+                            || !/^\w[\w .()-]*\.[A-Za-z0-9]{1,16}$/.test(entry.name)) {
+                            throw new ValidationError('statement.name');
+                        }
+                        if (names.has(entry.name)) throw new ValidationError('statement.duplicate', null, entry.name);
+                        names.add(entry.name);
+                        if (typeof entry.lang !== 'string' || !entry.lang) throw new ValidationError('statement.lang', null, entry.name);
+                        const isSource = Object.hasOwn(entry, 'source');
+                        if (isSource === Object.hasOwn(entry, 'file')) throw new ValidationError('statement.entry', null, entry.name);
+                        const filename = isSource ? entry.source : entry.file;
+                        if (typeof filename !== 'string' || !filename || filename.trim() !== filename
+                            || /[/\\\0]/.test(filename) || ['.', '..'].includes(filename)
+                            || path.isAbsolute(filename) || path.win32.isAbsolute(filename)
+                            || (isSource && filename === 'problem.yaml')) {
+                            throw new ValidationError('statement.file', null, entry.name);
+                        }
+                        if (!isSource && !additionalFiles.some(([f]) => f.name === filename && f.isFile())) {
+                            throw new ValidationError('statement.file', null, filename);
+                        }
+                        const location = path.join(tmpdir, i, ...(isSource ? [] : ['additional_file']), filename);
+                        const stat = await fs.lstat(location).catch(() => null);
+                        if (!stat?.isFile()) throw new ValidationError('statement.file', null, filename);
+                        if (isSource) sources.add(filename);
+                        statements.push({ name: entry.name, lang: entry.lang, ...(!isSource ? { file: filename } : {}) });
+                    }
+                }
+                let overrideContent: string = null;
+                if (!hasStatements) {
+                    overrideContent = findOverrideContent(path.join(tmpdir, i), 'problem');
+                    overrideContent ??= findOverrideContent(path.join(tmpdir, i, 'statement'), 'problem');
+                    overrideContent ??= findOverrideContent(path.join(tmpdir, i, 'problem_statement'), 'problem');
+                }
                 if (pdoc.difficulty && !Number.isSafeInteger(pdoc.difficulty)) delete pdoc.difficulty;
                 const title = pdoc.title || (pdoc as any).name;
                 if (typeof title !== 'string') throw new ValidationError('title', null, 'Invalid title');
@@ -562,9 +705,24 @@ export class ProblemModel {
                     // The following is from https://icpc.io/problem-package-format/spec/2023-07-draft.html
                     'attachments', 'generators', 'include', 'data', 'statement', 'problem_statement',
                 );
-                const totalSize = allFiles.map((f) => fs.statSync(f[1]).size).reduce((a, b) => a + b, 0);
-                if (allFiles.length > SystemModel.get('limit.problem_files')) throw new ValidationError('files', null, 'Too many files');
+                const sourceFiles = Array.from(sources, (name) => path.join(tmpdir, i, name));
+                const totalSize = [...allFiles.map((f) => f[1]), ...sourceFiles]
+                    .map((loc) => fs.statSync(loc).size).reduce((a, b) => a + b, 0);
+                if (allFiles.length + sources.size > SystemModel.get('limit.problem_files')) {
+                    throw new ValidationError('files', null, 'Too many files');
+                }
                 if (totalSize > SystemModel.get('limit.problem_files_size')) throw new ValidationError('files', null, 'Files too large');
+                if (hasStatements) {
+                    for (const [index, entry] of (manifest as any[]).entries()) {
+                        if (Object.hasOwn(entry, 'source')) {
+                            statements[index].content = await fs.readFile(path.join(tmpdir, i, entry.source), 'utf8');
+                        }
+                    }
+                } else {
+                    statements.push(...normalizeStatements(
+                        overrideContent ?? pdoc.content?.toString() ?? 'No content', SystemModel.get('server.language') || 'zh', pdoc.html,
+                    ));
+                }
                 const tag = (pdoc.tag || []).map((t) => t.toString());
                 let configChanged = false;
                 let config: ProblemConfigFile = {};
@@ -593,18 +751,10 @@ export class ProblemModel {
                     config.memory = (pdoc as any).limits.memory ? `${(pdoc as any).limits.memory}m` : config.memory || undefined;
                     configChanged = true;
                 }
-                const docId = overridePid
-                    ? (await ProblemModel.edit(ddoc._id, overridePid, {
-                        title: title.trim(),
-                        content: overrideContent || pdoc.content?.toString() || 'No content',
-                        tag,
-                        difficulty: pdoc.difficulty,
-                        ...(options.hidden ? { hidden: true } : {}),
-                    })).docId
-                    : await ProblemModel.add(
-                        ddoc._id, pid, title.trim(), overrideContent || pdoc.content?.toString() || 'No content',
-                        operator || pdoc.owner, tag, { hidden: options.hidden || pdoc.hidden, difficulty: pdoc.difficulty },
-                    );
+                const docId = overridePid || await ProblemModel.add(
+                    ddoc._id, pid, title.trim(), '',
+                    operator || pdoc.owner, tag, { hidden: options.hidden || pdoc.hidden, difficulty: pdoc.difficulty },
+                );
                 // TODO delete unused file when updating pdoc
                 for (const [f, loc] of await getFiles('testdata', 'attachments', 'generators', 'include')) {
                     if (f.isDirectory()) {
@@ -616,7 +766,7 @@ export class ProblemModel {
                     if (!f.isDirectory()) continue;
                     const sub = await fs.readdir(loc);
                     for (const file of sub) {
-                        if (f.name === 'sample') await ProblemModel.addAdditionalFile(domainId, docId, file, path.join(loc, file));
+                        if (!hasStatements && f.name === 'sample') await ProblemModel.addAdditionalFile(domainId, docId, file, path.join(loc, file));
                         await ProblemModel.addTestdata(ddoc._id, docId, file, path.join(loc, file));
                     }
                 }
@@ -636,10 +786,18 @@ export class ProblemModel {
                         configChanged = true;
                     }
                 }
-                for (const [f, loc] of await getFiles('additional_file', 'attachments', 'statement', 'problem_statement')) {
+                for (const [f, loc] of await getFiles(...(hasStatements
+                    ? ['additional_file'] : ['additional_file', 'attachments', 'statement', 'problem_statement']))) {
                     if (!f.isFile()) continue;
                     await ProblemModel.addAdditionalFile(ddoc._id, docId, f.name, loc);
                 }
+                await ProblemModel.setStatements(ddoc._id, docId, statements, true);
+                await ProblemModel.edit(ddoc._id, docId, {
+                    title: title.trim(),
+                    tag,
+                    difficulty: pdoc.difficulty,
+                    ...(options.hidden ? { hidden: true } : {}),
+                });
                 for (const [f, loc] of await getFiles('solution')) {
                     if (!f.isFile()) continue;
                     await SolutionModel.add(ddoc._id, docId, operator, await fs.readFile(loc, 'utf-8'));
@@ -693,6 +851,23 @@ export class ProblemModel {
             const problemPath = path.join(tmpdir, `${pdoc.docId}`);
             await fs.mkdir(problemPath);
             const problemYaml = path.join(problemPath, 'problem.yaml');
+            const statements = await ProblemModel.getStatements(pdoc);
+            let filePdoc = pdoc;
+            if (pdoc.reference) {
+                filePdoc = await ProblemModel.get(pdoc.reference.domainId, pdoc.reference.pid, ['domainId', 'docId', 'data', 'additional_file']);
+                if (!filePdoc) throw new ProblemNotFoundError(pdoc.reference.domainId, pdoc.reference.pid);
+            }
+            const manifest = statements.map((s) => {
+                if (/[/\\\0]/.test(s.name)) throw new ValidationError('statement.name', null, s.name);
+                if (s.file && !filePdoc.additional_file?.some((f) => f.name === s.file)) {
+                    throw new ValidationError('statement.file', null, s.file);
+                }
+                return {
+                    name: s.name,
+                    lang: s.lang,
+                    ...(s.file ? { file: s.file } : { source: `problem_${s.name}` }),
+                };
+            });
             const problemYamlContent = yaml.dump({
                 pid: pdoc.pid || `P${pdoc.docId}`,
                 owner: pdoc.owner,
@@ -701,33 +876,27 @@ export class ProblemModel {
                 nSubmit: pdoc.nSubmit,
                 nAccept: pdoc.nAccept,
                 difficulty: pdoc.difficulty,
+                statements: manifest,
             });
             await fs.writeFile(problemYaml, problemYamlContent);
-            try {
-                const c = JSON.parse(pdoc.content);
-                for (const key of Object.keys(c)) {
-                    const problemContent = path.join(problemPath, `problem_${key}.md`);
-                    await fs.writeFile(problemContent, typeof c[key] === 'string' ? c[key] : JSON.stringify(c[key]));
-                }
-            } catch (e) {
-                const problemContent = path.join(problemPath, 'problem.md');
-                await fs.writeFile(problemContent, pdoc.content);
+            for (const s of statements) {
+                if (!s.file) await fs.writeFile(path.join(problemPath, `problem_${s.name}`), s.content ?? '', 'utf8');
             }
-            if ((pdoc.data || []).length) {
+            if ((filePdoc.data || []).length) {
                 const testdataPath = path.join(problemPath, 'testdata');
                 await fs.mkdir(testdataPath);
-                for (const file of pdoc.data) {
-                    const stream = await storage.get(`problem/${domainId}/${pdoc.docId}/testdata/${file.name}`);
+                for (const file of filePdoc.data) {
+                    const stream = await storage.get(`problem/${filePdoc.domainId}/${filePdoc.docId}/testdata/${file.name}`);
                     const buf = await streamToBuffer(stream);
                     const testdataFile = path.join(testdataPath, file.name);
                     await fs.writeFile(testdataFile, buf);
                 }
             }
-            if ((pdoc.additional_file || []).length) {
+            if ((filePdoc.additional_file || []).length) {
                 const additionalPath = path.join(problemPath, 'additional_file');
                 await fs.mkdir(additionalPath);
-                for (const file of pdoc.additional_file) {
-                    const stream = await storage.get(`problem/${domainId}/${pdoc.docId}/additional_file/${file.name}`);
+                for (const file of filePdoc.additional_file) {
+                    const stream = await storage.get(`problem/${filePdoc.domainId}/${filePdoc.docId}/additional_file/${file.name}`);
                     const buf = await streamToBuffer(stream);
                     const additionalFile = path.join(additionalPath, file.name);
                     await fs.writeFile(additionalFile, buf);
@@ -743,7 +912,7 @@ export class ProblemModel {
     }
 }
 
-export function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     ctx.on('problem/addTestdata', async (domainId, docId, name) => {
         if (!['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(name)) return;
         const buf = await storage.get(`problem/${domainId}/${docId}/testdata/${name}`);
@@ -762,6 +931,10 @@ export function apply(ctx: Context) {
             await ProblemModel.edit(domainId, docId, { config: (await streamToBuffer(buf)).toString() });
         }
     });
+    await db.ensureIndexes(
+        collStatement,
+        { key: { domainId: 1, docId: 1, name: 1 }, name: 'basic', unique: true },
+    );
 }
 
 global.Hydro.model.problem = ProblemModel;

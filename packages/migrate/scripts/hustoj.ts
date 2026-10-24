@@ -203,7 +203,7 @@ export async function run({
             }
             if (!pidMap[pdoc.problem_id]) {
                 const files = {};
-                const markdown = [pdoc.description?.[0], pdoc.input?.[0], pdoc.output?.[0], pdoc.hint?.[0]].some((i) => i?.includes('[md]'));
+                const markdown = [pdoc.description, pdoc.input, pdoc.output, pdoc.hint].some((i) => i?.includes('[md]'));
                 let content = buildContent({
                     description: pdoc.description,
                     input: pdoc.input,
@@ -223,13 +223,13 @@ export async function run({
                         report({ message: `failed to read file: ${path.join(uploadDir, file[1])}` });
                     }
                 }
+                const lang = SystemModel.get('server.language') || 'zh';
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
-                    pdoc.title, content,
+                    pdoc.title, JSON.stringify([{ name: `problem_${lang}.${markdown ? 'md' : 'html'}`, lang, content }]),
                     1, pdoc.source?.trim().length ? pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i) : [],
                     { hidden: pdoc.defunct === 'Y' },
                 );
-                if (!markdown) await ProblemModel.edit(domainId, pid, { html: true });
                 pidMap[pdoc.problem_id] = pid;
                 await Promise.all(Object.keys(files).map((filename) => ProblemModel.addAdditionalFile(domainId, pid, filename, files[filename])));
                 if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for problem ${pid}` });
@@ -248,7 +248,6 @@ target: ybtbas/${+pdoc.id - 3000}
 ` : ''}`,
                 owner: uidMap[cdoc[0]?.user_id] || 1,
                 maintainer,
-                html: true,
             });
             if (pdoc.remote_oj === 'bas') remoteUsed = true;
             if (pdoc.solution) {

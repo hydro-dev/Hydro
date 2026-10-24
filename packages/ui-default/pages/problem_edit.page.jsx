@@ -3,8 +3,9 @@ import _ from 'lodash';
 import ReactDOM from 'react-dom/client';
 import { confirm } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
-import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
+import { editorRegistry, statementKinds as kinds } from 'vj/components/statement/editors';
+import uploadFiles from 'vj/components/upload';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request, tpl } from 'vj/utils';
 
@@ -157,48 +158,212 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   buildCategoryFilter();
   parseCategorySelection();
 
-  const $main = $('textarea[data-editor]');
-  const $field = $('textarea[data-markdown-upload]');
-  let content = $field.val();
-  let isObject = false;
-  let activeTab = $('[data-lang]').first().attr('data-lang');
-  try {
-    content = JSON.parse(content);
-    isObject = !(content instanceof Array);
-    if (!isObject) content = JSON.stringify(content);
-  } catch (e) { }
-  if (!isObject) content = { [activeTab]: content };
-  function getContent(lang) {
-    let c = '';
-    if (content[lang]) c = content[lang];
-    else {
-      const list = Object.keys(content).filter((l) => l.startsWith(lang));
-      if (list.length) c = content[list[0]];
-    }
-    if (typeof c !== 'string') c = JSON.stringify(c);
-    return c;
-  }
-  $main.val(getContent(activeTab));
-  function onChange(val) {
+  // ---------- statements ----------
+  const langs = UiContext.statementLangs || {};
+  const isCreate = !!UiContext.problemCreate;
+  const $field = $('textarea[name="content"]');
+  const defaultLang = UserContext.viewLang || i18n('__id');
+
+  // Parse a submitted-shape JSON string into entries (null when not statement JSON).
+  // Used both for the server-rendered initial value and for restoring the draft
+  // the browser puts back into the textarea when returning from an error page.
+  function parseDraft(val) {
     try {
-      val = JSON.parse(val);
-      if (!(val instanceof Array)) val = JSON.stringify(val);
-    } catch { }
-    const empty = /^\s*$/.test(val);
-    if (empty) delete content[activeTab];
-    else content[activeTab] = val;
-    if (!Object.keys(content).length) $field.text('');
-    else $field.text(JSON.stringify(content));
+      const parsed = JSON.parse(val);
+      if (!Array.isArray(parsed) || !parsed.every(
+        (v) => typeof v === 'object' && v && typeof v.name === 'string' && typeof v.lang === 'string')
+      ) return null;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
   }
-  const editor = Editor.getOrConstruct($main, { onChange });
-  $('[data-lang]').on('click', (ev) => {
-    $('[data-lang]').removeClass('tab--active');
-    $(ev.currentTarget).addClass('tab--active');
-    const lang = $(ev.currentTarget).attr('data-lang');
-    activeTab = lang;
-    const val = getContent(lang);
-    editor.value(val);
+
+  const entries = parseDraft(($field.val() || '').toString()) ?? parseDraft($field[0].defaultValue) ?? [{
+    name: `${defaultLang}.md`,
+    lang: defaultLang,
+    content: String($field.val() || ''),
+  }];
+
+  // file names known to exist: server-provided additional files plus uploads from this session
+  const knownFiles = new Set((UiContext.additionalFiles || []).map((f) => f.name));
+
+  let activeName = entries[0]?.name || null;
+  let editorHandle = null;
+  // assigned after the render functions are defined; kept as a variable to avoid forward references
+  let refreshUI = () => { };
+  const serialize = () => $field.val(JSON.stringify(entries));
+  const activeEntry = () => entries.find((e) => e.name === activeName);
+  const hasName = (n) => entries.some((e) => e.name === n);
+
+  function addTextEntry(ext) {
+    const lang = activeEntry()?.lang || defaultLang;
+    let name = `${lang}.${ext}`;
+    let i = 1;
+    while (hasName(name)) name = `${lang}_${++i}.${ext}`;
+    entries.push({ name, lang, content: '' });
+    refreshUI(name);
+  }
+
+  // no display:none here: the Drop instance manages the menu's visibility itself
+  const $kindMenu = $(tpl`<ol class="menu"></ol>`).appendTo('body');
+  for (const kind of kinds) {
+    $(tpl`<a class="menu__link" data-kind="${kind.id}" href="javascript:;">${i18n(kind.label)}</a>`)
+      .on('click', () => {
+        $('a[name="statement-add"]').data('vjDropdownInstance')?.dropInstance?.close();
+        if (kind.extension) addTextEntry(kind.extension);
+        else if (kind.accept) $('#statement-file-input').attr('accept', kind.accept).trigger('click');
+      })
+      .appendTo($('<li class="menu__item"></li>').appendTo($kindMenu));
+  }
+
+  function deleteEntry(name) {
+    const e = entries.find((x) => x.name === name);
+    _.pull(entries, e);
+    if (activeName === name) activeName = entries[0]?.name || null;
+    refreshUI();
+  }
+
+  function renderTabs() {
+    Dropdown.get($('#statement-tabs a[name="statement-add"]'))?.detach();
+    const $tabs = $('#statement-tabs').empty();
+    for (const e of entries) {
+      $(tpl`
+        <a class="section__tab-header-item ${e.name === activeName ? 'tab--active' : ''}" data-name="${e.name}" href="#">
+          ${e.name} <sup class="supplementary">${langs[e.lang] || e.lang}</sup>
+          <span class="icon icon-close statement-tab-del" title="${i18n('Delete Statement')}"></span>
+        </a>`).appendTo($tabs);
+    }
+    const title = i18n('Add statement');
+    const $add = $(tpl`
+      <a class="section__tab-header-item" name="statement-add" href="javascript:;" title="${title}">
+        <span class="icon icon-add"></span>
+      </a>`).appendTo($tabs);
+    Dropdown.getOrConstruct($add, { target: $kindMenu[0], position: 'bottom left' });
+  }
+
+  function renderProps() {
+    const e = activeEntry();
+    const $props = $('#statement-props').empty();
+    if (!e) return;
+    const $name = $(tpl`<input class="textbox inline compact flex-fill" value="${e.name}" placeholder="${i18n('Filename (with extension)')}">`)
+      .on('change', async () => {
+        const newName = String($name.val() || '').trim();
+        if (!newName || newName === e.name) {
+          $name.val(e.name);
+          return;
+        }
+        if (hasName(newName)) {
+          Notification.error(i18n('Duplicate statement filename.'));
+          $name.val(e.name);
+          return;
+        }
+        if (e.file) {
+          if (isCreate) {
+            // user-file storage has no rename operation; rename on the edit page after creation
+            Notification.error(i18n('Please rename it on the edit page after creating the problem.'));
+            $name.val(e.name);
+            return;
+          }
+          try {
+            await request.post('./files', {
+              operation: 'rename_files',
+              files: [e.file],
+              newNames: [newName],
+              type: 'additional_file',
+            });
+          } catch (err) {
+            Notification.error(err.message);
+            $name.val(e.name);
+            return;
+          }
+          e.file = newName;
+        }
+        e.name = newName;
+        refreshUI(newName);
+      });
+    const $lang = $('<select class="inline compact select"></select>');
+    // an unknown lang code (e.g. from an imported problem) still gets its own option,
+    // otherwise the select would silently display some other language
+    const langOptions = Object.keys(langs).includes(e.lang)
+      ? Object.entries(langs)
+      : [[e.lang, `${e.lang} (${i18n('Unknown language')})`], ...Object.entries(langs)];
+    for (const [k, v] of langOptions) {
+      $(tpl`<option value="${k}" ${k === e.lang ? 'selected' : ''}>${v}</option>`).appendTo($lang);
+    }
+    $lang.on('change', () => {
+      e.lang = String($lang.val());
+      serialize();
+      renderTabs();
+    });
+    $props.append($name).append($lang);
+  }
+
+  function renderEditor() {
+    editorHandle?.destroy?.();
+    const e = activeEntry();
+    const $area = $('#statement-editor-area').empty();
+    if (!e) {
+      $area.append($(tpl`<p class="note">${i18n('No statement yet. Use the + button in the tab bar to add one.')}</p>`));
+      return;
+    }
+    editorHandle = editorRegistry[e.name]({ entry: e, $container: $area });
+    editorHandle.onChange((value) => {
+      if (e.content !== undefined) e.content = value;
+      serialize();
+    });
+  }
+
+  refreshUI = (name) => {
+    if (name !== undefined) activeName = name;
+    serialize();
+    renderTabs();
+    renderProps();
+    renderEditor();
+  };
+
+  $('#statement-file-input').on('change', async (ev) => {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    const name = file.name;
+    if (hasName(name)) {
+      Notification.error(i18n('Duplicate statement filename.'));
+      ev.target.value = '';
+      return;
+    }
+    try {
+      await uploadFiles(isCreate ? '/file' : './files', [file], isCreate ? {} : { type: 'additional_file' });
+    } catch (e) {
+      ev.target.value = '';
+      return;
+    }
+    knownFiles.add(name);
+    entries.push({ name, lang: activeEntry()?.lang || defaultLang, file: name });
+    refreshUI(name);
+    ev.target.value = '';
   });
+
+  refreshUI();
+
+  $('#statement-tabs').on('click', '.section__tab-header-item', (ev) => {
+    ev.preventDefault();
+    const $item = $(ev.currentTarget);
+    if ($(ev.target).closest('.statement-tab-del').length) {
+      // modifier keys skip the confirmation
+      if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) {
+        deleteEntry($item.attr('data-name'));
+        return;
+      }
+      confirm(i18n('Confirm deleting this statement?')).then((yes) => {
+        if (yes) deleteEntry($item.attr('data-name'));
+      });
+      return;
+    }
+    const name = $item.attr('data-name');
+    if (!name || name === activeName) return;
+    refreshUI(name);
+  });
+
   $('[type="submit"]').on('click', (ev) => {
     if (!$('[name="title"]').val().toString().length) {
       Notification.error(i18n('Title is required.'));
@@ -209,7 +374,35 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
         () => $('[name="title"]').focus(),
       );
       ev.preventDefault();
+      return;
     }
+    for (const e of entries) {
+      const isEmpty = !e.file && (e.content === undefined || !String(e.content).trim().length);
+      if (isEmpty) {
+        Notification.error(i18n('Statement {0} is empty.', e.name));
+        ev.preventDefault();
+        return;
+      }
+      if (e.file && !knownFiles.has(e.file)) {
+        Notification.error(i18n('File {0} referenced by statement {1} does not exist.', e.file, e.name));
+        ev.preventDefault();
+        return;
+      }
+    }
+    const names = entries.map((e) => e.name);
+    if (new Set(names).size !== names.length) {
+      Notification.error(i18n('Duplicate statement filename.'));
+      ev.preventDefault();
+      return;
+    }
+    for (const e of entries) {
+      if (!e.name || !e.name.includes('.')) {
+        Notification.error(i18n('Invalid statement filename: {0}', e.name));
+        ev.preventDefault();
+        return;
+      }
+    }
+    serialize();
   });
 
   if (localStorage.getItem('polyhedron-hint') === 'dismiss') return;

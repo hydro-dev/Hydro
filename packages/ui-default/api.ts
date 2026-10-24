@@ -1,10 +1,12 @@
 /* eslint-disable import/first */
 export * from './components/dialog';
+export { default as Editor } from './components/editor/index';
 export { default as loadMonaco } from './components/monaco/loader';
 export { default as Notification } from './components/notification';
 export { default as Rotator } from './components/rotator';
 export { default as selectUser } from './components/selectUser';
 export { default as Socket } from './components/socket/index';
+export * from './components/statement/editors';
 export { default as uploadFiles } from './components/upload';
 export * from './components/zipDownloader';
 export { default as download } from './components/zipDownloader';

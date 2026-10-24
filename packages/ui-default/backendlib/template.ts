@@ -8,6 +8,7 @@ import { cac } from 'cac';
 import { convert } from 'html-to-text';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
+import { renderStatement } from './contentRenderer';
 import markdown from './markdown';
 import { ensureTag, xss } from './markdown-it-xss';
 import * as misc from './misc';
@@ -96,6 +97,21 @@ class Nunjucks extends nunjucks.Environment {
         else s = s[langs[0]];
       }
       return ensureTag(html ? xss.process(s) : markdown.render(s));
+    });
+    this.addFilter('statementRender', (statements: any[], language: string, file: string, pdoc: any, tid?: string) => {
+      if (!statements?.length) {
+        // legacy problems without statement rows render the raw content field
+        if (!pdoc?.content) return '';
+        return this.getFilter('content')(pdoc.content, language, pdoc.html);
+      }
+      let candidates = statements.filter((s) => s.lang === language);
+      if (!candidates.length) candidates = statements.filter((s) => s.lang?.startsWith(language));
+      if (!candidates.length) candidates = statements;
+      const entry = (file && candidates.find((s) => s.name === file)) || candidates[0];
+      return renderStatement(entry, {
+        pdoc,
+        tid,
+      });
     });
     this.addFilter('problemPreview', (html) => {
       const res = convert(html, {

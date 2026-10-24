@@ -182,6 +182,7 @@ declare module './model/problem' {
         data: FileInfo[];
         additional_file: FileInfo[];
         hidden?: boolean;
+        /** @deprecated 仅兼容读取旧题面，格式由题面文件扩展名决定。 */
         html?: boolean;
         stats?: any;
         difficulty?: number;
@@ -623,6 +624,7 @@ declare module './service/db' {
         'record.stat': RecordStatDoc;
         'record.history': RecordHistoryDoc;
         document: any;
+        'problem.statement': import('./model/problem').ProblemStatementDoc;
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
         }[keyof DocStatusType];
@@ -700,6 +702,7 @@ export interface UI {
 export interface ModuleInterfaces {
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
     problemSearch: ProblemSearch;
+    contentRenderer: import('./lib/content').Renderer;
 }
 
 export interface HydroGlobal {

@@ -99,7 +99,12 @@ export async function downloadProblemSet(pids, name = 'Export') {
         pid: 1,
         owner: 1,
         title: 1,
-        content: 1,
+        statements: {
+          name: 1,
+          lang: 1,
+          content: 1,
+          file: 1,
+        },
         tag: 1,
         nSubmit: 1,
         nAccept: 1,
@@ -110,6 +115,19 @@ export async function downloadProblemSet(pids, name = 'Export') {
           name: 1,
         },
       });
+      const statements: any[] = pdoc.statements || [];
+      const manifest = statements.map((entry) => {
+        if (/[/\\\0]/.test(entry.name)) throw new Error(`Invalid statement filename: ${entry.name}`);
+        if (entry.file) {
+          if (!pdoc.additional_file?.some((file) => file.name === entry.file)) {
+            throw new Error(`Missing statement file: ${entry.file}`);
+          }
+          return { name: entry.name, lang: entry.lang, file: entry.file };
+        }
+        const source = `problem_${entry.name}`;
+        targets.push({ filename: `${pid}/${source}`, content: entry.content ?? '' });
+        return { name: entry.name, lang: entry.lang, source };
+      });
       targets.push({
         filename: `${pid}/problem.yaml`,
         content: dump({
@@ -119,23 +137,9 @@ export async function downloadProblemSet(pids, name = 'Export') {
           tag: pdoc.tag,
           nSubmit: pdoc.nSubmit,
           nAccept: pdoc.nAccept,
+          statements: manifest,
         }),
       });
-      try {
-        const c = JSON.parse(pdoc.content);
-        if (c instanceof Array || typeof c === 'string') throw new Error('Invalid content');
-        for (const key of Object.keys(c)) {
-          targets.push({
-            filename: `${pid}/problem_${key}.md`,
-            content: typeof c[key] === 'string' ? c[key] : JSON.stringify(c[key]),
-          });
-        }
-      } catch (e) {
-        targets.push({
-          filename: `${pid}/problem.md`,
-          content: pdoc.content,
-        });
-      }
       let { links } = await request.post(
         `/d/${UiContext.domainId}/p/${pid}/files`,
         { operation: 'get_links', files: (pdoc.data || []).map((i) => i.name), type: 'testdata' },
