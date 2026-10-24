@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { confirm } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Notification from 'vj/components/notification';
-import { resolveStatementEditor, statementKinds as kinds } from 'vj/components/statement/editors';
+import { editorRegistry, statementKinds as kinds } from 'vj/components/statement/editors';
 import uploadFiles from 'vj/components/upload';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request, tpl } from 'vj/utils';
@@ -307,8 +307,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
       $area.append($(tpl`<p class="note">${i18n('No statement yet. Use the + button in the tab bar to add one.')}</p>`));
       return;
     }
-    const factory = resolveStatementEditor(e.name);
-    editorHandle = factory({ entry: e, $container: $area });
+    editorHandle = editorRegistry[e.name]({ entry: e, $container: $area });
     editorHandle.onChange((value) => {
       if (e.content !== undefined) e.content = value;
       serialize();

@@ -73,7 +73,7 @@ export function parseSubmittedStatements(content: string, availableFiles: string
     try {
         parsed = JSON.parse(content);
     } catch {
-        throw new ValidationError('statement.json');
+        return null;
     }
     if (!Array.isArray(parsed)) return null;
     const names = new Set<string>();
