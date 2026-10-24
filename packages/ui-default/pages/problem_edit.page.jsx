@@ -180,7 +180,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   }
 
   const entries = parseDraft(($field.val() || '').toString()) ?? parseDraft($field[0].defaultValue) ?? [{
-    name: `problem_${defaultLang}.md`,
+    name: `${defaultLang}.md`,
     lang: defaultLang,
     content: String($field.val() || ''),
   }];
@@ -198,9 +198,9 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
 
   function addTextEntry(ext) {
     const lang = activeEntry()?.lang || defaultLang;
-    let name = `problem_${lang}.${ext}`;
+    let name = `${lang}.${ext}`;
     let i = 1;
-    while (hasName(name)) name = `problem_${lang}_${++i}.${ext}`;
+    while (hasName(name)) name = `${lang}_${++i}.${ext}`;
     entries.push({ name, lang, content: '' });
     refreshUI(name);
   }

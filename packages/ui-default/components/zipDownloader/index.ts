@@ -124,7 +124,7 @@ export async function downloadProblemSet(pids, name = 'Export') {
           }
           return { name: entry.name, lang: entry.lang, file: entry.file };
         }
-        const source = `statement_${entry.name}`;
+        const source = `problem_${entry.name}`;
         targets.push({ filename: `${pid}/${source}`, content: entry.content ?? '' });
         return { name: entry.name, lang: entry.lang, source };
       });

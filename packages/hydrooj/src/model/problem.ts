@@ -865,7 +865,7 @@ export class ProblemModel {
                 return {
                     name: s.name,
                     lang: s.lang,
-                    ...(s.file ? { file: s.file } : { source: `statement_${s.name}` }),
+                    ...(s.file ? { file: s.file } : { source: `problem_${s.name}` }),
                 };
             });
             const problemYamlContent = yaml.dump({
@@ -880,7 +880,7 @@ export class ProblemModel {
             });
             await fs.writeFile(problemYaml, problemYamlContent);
             for (const s of statements) {
-                if (!s.file) await fs.writeFile(path.join(problemPath, `statement_${s.name}`), s.content ?? '', 'utf8');
+                if (!s.file) await fs.writeFile(path.join(problemPath, `problem_${s.name}`), s.content ?? '', 'utf8');
             }
             if ((filePdoc.data || []).length) {
                 const testdataPath = path.join(problemPath, 'testdata');

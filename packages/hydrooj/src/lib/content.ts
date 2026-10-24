@@ -58,7 +58,7 @@ export function parseStatements(content: string, html = false): StatementEntry[]
 
 export function normalizeStatements(content: string, lang: string, html = false): StatementEntry[] {
     if (!content) return [];
-    return parseStatements(content, html) ?? [{ name: `problem_${lang}.${html ? 'html' : 'md'}`, lang, content }];
+    return parseStatements(content, html) ?? [{ name: `${lang}.${html ? 'html' : 'md'}`, lang, content }];
 }
 
 /**
