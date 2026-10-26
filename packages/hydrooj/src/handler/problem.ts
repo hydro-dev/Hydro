@@ -1045,6 +1045,7 @@ export class ProblemCreateHandler extends Handler {
         domainId: string, title: string, content: string, pid: string | number = '',
         hidden = false, difficulty = 0, tag: string[] = [],
     ) {
+        await this.limitRate('problem_create', 5, 2, this.user._id.toString());
         if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
         const entries = parseSubmittedStatements(content, this.user._files.map((i) => i.name))
@@ -1052,18 +1053,16 @@ export class ProblemCreateHandler extends Handler {
         const docId = await problem.add(domainId, pid, title, '', this.user._id, tag ?? [], { hidden, difficulty });
         const files = new Set(Array.from(content.matchAll(/file:\/\/([\w-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
         for (const entry of entries) if (entry.file) files.add(entry.file);
-        const tasks = [];
+        const tasks: Promise<any>[] = [problem.setStatements(domainId, docId, entries)];
         for (const file of files) {
-            if (this.user._files.find((i) => i.name === file)) {
-                tasks.push(
-                    storage.rename(`user/${this.user._id}/${file}`, `problem/${domainId}/${docId}/additional_file/${file}`, this.user._id)
-                        .then(() => problem.addAdditionalFile(domainId, docId, file, '', this.user._id, true)),
-                    user.setById(this.user._id, { _files: this.user._files.filter((i) => i.name !== file) }),
-                );
-            }
+            if (!this.user._files.find((i) => i.name === file)) continue;
+            tasks.push(
+                storage.rename(`user/${this.user._id}/${file}`, `problem/${domainId}/${docId}/additional_file/${file}`, this.user._id)
+                    .then(() => problem.addAdditionalFile(domainId, docId, file, '', this.user._id, true)),
+                user.setById(this.user._id, { _files: this.user._files.filter((i) => i.name !== file) }),
+            );
         }
         await Promise.all(tasks);
-        await problem.setStatements(domainId, docId, entries);
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }
