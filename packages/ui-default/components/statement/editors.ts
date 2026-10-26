@@ -51,7 +51,7 @@ export const editorRegistry: Record<string, (ctx: StatementEditorContext) => Sta
   },
   get(target, key) {
     const name = key.toString();
-    return target[name.includes('.') ? name.split('.').pop().toLowerCase() : ''] || editorRegistry.__text;
+    return target[name.includes('.') ? name.split('.').pop().toLowerCase() : ''] || target.__text;
   },
 });
 
