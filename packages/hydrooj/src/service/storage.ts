@@ -326,7 +326,10 @@ class LocalStorageService {
     async get(target: string, path?: string) {
         target = resolve(this.dir, convertPath(target));
         if (!existsSync(target)) throw new Error(`File not found: ${target}`);
-        if (path) await copyFile(target, path);
+        if (path) {
+            await copyFile(target, path);
+            return null;
+        }
         return createReadStream(target);
     }
 
