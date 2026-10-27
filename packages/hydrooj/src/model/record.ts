@@ -283,8 +283,10 @@ export default class RecordModel {
         return r;
     }
 
-    static async getMultiRejudgeTask(domainId: string | undefined, query: Filter<RecordRejudgeDoc>) {
-        return document.getMulti(domainId, document.TYPE_REJUDGE, query).toArray();
+    static getMultiRejudgeTask(domainId: string | undefined, query: Filter<RecordRejudgeDoc> = {}) {
+        const filter: any = { docType: document.TYPE_REJUDGE, ...query };
+        if (domainId) filter.domainId = domainId;
+        return document.coll.find(filter).sort({ _id: -1 });
     }
 
     static async getRejudgeTask(domainId: string, _id: ObjectId) {
@@ -296,7 +298,7 @@ export default class RecordModel {
     }
 
     static async pushRejudgeResult(rrid: ObjectId, newStatus: number, newScore: number, newRev) {
-        await RecordModel.collRejudge.updateOne({ _id: rrid }, {
+        await RecordModel.collRejudge.updateOne({ rrid }, {
             $set: {
                 newStatus,
                 newScore,

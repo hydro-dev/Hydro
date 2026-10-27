@@ -244,7 +244,9 @@ export interface RecordRejudgeDoc extends Document {
     docId: ObjectId;
     docType: document['TYPE_REJUDGE'];
     apply: boolean;
+    beginAt: Date;
     finishAt?: Date;
+    rids?: ObjectId[];
 }
 
 export interface RecordRejudgeResultDoc {

@@ -130,10 +130,10 @@
         {%- for item in tasks -%}
         <tr>
           <td>{{ item._id.toHexString()|truncate(8,True,'') }}</td>
-          <td>{{ user.render_inline(item.operator, badge=false) }}</td>
-          <td>{{ item.count }}</td>
+          <td>{{ user.render_inline(udict[item.owner], badge=false) }}</td>
+          <td>{{ item.rids|length }}</td>
           <td>{{ item.beginAt }}</td>
-          <td>{{ item.status }}</td>
+          <td>{{ item.finishAt ? _('Done') : _('Pending') }}</td>
           <td>
             <a class="typo-a" href="{{ url('manage_rejudge_detail', query={id: item._id.toHexString()}) }}">{{ _('View') }}</a>
           </td>

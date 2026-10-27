@@ -23,7 +23,7 @@ import user from '../model/user';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
-import { JudgeResultCallbackContext, next as judgeNext, end as judgeEnd } from './judge';
+import { JudgeResultCallbackContext } from './judge';
 
 const logger = new Logger('manage');
 
@@ -360,8 +360,11 @@ class SystemUserPrivHandler extends SystemHandler {
 
 class SystemRejudgeHandler extends SystemHandler {
     async get() {
+        const tasks = await record.getMultiRejudgeTask(undefined, {}).limit(20).toArray();
+        const udict = await user.getListForRender(undefined, Array.from(new Set(tasks.map((i) => i.owner))), true);
         this.response.body = {
-            rrdocs: await record.getMultiRejudgeTask(undefined, {}),
+            tasks,
+            udict,
             apply: true,
             status: NORMAL_STATUS.filter((i: STATUS) => ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_ACCEPTED].includes(i)).join(','),
         };
@@ -434,7 +437,8 @@ class SystemRejudgeHandler extends SystemHandler {
                 highPriority,
                 apply: _apply,
                 recordLength: rdocs.length,
-                rrdocs: await record.getMultiRejudgeTask(undefined, {}),
+                tasks: await record.getMultiRejudgeTask(undefined, {}).limit(20).toArray(),
+                udict: await user.getListForRender(undefined, [], true),
             };
             this.response.template = 'manage_rejudge.html';
             return;
@@ -442,6 +446,8 @@ class SystemRejudgeHandler extends SystemHandler {
         const rid = await record.addRejudgeTask(domainId, {
             owner: this.user._id,
             apply: _apply,
+            beginAt: new Date(),
+            rids: rdocs.map((i) => i._id),
         });
         const priority = await record.submissionPriority(this.user._id, (highPriority ? 0 : -10000) - rdocs.length * 5 - 50);
         if (_apply) await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
@@ -469,8 +475,8 @@ class SystemRejudgeDetailHandler extends SystemHandler {
     @param('rid', Types.ObjectId)
     async get(domainId: string, rid: ObjectId) {
         const rrdoc = await record.getRejudgeTask(domainId, rid);
-        const rdocs = await record.getMulti(domainId, { _id: { $in: rrdoc.rids } }).toArray();
         if (!rrdoc) throw new RecordNotFoundError(domainId, rid);
+        const rdocs = await record.getMulti(domainId, { _id: { $in: rrdoc.rids || [] } }).toArray();
         this.response.body = { rrdoc, rdocs };
         this.response.template = 'manage_rejudge_detail.html';
     }
