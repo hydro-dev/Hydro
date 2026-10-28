@@ -12,6 +12,8 @@ export interface UiContextBase {
     cdn_dynamic: boolean;
     url_prefix: string;
     ws_prefix: string;
+    domainId?: string;
+    domainHost?: string[];
 }
 export const UiContextBase: UiContextBase = {
     cdn_prefix: '/',
@@ -34,7 +36,9 @@ export default async (ctx: KoaContext, next: Next) => {
         if (UiContext.ws_prefix.includes(',')) UiContext.ws_prefix = randomPick(UiContext.ws_prefix.split(','));
         UiContext.cdn_dynamic = system.get('server.cdn_dynamic');
     }
+    const domainHost = Array.isArray(domainInfo.host) ? domainInfo.host : [domainInfo.host];
     UiContext.domainId = domainId;
+    UiContext.domainHost = domainHost.filter(Boolean);
     UiContext.domainVersion = domain.getVersion(domainInfo);
     ctx.HydroContext.UiContext = UiContext;
     ctx.HydroContext.domain = domainInfo;
