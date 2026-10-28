@@ -124,7 +124,7 @@
           <div class="section__tab-header-wrapper">
             <ul class="section__tab-header flex-row">
               {% for k in stmtLangs %}
-              <a class="section__tab-header-item {{'tab--active' if activeLang == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
+              <a class="section__tab-header-item {{'tab--active' if activeLang == k }}" data-lang="{{ k }}" href="./{{pdoc.docId if tdoc else pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
                 {{ handler.ctx.i18n.get('__langname', k) or _('Unknown language') }}
               </a>
               {% endfor %}
