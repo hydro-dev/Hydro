@@ -1,0 +1,40 @@
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Bulk Rejudge Result') }}</h1>
+  </div>
+  <div class="section__body">
+    <div class="row"><div class="columns clearfix">
+      <ul class="section__stat">
+        <li>{{ _('Total Submissions') }} <b>{{ rrdoc.rids|length }}</b></li>
+        <li>{{ _('Begin At') }} <b>{{ rrdoc.beginAt }}</b></li>
+        <li>{{ _('Status') }} <b>{{ rrdoc.finishAt ? _('Done') : _('Pending') }}</b></li>
+      </ul>
+    </div></div>
+  </div>
+</div>
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Submissions') }}</h1>
+  </div>
+  <div class="section__body no-padding">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="col--inline">{{ _('Record ID') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for item in rdocs -%}
+        <tr>
+          <td class="col--inline">
+            <a class="typo-a" href="{{ url('record_detail', rid=item._id) }}">{{ item._id.toHexString() }}</a>
+          </td>
+        </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
