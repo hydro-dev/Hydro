@@ -394,9 +394,12 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     ev.preventDefault();
     const url = new URL(window.location.href);
     url.searchParams.set('lang', ev.currentTarget.dataset.lang);
-    $('[data-lang]').removeClass('tab--active');
+    url.searchParams.delete('file');
     pjax.request({ url: url.toString() });
-    $(ev.currentTarget).addClass('tab--active');
+  });
+  $(document).on('click', '.statement-file-tab', (ev) => {
+    ev.preventDefault();
+    pjax.request({ url: $(ev.currentTarget).attr('href') });
   });
   $(document).on('click', '[name="show_tags"]', (ev) => {
     $(ev.currentTarget).hide();

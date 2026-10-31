@@ -119,32 +119,6 @@
         <div class="section__header non-scratchpad--hide">
           <h1 class="section__title">{{ pdoc.title }}</h1>
         </div>
-        {% if stmtLangs|length > 1 %}
-        <div class="section__tab-container">
-          <div class="section__tab-header-wrapper">
-            <ul class="section__tab-header flex-row">
-              {% for k in stmtLangs %}
-              <a class="section__tab-header-item {{'tab--active' if activeLang == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
-                {{ handler.ctx.i18n.get('__langname', k) or _('Unknown language') }}
-              </a>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-        {% endif %}
-        {% if stmtFiles|length > 1 %}
-        <div class="section__tab-container section__tab-container--statements">
-          <div class="section__tab-header-wrapper">
-            <ul class="section__tab-header flex-row">
-              {% for f in stmtFiles %}
-              <a class="section__tab-header-item statement-file-tab {{'tab--active' if (handler.request.query.file or stmtFiles[0]) == f }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{activeLang}}&file={{ f|urlencode }}">
-                {{ f }}
-              </a>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-        {% endif %}
         {% include "partials/problem_description.html" %}
       </div></div>
     </div>

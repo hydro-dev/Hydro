@@ -1,4 +1,31 @@
-<div class="section__body typo richmedia" data-fragment-id="problem-description">
+<div data-fragment-id="problem-description">
+  {% if stmtLangs|length > 1 %}
+  <div class="section__tab-container">
+    <div class="section__tab-header-wrapper">
+      <ul class="section__tab-header flex-row">
+        {% for k in stmtLangs %}
+        <a class="section__tab-header-item {{'tab--active' if activeLang == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
+          {{ handler.ctx.i18n.get('__langname', k) or _('Unknown language') }}
+        </a>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+  {% if stmtFiles|length > 1 %}
+  <div class="section__tab-container section__tab-container--statements">
+    <div class="section__tab-header-wrapper">
+      <ul class="section__tab-header flex-row">
+        {% for f in stmtFiles %}
+        <a class="section__tab-header-item statement-file-tab {{'tab--active' if (handler.request.query.file or stmtFiles[0]) == f }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{activeLang}}&file={{ f|urlencode }}">
+          {{ f }}
+        </a>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+  <div class="section__body typo richmedia">
   {% if not pdoc.data.length and not pdoc.reference %}
     <blockquote class="warn">
       <p>{{ _('No {0} at current.').format(_("testdata")) }}</p>
@@ -30,4 +57,5 @@
     {% set renderredContent = statements|statementRender(preferredLang, handler.request.query.file, pdoc, handler.request.query.tid) %}
   {% endif %}
   {{ renderredContent|safe }}
+  </div>
 </div>
