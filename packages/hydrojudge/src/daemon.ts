@@ -45,7 +45,7 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 async function daemon() {
-    const shouldRun = await versionCheck((msg) => log.error(msg));
+    const shouldRun = await versionCheck((msg) => log.warn(msg), (msg) => log.error(msg));
     if (!shouldRun) process.exit(1);
     const tracing = getConfig('tracing');
     if (tracing?.endpoint && tracing?.samplePercentage) initTracing(tracing.endpoint, tracing.samplePercentage);
