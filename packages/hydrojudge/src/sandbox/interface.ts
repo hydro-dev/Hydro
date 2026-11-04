@@ -148,6 +148,8 @@ export interface FileError {
  */
 export interface SandboxResult {
     status: SandboxStatus;
+    /** 1-based completion order within a grouped run, when supported by the sandbox */
+    exitOrder?: number;
     /** contains error message if status is not Accept */
     error?: string;
     /** signal number if status is Signalled, otherwise exit status */

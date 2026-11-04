@@ -49,6 +49,7 @@ export interface Parameter {
 
 interface SandboxAdaptedResult extends AsyncDisposable {
     status: number;
+    exitOrder?: number;
     code: number;
     signalled: boolean;
     /** in miliseconds */
@@ -125,6 +126,7 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
     // FIXME: Signalled?
     const ret: SandboxAdaptedResult = {
         status: statusMap.get(result.status) || STATUS.STATUS_ACCEPTED,
+        exitOrder: result.exitOrder,
         signalled: result.status === SandboxStatus.Signalled,
         time: result.time / 1000000 / rate,
         memory: result.memory / 1024,

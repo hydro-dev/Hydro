@@ -14,7 +14,7 @@ const judgeCase = (c: NormalizedCase) => async (ctx: Context, ctxSubtask: Contex
     let state: PassInfo = { input: { src: c.input }, state: {}, dispose: () => Promise.resolve() };
     while (true) {
         const [{
-            code, signalled, time, memory,
+            code, signalled, time, memory, exitOrder: userExitOrder,
         }, resInteractor] = await runPiped([
             {
                 execute: ctx.executeUser.execute,
@@ -51,18 +51,36 @@ const judgeCase = (c: NormalizedCase) => async (ctx: Context, ctxSubtask: Contex
         let status: number;
         let score = 0;
         let message: any = pass ? `[Pass ${pass}] ` : '';
-        if (time > c.time) {
+        const timeLimitExceeded = time > c.time;
+        const memoryLimitExceeded = memory > c.memory * 1024;
+        const userRuntimeError = !!((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code));
+        const result = parse(resInteractor.stderr, c.score, ctx.config.detail);
+        const interactorExitedFirst = userExitOrder > 0
+            && resInteractor.exitOrder > 0
+            && resInteractor.exitOrder < userExitOrder;
+        const interactorWAOverridesUserFailure = interactorExitedFirst
+            && result.status === STATUS.STATUS_WRONG_ANSWER
+            && resInteractor.status !== STATUS.STATUS_TIME_LIMIT_EXCEEDED
+            && resInteractor.status !== STATUS.STATUS_MEMORY_LIMIT_EXCEEDED
+            && resInteractor.status !== STATUS.STATUS_SYSTEM_ERROR
+            && (timeLimitExceeded || userRuntimeError);
+        if (timeLimitExceeded && !interactorWAOverridesUserFailure) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory > c.memory * 1024) {
+        } else if (!timeLimitExceeded && memoryLimitExceeded) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
-        } else if (ctx.config.detail === 'full' && ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code))) {
+        } else if (userRuntimeError && !interactorWAOverridesUserFailure) {
             status = STATUS.STATUS_RUNTIME_ERROR;
-            if (code < 32 && signalled) message = signals[code];
-            else message = { message: `${message}Your program returned {0}.`, params: [code] };
+            if (ctx.config.detail === 'full') {
+                if (code < 32 && signalled) message = signals[code];
+                else message = { message: `${message}Your program returned {0}.`, params: [code] };
+            }
         } else {
-            const result = parse(resInteractor.stderr, c.score, ctx.config.detail);
             status = result.status;
             score = result.score;
+            if (interactorWAOverridesUserFailure && ctx.config.detail === 'full') {
+                const failure = timeLimitExceeded ? 'Time limit exceeded' : 'Runtime error';
+                message += `${failure}, but interactor exited first with WA. `;
+            }
             message += result.message;
             if (resInteractor.code && !(resInteractor.stderr || '').trim().length) {
                 message += ` (Interactor exited with code ${resInteractor.code})`;
