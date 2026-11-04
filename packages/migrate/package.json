@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/migrate",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro",
     "author": "undefined <i@undefined.moe>",
