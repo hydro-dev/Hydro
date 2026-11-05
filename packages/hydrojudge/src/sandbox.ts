@@ -241,11 +241,11 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         return false;
     }
     const { osinfo } = await sysinfo.get();
-    if (!sandboxSeccomp) {
+    if (sandboxSeccomp === false) {
         reportWarn('Seccomp is not enabled in go-judge. This reduces sandbox isolation.');
     }
-    if (!memorySwapLimitEnabled) {
-        reportWarn('memorySwapLimitEnabled is not enabled in go-judge. This could result in inaccurate memory usage measurements.');
+    if (memorySwapLimitEnabled !== true) {
+        reportWarn('go-judge does not report swap limiting as enabled. Swap limits may not be enforced, so memory limits may not restrict swap usage. Memory usage measurements may also be inaccurate.');
     }
     if (sandboxCgroup === 2) {
         const kernelVersion = osinfo.kernel.match(/^\d+\.\d+\.\d+/)[0];
