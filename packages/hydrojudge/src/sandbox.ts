@@ -245,7 +245,11 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         reportWarn('Seccomp is not enabled in go-judge. This reduces sandbox isolation.');
     }
     if (memorySwapLimitEnabled !== true) {
-        reportWarn('go-judge does not report swap limiting as enabled. Swap limits may not be enforced, so memory limits may not restrict swap usage. Memory usage measurements may also be inaccurate.');
+        reportWarn([
+            'go-judge does not report swap limiting as enabled.',
+            'Swap limits may not be enforced, so memory limits may not restrict swap usage.',
+            'Memory usage measurements may also be inaccurate.',
+        ].join(' '));
     }
     if (sandboxCgroup === 2) {
         const kernelVersion = osinfo.kernel.match(/^\d+\.\d+\.\d+/)[0];
