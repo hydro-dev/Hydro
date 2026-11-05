@@ -241,7 +241,7 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         return false;
     }
     const { osinfo } = await sysinfo.get();
-    if (sandboxSeccomp === false) {
+    if (sandboxSeccomp !== true) {
         reportWarn('Seccomp is not enabled in go-judge. This reduces sandbox isolation.');
     }
     if (memorySwapLimitEnabled !== true) {
