@@ -19,7 +19,7 @@ const page = new NamedPage('manage_config', async () => {
 
   function Markdown({ source }) {
     const rendered = React.useMemo(() => {
-      const res = renderMarkdown({ value: source });
+      const res = renderMarkdown({ value: source || '' });
       const value = res.element.innerHTML;
       res.dispose();
       return value;
