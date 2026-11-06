@@ -223,6 +223,8 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
     let sandboxVersion: string;
     let sandboxCgroup: number;
     let sandboxCgroupControllers: string[] | null;
+    let sandboxSeccomp: boolean | undefined;
+    let memorySwapLimitEnabled: boolean | undefined;
     let fixSymlinkEscape: boolean;
     try {
         const version = await client.version();
@@ -230,6 +232,8 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
         sandboxCgroupControllers = config.runnerConfig?.cgroupControllers || null;
+        sandboxSeccomp = config.runnerConfig?.seccomp;
+        memorySwapLimitEnabled = config.runnerConfig?.memorySwapLimitEnabled;
         fixSymlinkEscape = config.fixSymlinkEscape ?? false;
     } catch (e) {
         if (e?.code === 'ECONNREFUSED') reportError('Failed to connect to sandbox, please check sandbox_host config and if your sandbox is running.');
@@ -237,6 +241,12 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         return false;
     }
     const { osinfo } = await sysinfo.get();
+    if (sandboxSeccomp !== true) {
+        reportWarn('Seccomp is not enabled in go-judge. This reduces sandbox isolation.');
+    }
+    if (memorySwapLimitEnabled !== true) {
+        reportWarn('go-judge swap limits are unavailable. Memory limits may not restrict swap use, and memory usage measurements may be inaccurate.');
+    }
     if (sandboxCgroup === 2) {
         const kernelVersion = osinfo.kernel.match(/^\d+\.\d+\.\d+/)[0];
         if (!gte(kernelVersion, '5.19.0') || !gte(sandboxVersion, '1.6.10')) {
