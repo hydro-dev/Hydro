@@ -127,6 +127,10 @@ export default function reducer(state = {
       if (action.payload.memory) subtask.memory = action.payload.memory;
       if (action.payload.score) subtask.score = +action.payload.score || 0;
       if (action.payload.if) subtask.if = action.payload.if;
+      if ('if_score' in action.payload) {
+        if (action.payload.if_score?.length) subtask.if_score = action.payload.if_score;
+        else delete subtask.if_score;
+      }
       if (action.payload.type) subtask.type = action.payload.type;
       if (!subtask.time) delete subtask.time;
       if (!subtask.memory) delete subtask.memory;
