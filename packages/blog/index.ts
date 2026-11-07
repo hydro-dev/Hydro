@@ -228,7 +228,7 @@ export async function apply(ctx: Context) {
         blog_edit: '編輯部落格',
         blog_main: '部落格',
     });
-    ctx.i18n.load('kr', {
+    ctx.i18n.load('ko', {
         "{0}'s blog": '{0}의 블로그',
         Blog: '블로그',
         blog_main: '블로그',

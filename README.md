@@ -109,7 +109,19 @@ Hydro 用户群：1085853538
 同时群内可能存在部分令您感到不适或感到冒犯的内容。若对此有顾虑**请勿加群**。
 
 <details>
-<summary><h2>更新日志（点击展开）</h2></summary
+<summary><h2>更新日志（点击展开）</h2></summary>
+
+## Hydro 5.1.0 / UI 4.59.1
+
+- core: 支持同语言添加多个题面
+- ui: 优化 monaco worker 加载
+- db: 添加 HYDRO_BACKUP_DIR 选项
+- ui: UserSelectAutoComplete: 添加查询缓存
+- core: 支持组队参赛
+- core: 修复自测过滤
+- core: 修复批量设置用户角色
+- judge: 添加交互题退出顺序检测
+- core&ui: 交互优化
 
 ## Hydro 5.0.5 / UI 4.58.5
 

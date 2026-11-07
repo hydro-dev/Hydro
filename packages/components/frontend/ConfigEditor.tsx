@@ -148,7 +148,7 @@ export default function ConfigEditor({
   // FIXME: Otherwise first form change will be ignored
   React.useEffect(() => {
     setTimeout(() => {
-      updateFromMonaco(stringConfig === '{}' ? 'dummy: 1' : `${stringConfig}\n\ndummy: 1`);
+      updateFromMonaco(stringConfig?.trim() === '{}' ? 'dummy: 1' : `${stringConfig}\n\ndummy: 1`);
       setTimeout(() => {
         setStringConfig(stringConfig || '\n');
         setValue(yaml.load(stringConfig));
