@@ -22,11 +22,9 @@ export async function getListStatus(domainId: string, uid: number, tids: ObjectI
 }
 
 export async function enroll(domainId: string, tid: ObjectId, uid: number) {
-    try {
-        await document.setIfNotStatus(domainId, document.TYPE_TRAINING, tid, uid, 'enroll', 1, 1, {});
-    } catch (e) {
-        throw new TrainingAlreadyEnrollError(tid, uid);
-    }
+    // setIfNotStatus returns false (instead of throwing) when already enrolled
+    const sdoc = await document.setIfNotStatus(domainId, document.TYPE_TRAINING, tid, uid, 'enroll', 1, 1, {});
+    if (!sdoc) throw new TrainingAlreadyEnrollError(tid, uid);
     return await document.inc(domainId, document.TYPE_TRAINING, tid, 'attend', 1);
 }
 

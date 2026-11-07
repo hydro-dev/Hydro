@@ -640,4 +640,21 @@ export const coreScripts: MigrationScript[] = [
         }
         return true;
     },
+    async function _97_98() {
+        const tdocs = document.coll.find({ docType: document.TYPE_TRAINING })
+            .project({ docId: 1, domainId: 1, attend: 1 });
+        for await (const tdoc of tdocs) {
+            const attend = await document.collStatus.countDocuments({
+                docType: document.TYPE_TRAINING,
+                domainId: tdoc.domainId,
+                docId: tdoc.docId,
+                enroll: 1,
+                uid: { $gt: 1 },
+            });
+            if (attend !== tdoc.attend) {
+                await document.set(tdoc.domainId, document.TYPE_TRAINING, tdoc.docId, { attend });
+            }
+        }
+        return true;
+    },
 ];
