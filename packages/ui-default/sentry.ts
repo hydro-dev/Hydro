@@ -22,6 +22,7 @@ init({
 setTag('host', window.location.host);
 setTag('page_name', document.documentElement.getAttribute('data-page'));
 window.captureException = (e: any) => {
-  if (!e.isUserFacingError) captureException(e);
+  // catch clauses can receive undefined/null (bare `reject()`), not just Errors
+  if (e && !e.isUserFacingError) captureException(e);
 };
 (window as any)._sentryEvents.forEach(captureException);
