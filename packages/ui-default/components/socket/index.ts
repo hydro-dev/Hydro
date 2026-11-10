@@ -45,8 +45,9 @@ export default class Sock {
       let data = message.data;
       if (decompress) data = decompress.inflate(data);
       const msg = JSON.parse(data);
-      if (msg.error === 'PermissionError' || msg.error === 'PrivilegeError') this.close();
-      else this.onmessage?.(message, data);
+      if (msg.error) {
+        if (['PermissionError', 'PrivilegeError'].includes(msg.error.name || msg.error)) this.close();
+      } else this.onmessage?.(message, data);
     };
   }
 
