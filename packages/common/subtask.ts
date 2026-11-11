@@ -90,6 +90,7 @@ interface ParsedSubtask {
     score?: number;
     id?: number;
     if?: number[];
+    if_score?: number[];
 }
 
 export function readSubtasksFromFiles(files: string[], config) {
@@ -162,6 +163,7 @@ export function normalizeSubtasks(
             id: id + 1,
             type: 'min',
             if: [],
+            if_score: [],
             ...s,
             score,
             time: parseTimeMS(s.time || time, !ignoreParseError) * timeRate,
