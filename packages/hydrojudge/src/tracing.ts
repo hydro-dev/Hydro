@@ -1,5 +1,7 @@
 import { OTLPTraceExporter as OTLPTraceExporterHttp } from '@opentelemetry/exporter-trace-otlp-http';
-import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { TraceIdRatioBasedSampler } from '@opentelemetry/sdk-trace';
 import { Logger } from './log';
 
 const logger = new Logger('tracing');
@@ -9,12 +11,12 @@ export function initTracing(endpoint: string, samplePercentage = 1.0) {
         url: endpoint.includes('/v1/traces') ? endpoint : `${endpoint}/v1/traces`,
     });
     const sdk = new NodeSDK({
-        resource: resources.resourceFromAttributes({
+        resource: resourceFromAttributes({
             'service.name': 'hydrojudge',
             'service.version': require('../package.json').version,
         }),
         traceExporter,
-        sampler: new tracing.TraceIdRatioBasedSampler(samplePercentage),
+        sampler: new TraceIdRatioBasedSampler(samplePercentage),
         instrumentations: [],
     });
     sdk.start();

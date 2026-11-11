@@ -9,18 +9,18 @@
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:^",
-        "@koa/router": "^15.7.0",
-        "@mongodb-js/saslprep": "^1.6.0",
+        "@koa/router": "^15.7.1",
+        "@mongodb-js/saslprep": "^1.6.3",
         "emoji-regex": "^11.0.0",
         "fs-extra": "^11.4.1",
-        "koa": "^3.2.1",
+        "koa": "^3.3.0",
         "koa-body": "^8.0.1",
-        "koa-compress": "5.2.2",
-        "path-to-regexp": "^8.4.2",
-        "sanitize-filename": "^1.6.4",
+        "koa-compress": "5.3.0",
+        "path-to-regexp": "^9.0.0",
+        "sanitize-filename": "^1.6.5",
         "schemastery": "^3.18.0",
         "shorty.js": "^1.0.1",
-        "ws": "^8.22.0"
+        "ws": "^8.22.2"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",

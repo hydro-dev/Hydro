@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http';
 import KoaRouter, { type RouterInstance } from '@koa/router';
-import { Keys, pathToRegexp } from 'path-to-regexp';
+import { Key, pathToRegexp } from 'path-to-regexp';
 import type WebSocket from 'ws';
 import type { KoaContext } from './server';
 
@@ -13,7 +13,7 @@ function remove<T>(list: T[], item: T) {
 export class WebSocketLayer {
     clients = new Set<WebSocket>();
     regexp: RegExp;
-    keys: Keys;
+    keys: Key[];
 
     constructor(path: Parameters<typeof pathToRegexp>[0], public callback?: WebSocketCallback) {
         const r = pathToRegexp(path);

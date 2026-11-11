@@ -5,16 +5,16 @@
     "main": "base.mjs",
     "repository": "https://github.com/hydro-dev/Hydro",
     "dependencies": {
-        "@antfu/eslint-config": "^9.5.1",
-        "@eslint-react/eslint-plugin": "^5.26.5",
-        "@typescript-eslint/eslint-plugin": "^8.71.2",
-        "@typescript-eslint/parser": "^8.71.2",
-        "eslint-plugin-de-morgan": "^2.2.1",
+        "@antfu/eslint-config": "^10.0.0",
+        "@eslint-react/eslint-plugin": "^5.30.2",
+        "@typescript-eslint/eslint-plugin": "^8.72.2",
+        "@typescript-eslint/parser": "^8.72.2",
+        "eslint-plugin-de-morgan": "^2.3.0",
         "eslint-plugin-github": "^6.1.2",
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.7",
         "eslint-plugin-simple-import-sort": "^14.0.0",
-        "globals": "^17.13.0"
+        "globals": "^17.14.0"
     },
     "peerDependencies": {
         "eslint": ">= 9"

@@ -52,7 +52,7 @@ async function daemon() {
     const _hosts = getConfig('hosts');
     const queue = new PQueue({ concurrency: Infinity });
     await fs.ensureDir(getConfig('tmp_dir'));
-    queue.on('error', (e) => log.error(e));
+    queue.addEventListener('error', (e) => log.error(e.detail));
     if (!Object.keys(_hosts).length) {
         log.warn('No host configured');
         setInterval(() => log.warn('No host configured'), Time.hour);

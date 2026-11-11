@@ -67,8 +67,8 @@ export default class Hydro implements Session {
         if (!res.body.links) throw new FormatError('problem not exist');
         const queue = new PQueue({ concurrency: 10 });
         let error = null;
-        queue.on('error', (e) => {
-            error = e;
+        queue.addEventListener('error', (e) => {
+            error = e.detail;
         });
         for (const name in res.body.links) {
             queue.add(async () => {

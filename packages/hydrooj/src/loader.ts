@@ -174,7 +174,7 @@ app.plugin(Loader);
 async function preload() {
     global.app = await new Promise((resolve) => {
         app.inject(['timer', 'i18n', '$api'], (c) => {
-            c.root.domain = undefined as any;
+            c[Context.root].domain = undefined as any;
             resolve(c);
         });
     });
