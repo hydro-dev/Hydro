@@ -1,0 +1,13 @@
+{
+  "name": "@hgnuoj/contest-album",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "license": "AGPL-3.0-only",
+  "dependencies": { "sharp": "0.34.5" },
+  "peerDependencies": {
+    "hydrooj": "workspace:^",
+    "@hydrooj/ui-default": "workspace:^",
+    "@hgnuoj/image-preview": "workspace:^"
+  }
+}

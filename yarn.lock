@@ -3351,6 +3351,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hgnuoj/contest-album@workspace:packages/contest-album":
+  version: 0.0.0-use.local
+  resolution: "@hgnuoj/contest-album@workspace:packages/contest-album"
+  dependencies:
+    sharp: "npm:0.34.5"
+  peerDependencies:
+    "@hgnuoj/image-preview": "workspace:^"
+    "@hydrooj/ui-default": "workspace:^"
+    hydrooj: "workspace:^"
+  languageName: unknown
+  linkType: soft
+
 "@hgnuoj/discussion-toc@workspace:packages/discussion-toc":
   version: 0.0.0-use.local
   resolution: "@hgnuoj/discussion-toc@workspace:packages/discussion-toc"

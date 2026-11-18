@@ -1,0 +1,28 @@
+{% extends "album_layout.html" %}
+{% import "album_award.html" as awards %}
+{% block content %}
+<main class="row album-app">
+  <div class="columns">
+    <header class="album-hero">
+      <div><p class="album-eyebrow">HGNU · ACM</p><h1>比赛相册</h1><p class="album-lead">记录赛场、颁奖和同行的瞬间。</p></div>
+      <div class="album-hero-side"><div class="album-totals"><span><strong>{{ stats.count }}</strong> 本相册</span><span><strong>{{ stats.photos }}</strong> 张照片</span></div>{% if canCreate %}<a class="album-button album-button--primary album-create-button" href="{{ url('album_create') }}"><span class="album-create-icon" aria-hidden="true">+</span><span>新建相册</span></a>{% endif %}</div>
+    </header>
+    <section class="album-filters" aria-label="筛选相册">
+      <form method="get" class="album-search"><label class="album-sr-only" for="album-query">搜索比赛名称</label><input id="album-query" type="search" name="q" value="{{ q }}" placeholder="搜索比赛名称…" maxlength="100"><input type="hidden" name="year" value="{{ year }}"><button class="album-button" type="submit">搜索</button></form>
+      <nav class="album-years" aria-label="按年份筛选"><a class="{% if not year %}is-active{% endif %}" href="{{ allYears }}">全部年份</a>{% for item in years %}<a class="{% if year == item.year.toString() %}is-active{% endif %}" href="{{ item.url }}">{{ item.year if item.year else '未注明年份' }} <span>{{ item.count }}</span></a>{% endfor %}</nav>
+    </section>
+    {% if q %}<p class="album-results">“{{ q }}” · 找到 {{ total }} 本相册</p>{% endif %}
+    {% for group in groups %}
+    <section class="album-year-group"><h2>{{ group.year if group.year else '未注明年份' }}<span>赛场记忆</span></h2><div class="album-grid">
+      {% for album in group.items %}
+      <a class="album-card" href="{{ url('album_detail', aid=album._id) }}" title="{{ album.title }}">
+        <div class="album-card-cover">{% if album.coverImage %}<img src="{{ album.coverImage.thumb }}" alt="{{ album.title }}" loading="lazy" decoding="async" width="480" height="360">{% else %}<span class="album-empty-cover">等待第一张照片</span>{% endif %}<span class="album-photo-badge">{{ album.photos.length }} 张照片</span>{% if not album.published %}<span class="album-draft-badge">草稿</span>{% endif %}</div>
+        <div class="album-card-body"><p class="album-card-date">{{ album.date or (album.year.toString() + ' 年' if album.year else '日期待补充') }}</p><h3>{{ album.title }}</h3><span class="album-card-open"><span>查看相册</span>{{ awards.badge(album.award, awardLabels) }}</span></div>
+      </a>
+      {% endfor %}
+    </div></section>
+    {% else %}<div class="album-empty"><h2>还没有匹配的相册</h2><p>换一个名称或年份试试。{% if canCreate %}也可以新建第一本比赛相册。{% endif %}</p></div>{% endfor %}
+    {% if pageCount > 1 %}<nav class="album-pagination" aria-label="相册分页">{% if page > 1 %}<a class="album-button" href="{{ previous }}">上一页</a>{% endif %}<span>第 {{ page }} / {{ pageCount }} 页</span>{% if page < pageCount %}<a class="album-button" href="{{ next }}">下一页</a>{% endif %}</nav>{% endif %}
+  </div>
+</main>
+{% endblock %}
