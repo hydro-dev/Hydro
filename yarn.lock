@@ -3351,6 +3351,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hgnuoj/discussion-toc@workspace:packages/discussion-toc":
+  version: 0.0.0-use.local
+  resolution: "@hgnuoj/discussion-toc@workspace:packages/discussion-toc"
+  peerDependencies:
+    "@hydrooj/ui-default": "workspace:^"
+  languageName: unknown
+  linkType: soft
+
 "@hgnuoj/image-preview@workspace:packages/image-preview":
   version: 0.0.0-use.local
   resolution: "@hgnuoj/image-preview@workspace:packages/image-preview"
