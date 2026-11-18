@@ -68,5 +68,6 @@
         "mongodb": "^7.0.0",
         "@types/koa": "patch:@types/koa@npm%3A3.0.3#~/.yarn/patches/@types-koa-npm-3.0.3-content-disposition.patch",
         "@types/express-serve-static-core": "patch:@types/express-serve-static-core@npm%3A4.19.6#~/.yarn/patches/@types-express-serve-static-core-npm-4.19.6-cc0017aaf4.patch"
-    }
+    },
+    "packageManager": "yarn@4.18.1"
 }

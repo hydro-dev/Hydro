@@ -70,3 +70,4 @@ ceshi.sh
 
 packages/*/public/assets
 node_modules.*
+install/docker/data/*
