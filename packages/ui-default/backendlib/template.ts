@@ -234,6 +234,21 @@ export class TemplateService extends Service {
     }
 
     const env = new Nunjucks(Loader);
+    env.addFilter('markdownImages', (text, callback) => {
+      try {
+        const html = ensureTag(markdown.render(text));
+        const previews = ctx.get('image-preview') as { render: (html: string) => Promise<string> } | undefined;
+        if (!previews) callback(null, html);
+        else {
+          previews.render(html).then((result) => callback(null, result), (error) => {
+            ctx.logger.warn('Image preview rendering failed: %s', error.message);
+            callback(null, html);
+          });
+        }
+      } catch (error) {
+        callback(error);
+      }
+    }, true);
     env.addGlobal('findSubModule', (prefix) => Object.keys(that.registry).filter((n) => n.startsWith(prefix)));
     env.addGlobal('templateExists', (name) => !!that.registry[name]);
 

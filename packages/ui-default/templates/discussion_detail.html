@@ -26,7 +26,7 @@
           </li>
         </ul>
         <div class="typo topic__content richmedia" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
-          {{ ddoc['content']|markdown|safe }}
+          {{ ddoc['content']|markdownImages|safe }}
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
