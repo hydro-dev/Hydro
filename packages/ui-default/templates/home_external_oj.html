@@ -1,0 +1,32 @@
+{% extends "layout/home_base.html" %}
+{% block home_content %}
+<div class="section external-oj-accounts">
+  <div class="section__header"><h1 class="section__title">外站账号</h1></div>
+  <div class="section__body typo">
+    <p>绑定公开账号后，累计通过题数会显示在个人页，并计入外站刷题榜。北京时间每天 12:00 开始同步，不需要外站密码或 Cookie。</p>
+    {% for account in accounts %}
+      {% set attempted = feedback and feedback.platform == account.platform %}
+      <form method="post" action="{{ url('home_external_oj') }}" class="external-oj-account">
+        <input type="hidden" name="platform" value="{{ account.platform }}">
+        <div>
+          <label for="external-{{ account.platform }}"><strong>{{ account.label }}</strong></label>
+          <input class="textbox" type="text" maxlength="256" autocomplete="off" name="handle" id="external-{{ account.platform }}"
+                 placeholder="{{ '数字 UID 或个人主页链接' if account.platform in ['luogu', 'nowcoder'] else '用户名或个人主页链接' }}"
+                 value="{{ feedback.input if attempted else account.handle | default('') }}"
+                 {% if attempted %} aria-invalid="true" aria-describedby="external-{{ account.platform }}-error" autofocus{% endif %}>
+          {% if attempted %}<p class="external-oj-account__error" id="external-{{ account.platform }}-error" role="alert">{{ feedback.message }}</p>{% endif %}
+        </div>
+        <p class="external-oj-account__state">
+          {% include "partials/external_oj_state.html" %}
+        </p>
+        <div class="external-oj-account__actions">
+          <button class="rounded primary button" name="operation" value="bind">{{ '保存修改' if account.handle else '绑定' }}</button>
+          {% if account.handle %}
+            <button class="rounded button" name="operation" value="unbind">解绑 {{ account.handle }}</button>
+          {% endif %}
+        </div>
+      </form>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

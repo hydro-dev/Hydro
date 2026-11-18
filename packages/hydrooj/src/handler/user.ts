@@ -13,6 +13,7 @@ import {
 } from '../error';
 import { TokenDoc, Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
+import { loadExternalOjProfile } from '../lib/externalOjProfile';
 import { sendMail } from '../lib/mail';
 import { verifyTFA } from '../lib/verifyTFA';
 import BlackListModel from '../model/blacklist';
@@ -454,6 +455,9 @@ class UserDetailHandler extends Handler {
         this.response.template = 'user_detail.html';
         this.response.body = {
             isSelfProfile, udoc, sdoc, pdocs, tags, tdocs, studoc,
+            externalOj: await loadExternalOjProfile(domainId, uid, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
+                ? pdocs.filter((p) => !p.hidden || isSelfProfile || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)).map((p) => p.docId)
+                : null),
         };
         if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION)) {
             const psdocs = await SolutionModel.getByUser(domainId, uid).limit(10).toArray();

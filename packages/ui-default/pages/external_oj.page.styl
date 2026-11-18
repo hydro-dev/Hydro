@@ -1,0 +1,128 @@
+.external-oj-account
+  display: grid
+  grid-template-columns: minmax(165px, 2fr) minmax(125px, 1fr) auto
+  gap: 12px
+  align-items: end
+  margin-top: 12px
+  padding-block: 12px
+  border-bottom: 1px solid rgba(128, 128, 128, .25)
+
+  label
+    display: block
+    margin-bottom: 4px
+
+  p
+    margin: 0
+
+  p.external-oj-account__error
+    margin-top: .375rem
+    font-weight: 600
+    color: #ad274a
+
+  .button
+    margin: 0 0 4px
+
+  small
+    display: block
+
+  +mobile()
+    grid-template-columns: 1fr
+
+.external-oj-activity__header
+  display: flex
+  flex-wrap: wrap
+  align-items: flex-end
+  justify-content: space-between
+  gap: 12px
+  margin-bottom: 14px
+
+  h2
+    margin-bottom: 4px
+
+  p
+    margin: 0
+
+.external-oj-activity__overflow
+  overflow-x: auto
+  padding: 4px
+
+.external-oj-activity__months,
+.external-oj-activity__calendar
+  display: grid
+  grid-auto-flow: column
+  grid-auto-columns: 12px
+  gap: 3px
+  width: max-content
+
+.external-oj-activity__months
+  font-size: rem(11px)
+  white-space: nowrap
+  margin-bottom: 4px
+
+.external-oj-activity__calendar
+  grid-template-rows: repeat(7, 12px)
+
+.external-oj-activity__day,
+.external-oj-activity__legend i
+  appearance: none
+  padding: 0
+  width: 12px
+  height: 12px
+  border: 1px solid rgba(90, 110, 100, .22)
+  border-radius: 3px
+
+.external-oj-activity
+  [data-oj-level="0"]
+    background: rgba(120, 135, 130, .22)
+  [data-oj-level="1"]
+    background: #a6dfaf
+  [data-oj-level="2"]
+    background: #5eb775
+  [data-oj-level="3"]
+    background: #2f9253
+  [data-oj-level="4"]
+    background: #16633d
+  [data-oj-level="missing"]
+    background: repeating-linear-gradient(135deg, transparent 0 2px, rgba(120, 135, 130, .35) 2px 4px)
+
+  [data-oj-day]:focus-visible,
+  [data-oj-day][aria-pressed="true"]
+    outline: 2px solid #07878b
+    outline-offset: 2px
+
+.external-oj-activity__legend
+  display: flex
+  align-items: center
+  gap: 4px
+  margin: 8px 0 14px
+
+.external-oj-activity__day-detail
+  min-height: 40px
+  margin-bottom: 12px
+
+  ul
+    display: flex
+    flex-wrap: wrap
+    gap: 6px 16px
+    padding: 0
+    margin: 6px 0 0
+    list-style: none
+
+.external-oj-activity__accounts
+  table-layout: fixed
+  width: 100%
+
+  .external-oj-activity__platform-col
+    width: 26%
+
+  .external-oj-activity__handle-col
+    width: 27%
+
+  .external-oj-activity__handle
+    overflow-wrap: anywhere
+
+  td span
+    margin-inline-start: 4px
+
+  small
+    margin-inline-start: 8px

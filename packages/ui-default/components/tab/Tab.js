@@ -97,7 +97,11 @@ export default class Tab extends DOMAttachedObject {
 
     // 4. Finalize
     this.currentIndex = idx;
-    if (this.hasMemo) location.hash = `#tab-${idx}`;
+    if (this.hasMemo) {
+      const anchor = $newTab.attr('data-tab-anchor');
+      if (anchor) history.replaceState(history.state, '', `#${anchor}`);
+      else location.hash = `#tab-${idx}`;
+    }
     this.isAnimating = false;
   }
 
@@ -144,14 +148,15 @@ export default class Tab extends DOMAttachedObject {
             return idx;
           }
         }
-        return null;
+        const idx = this.$content.children().get().findIndex((panel) => panel.dataset.tabAnchor === hash);
+        return idx < 0 ? null : idx;
       };
       const handleIdChange = () => {
         const idx = getIdx();
         if (typeof idx === 'number') this.switchToTab(idx);
       };
       $(window).on('hashchange', handleIdChange);
-      handleIdChange();
+      this.currentIndex = getIdx() ?? 0;
     } else this.currentIndex = 0;
 
     this.$content

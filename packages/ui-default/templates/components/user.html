@@ -1,4 +1,4 @@
-{% macro render_inline(udoc, avatar=true, badge=true, modbadge=true, levelbadge=true, classname = true) %}
+{% macro render_inline(udoc, avatar=true, badge=true, modbadge=true, levelbadge=true, classname = true, studentId = true) %}
 {% if udoc %}
 <span class="user-profile-link">
   {% if avatar %}
@@ -14,7 +14,7 @@
     {% endif %}
   {% endif %}
   {% if udoc.name %}
-    <a class="user-profile-name" href="{{ url('user_detail', uid=udoc._id) }}" data-tooltip="学号：{{ udoc.stuid }}">
+    <a class="user-profile-name" href="{{ url('user_detail', uid=udoc._id) }}"{% if studentId %} data-tooltip="学号：{{ udoc.stuid }}"{% endif %}>
       <span>{{ udoc.name }}</span>
     </a>
   {% else %}

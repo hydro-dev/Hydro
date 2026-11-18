@@ -14,6 +14,9 @@ import * as discussion from '../model/discussion';
 import domain from '../model/domain';
 import MessageModel from '../model/message';
 import * as oplog from '../model/oplog';
+import {
+    EXTERNAL_RANKING_PLATFORMS, getExternalRanking, getGradeOptions, getGradeRpRanking,
+} from '../model/ranking';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import system from '../model/system';
 import user from '../model/user';
@@ -24,17 +27,52 @@ import { log2 } from '../utils';
 
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
-    async get(domainId: string, page = 1) {
-        const [dudocs, upcount, ucount] = await this.paginate(
-            domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 }, join: true }).sort({ rp: -1 }),
-            page,
-            'ranking',
-        );
-        const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
-        const udocs = dudocs.map((i) => udict[i.uid]);
+    @query('grade', Types.String, true)
+    @query('externalPage', Types.PositiveInt, true)
+    @query('externalSort', Types.String, true)
+    @query('externalScope', Types.String, true)
+    async get(domainId: string, page = 1, grade = 'all', externalPage = 1, sort = 'total', scope = 'all') {
+        const { db } = this.ctx;
+        const externalSort = EXTERNAL_RANKING_PLATFORMS.find(({ key }) => key === sort)?.key ?? 'total';
+        const externalScope = scope === 'synced' ? 'synced' : 'all';
+        const grades = await getGradeOptions(db, domainId);
+        if (grade !== 'unknown' && !grades.includes(grade)) grade = 'all';
+        const pageSize = this.ctx.setting.get('pagination.ranking') || 20;
+        const viewerUid = this.user.hasPriv(PRIV.PRIV_USER_PROFILE) ? this.user._id : undefined;
+        const [rp, external] = await Promise.all([
+            grade === 'all'
+                ? this.paginate(
+                    domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 }, join: true }).sort({ rp: -1 }),
+                    page,
+                    'ranking',
+                ).then(([rows, pages, count]) => ({ rows, pages, count, viewerRank: this.user.rank }))
+                : getGradeRpRanking(db, domainId, grade, page, pageSize, viewerUid)
+                    .then((result) => ({ ...result, pages: Math.ceil(result.count / pageSize) })),
+            getExternalRanking(db, domainId, grade, externalPage, pageSize, externalSort, new Date(), externalScope),
+        ]);
+        const udict = await user.getList(domainId, [...rp.rows, ...external.rows].map(({ uid }) => uid));
+        const externalUsers = Object.fromEntries(external.rows.map(({ uid, uname }) => [uid, {
+            _id: uid, uname, class: udict[uid]?.class, name: udict[uid]?.name,
+        }]));
         this.response.template = 'ranking.html';
         this.response.body = {
-            udocs, upcount, ucount, page,
+            udocs: rp.rows.map(({ uid }) => udict[uid]),
+            upcount: rp.pages,
+            ucount: rp.count,
+            page,
+            rpRanks: grade === 'all' ? undefined : rp.rows.map(({ rank }) => rank),
+            viewerRpRank: rp.viewerRank,
+            grades,
+            grade,
+            externalRows: external.rows,
+            externalUsers,
+            externalPlatforms: EXTERNAL_RANKING_PLATFORMS,
+            externalPage,
+            externalSort,
+            externalScope,
+            externalAllCount: external.allCount,
+            externalSyncedCount: external.syncedCount,
+            externalPageCount: Math.ceil(external.count / pageSize),
         };
     }
 }

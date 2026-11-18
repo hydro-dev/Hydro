@@ -1,0 +1,8 @@
+{% if account.total is number %}{{ account.total }} 题{% else %}暂无题量{% endif %}
+{% if account.state == 'unbound' %}<span>未绑定</span>{% endif %}
+{% if account.state == 'pending' %}<span>等待首次同步</span>{% endif %}
+{% if account.state == 'failed' %}<span>同步失败{% if account.lastSuccessAt %}，保留上次数据{% endif %}</span>{% endif %}
+{% if account.lastSuccessAt %}
+  <small>最近成功：{{ datetimeSpan(account.lastSuccessAt)|safe }}</small>
+  {% if not account.hasDaily %}<small>暂无每日明细</small>{% endif %}
+{% endif %}
