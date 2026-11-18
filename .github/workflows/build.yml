@@ -11,6 +11,8 @@ permissions:
 env:
   CI: true
   YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
+  # Corepack 首次下载 yarn 时会交互式询问，CI 里必须关掉
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
 
 jobs:
   build:
@@ -25,29 +27,52 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 22
+    - name: Enable Corepack
+      run: |
+        corepack enable
+        corepack --version
+        yarn --version
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
-      run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
-    - uses: actions/cache@v4
-      with:
-        path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          yarn.lock
-          .cache
-          **/tsconfig.tsbuildinfo
-        key: cache-${{ github.ref }}-${{ github.sha }}
-        restore-keys: |
-          cache-${{ github.ref }}-
-          cache-
-    - name: Clear Cache
-      if: "contains(github.event.head_commit.message, 'skip-cache')"
+      run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+    # commit message 含 skip-cache 时让缓存 key 带随机后缀，等于强制不命中。
+    # 用 env 中转而不是把 commit message 直接拼进 shell，避免命令注入。
+    - name: Compute cache key suffix
+      id: cache-key
+      env:
+        COMMIT_MSG: ${{ github.event.head_commit.message }}
+        RUN_ID: ${{ github.run_id }}
       run: |
-        rm -rf node_modules yarn.lock **/tsconfig.tsbuildinfo
+        if printf '%s' "$COMMIT_MSG" | grep -q 'skip-cache'; then
+          echo "suffix=skip-$RUN_ID" >> "$GITHUB_OUTPUT"
+        else
+          echo "suffix=" >> "$GITHUB_OUTPUT"
+        fi
+    # 依赖缓存：只跟 yarn.lock 绑定，依赖没变就复用，装包时不走网络
+    - name: Restore yarn cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: yarn-${{ runner.os }}-${{ steps.cache-key.outputs.suffix }}${{ hashFiles('yarn.lock') }}
+        restore-keys: |
+          yarn-${{ runner.os }}-
+    # 构建缓存：.cache 里是 tsc 增量产物 + webpack 持久化缓存。
+    # 用源码哈希做 key、用"仅含 lock 哈希"的前缀做 restore-keys：
+    # 源码一改 key 就变，但仍能回退到最近一次构建结果做增量。
+    - name: Restore build cache
+      uses: actions/cache@v4
+      with:
+        path: .cache
+        key: build-${{ runner.os }}-${{ steps.cache-key.outputs.suffix }}${{ hashFiles('yarn.lock') }}-${{ hashFiles('packages/**/*.ts', 'packages/**/*.tsx', 'packages/**/*.vue', 'framework/**/*.ts') }}
+        restore-keys: |
+          build-${{ runner.os }}-${{ steps.cache-key.outputs.suffix }}${{ hashFiles('yarn.lock') }}-
+          build-${{ runner.os }}-
     - name: Config And Install
       run: |
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
-        yarn set version 4.18.1
+        corepack install
+        yarn --version
         yarn
         yarn dedupe
         node build/prepare.js
