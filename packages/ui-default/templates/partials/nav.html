@@ -1,7 +1,7 @@
 {%- macro nav_item(item) -%}
 <li class="nav__list-item">
   <a href="{{ url(item.name, item.args, query=item.args.query(handler) if typeof(item.args.query) == 'function' else item.args.query or {}) }}" class="nav__item{% if page_name.startsWith(item.args.prefix) %} nav--active{% endif %}">
-    {{ _(item.displayName or item.name) }}
+    {{ _(item.displayName or item.args.displayName or item.name) }}
   </a>
 </li>
 {%- endmacro -%}

@@ -1,0 +1,35 @@
+{% extends "layout/basic.html" %}
+
+{% block content %}
+<div class="algo-wiki" lang="zh-CN">
+  <section class="section algo-wiki__reader algo-wiki__editor">
+    <p class="algo-wiki__eyebrow"><a href="{{ url('wiki_main') }}">算法 Wiki</a></p>
+    <h1>{{ '编辑文章' if article else '新建文章' }}</h1>
+    <form method="post" action="{{ url('wiki_edit', slug=article.slug) if article else url('wiki_create') }}">
+      {% if article %}
+        <p>文章地址：<a href="{{ url('wiki_article', slug=article.slug) }}">{{ article.slug }}</a></p>
+      {% else %}
+        <label for="wiki-slug">文章地址</label>
+        <input class="textbox" id="wiki-slug" name="slug" required maxlength="{{ limits.slug }}"
+          pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="two-pointers" aria-describedby="wiki-slug-hint">
+        <p class="algo-wiki__field-hint" id="wiki-slug-hint">使用小写英文字母、数字或连字符。保存后地址固定。</p>
+      {% endif %}
+      <label for="wiki-title">标题</label>
+      <input class="textbox" id="wiki-title" name="title" value="{{ article.title }}" required maxlength="{{ limits.title }}">
+      <label for="wiki-category">分类</label>
+      <input class="textbox" id="wiki-category" name="category" value="{{ article.category }}" required maxlength="{{ limits.category }}">
+      <label for="wiki-summary">摘要</label>
+      <input class="textbox" id="wiki-summary" name="summary" value="{{ article.summary }}" required maxlength="{{ limits.summary }}">
+      <label for="wiki-markdown">Markdown 正文</label>
+      <p class="algo-wiki__field-hint" id="wiki-markdown-hint">正文最多 64 KiB。用 ##、### 创建目录，用三反引号标记代码块。</p>
+      <textarea class="textbox algo-wiki__markdown" id="wiki-markdown" name="markdown" required maxlength="{{ limits.markdown }}"
+        spellcheck="false" aria-describedby="wiki-markdown-hint">
+{{ article.markdown }}</textarea>
+      <div class="algo-wiki__editor-actions">
+        <button class="primary button" type="submit">保存文章</button>
+        <a href="{{ url('wiki_article', slug=article.slug) if article else url('wiki_main') }}">取消</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
