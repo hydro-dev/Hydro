@@ -1,0 +1,13 @@
+{
+  "name": "@hgnuoj/discussion-toc",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "license": "AGPL-3.0-only",
+  "hydro": {
+    "cli": false
+  },
+  "peerDependencies": {
+    "@hydrooj/ui-default": "workspace:^"
+  }
+}

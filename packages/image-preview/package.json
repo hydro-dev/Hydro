@@ -1,0 +1,15 @@
+{
+  "name": "@hgnuoj/image-preview",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "cheerio": "~1.0.0",
+    "lru-cache": "^11.5.3",
+    "sharp": "0.34.5"
+  },
+  "peerDependencies": {
+    "hydrooj": "workspace:^"
+  }
+}
