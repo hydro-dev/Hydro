@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
@@ -8,6 +9,25 @@ import convert from 'schemastery-jsonschema';
 import { presetRenderers } from './backendlib/contentRenderer';
 import markdown from './backendlib/markdown';
 import { TemplateService } from './backendlib/template';
+
+declare module 'hydrooj' {
+  interface UiContextBase {
+    assetRevision?: string;
+  }
+}
+
+function getAssetRevision(version: string) {
+  try {
+    const hash = createHash('sha256');
+    for (const name of [`theme-${version}.css`, `hydro-${version}.js`]) {
+      hash.update(readFileSync(join(__dirname, 'public', name)));
+    }
+    return hash.digest('hex').slice(0, 12);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    return undefined;
+  }
+}
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -200,6 +220,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
   });
   if (process.env.HYDRO_CLI) return;
+  const assetRevision = !process.env.DEV && getAssetRevision(global.Hydro.version['ui-default']);
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
   ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
@@ -213,6 +234,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     }
   });
   ctx.on('handler/after', async (that) => {
+    if (assetRevision) that.UiContext.assetRevision = assetRevision;
     that.UiContext.SWConfig = {
       preload: config.serviceWorker.preload,
       hosts: [
