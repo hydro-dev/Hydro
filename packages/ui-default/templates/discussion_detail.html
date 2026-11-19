@@ -1,7 +1,11 @@
 {% extends "layout/basic.html" %}
 {% import "components/comments_discussion.html" as comments with context %}
+{% block ogp %}
+{{ super() }}
+{% if albumStylesheet %}<link rel="stylesheet" href="{{ albumStylesheet }}">{% endif %}
+{% endblock %}
 {% block content %}
-<div class="row">
+<div class="row" data-discussion-layout>
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__body">
@@ -25,8 +29,11 @@
             {{ datetimeSpan(ddoc._id)|safe }}
           </li>
         </ul>
+        {% if albumCollection %}
+        <p class="album-source-banner"><span>这篇公告的照片已按比赛整理</span><a href="{{ albumCollection }}">浏览比赛相册 →</a></p>
+        {% endif %}
         <div class="typo topic__content richmedia" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
-          {{ ddoc['content']|markdown|safe }}
+          {{ ddoc['content']|markdownImages|safe }}
         </div>
       </div>
       <ul class="section__footer supplementary dot list">
@@ -108,7 +115,7 @@
       </div>
     </!-->
   </div>
-  <div class="medium-3 columns">
+  <div class="medium-3 columns" data-discussion-sidebar>
     {% set udoc = udict[ddoc.owner] %}
     <div class="section side">
       <div class="profile__bg user-profile-bg--1"></div>
