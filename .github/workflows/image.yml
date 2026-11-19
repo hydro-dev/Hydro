@@ -1,9 +1,13 @@
 name: Image
 
 # 每次 master 有新提交（也就是有分支合并进来）时，从头编译一次前端，
-# 用仓库源码构建 backend 镜像，冒烟检查通过后把同一个镜像推送到 Docker Hub public 仓库。
+# 用仓库源码构建 backend 镜像并冒烟检查。**push 触发永远不推送镜像**，
+# 平时只是验证这份代码能构建、能跑起来。
 #
-# 手动运行默认只构建 + 冒烟检查；把 publish 设为 true 才推送，且会覆盖 latest。
+# 只有手动 Run workflow、选择 master 分支且把 publish 设为 true 时才推送到 Docker Hub
+# public 仓库，相当于发布前必须有人手动确认一次。每次发布打两个 tag：
+#   latest                    最近一次发布的构建
+#   YYYYMMDD-HHMMSS (UTC)     构建时间戳，不可变，便于回滚/核对
 # 推送凭据来自仓库 Actions secret DOCKER_TOKEN（Docker Hub Access Token，需要可 push
 # 到 ztl123z/hgnu-backend）；用户名 ztl123z 不是 secret，直接写在 env 里。
 # 只从 ZTL123Z/HGNUOJ 发布，fork 仍会构建/冒烟检查，但不会推送。
@@ -14,11 +18,11 @@ name: Image
 on:
   push:
     branches: [master]
-  # 手动作业：默认试构建；publish=true 时也发布
+  # 手动作业：默认只构建 + 冒烟检查；publish=true 才推送到 Docker Hub
   workflow_dispatch:
     inputs:
       publish:
-        description: '是否推送到 Docker Hub（true 会覆盖 latest）'
+        description: '是否推送到 Docker Hub（仅 master 生效；true 会覆盖 latest，并打时间戳 tag）'
         type: choice
         required: false
         default: 'false'
@@ -103,10 +107,12 @@ jobs:
     - name: Image size
       run: docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' "${{ env.LOCAL_IMAGE }}:${{ github.sha }}"
 
-    # 先验证再登录、打 tag 和推送；保证 latest / sha tag 指向同一个已测试的本地镜像。
-    # 手动运行默认 publish=false，只做试构建；fork 永远不会执行推送。
+    # 先验证再登录、打 tag 和推送；保证 latest / 版本 tag 指向同一个已测试的本地镜像。
+    # 只有「手动运行 + publish=true + 选的是 master」才推送：push 到 master、手动运行但
+    # 没勾 publish、或手动运行选了其他分支，都只构建和冒烟检查。fork 永远不会执行推送。
+    # 限制 master 是为了避免把未合并的分支构建覆盖成 latest。
     - name: Log in to Docker Hub
-      if: ${{ github.repository == 'ZTL123Z/HGNUOJ' && (github.event_name == 'push' || inputs.publish == 'true') }}
+      if: ${{ github.repository == 'ZTL123Z/HGNUOJ' && github.event_name == 'workflow_dispatch' && inputs.publish == 'true' && github.ref == 'refs/heads/master' }}
       uses: docker/login-action@v3
       with:
         registry: docker.io
@@ -115,16 +121,19 @@ jobs:
         logout: true
 
     - name: Push image to Docker Hub
-      if: ${{ github.repository == 'ZTL123Z/HGNUOJ' && (github.event_name == 'push' || inputs.publish == 'true') }}
+      if: ${{ github.repository == 'ZTL123Z/HGNUOJ' && github.event_name == 'workflow_dispatch' && inputs.publish == 'true' && github.ref == 'refs/heads/master' }}
       run: |
         set -euo pipefail
         LOCAL="${{ env.LOCAL_IMAGE }}:${{ github.sha }}"
         REMOTE="${{ env.DOCKERHUB_IMAGE }}"
-        SHORT_SHA="${GITHUB_SHA::7}"
-        SHA_TAG="$REMOTE:sha-$SHORT_SHA"
+        # 版本号用 UTC 构建时间，格式 YYYYMMDD-HHMMSS（Docker tag 不允许冒号，
+        # 所以用 - 分隔日期和时间）。同一个 run 里只算一次，latest 与版本 tag 同源。
+        VERSION_TAG="$REMOTE:$(date -u +'%Y%m%d-%H%M%S')"
 
-        docker tag "$LOCAL" "$SHA_TAG"
+        docker tag "$LOCAL" "$VERSION_TAG"
         docker tag "$LOCAL" "$REMOTE:latest"
-        echo "Publishing $SHA_TAG and $REMOTE:latest"
-        docker push "$SHA_TAG"
+        echo "Publishing $VERSION_TAG and $REMOTE:latest"
+        echo "### 发布镜像: \`$VERSION_TAG\`" >> "$GITHUB_STEP_SUMMARY"
+        echo "> 源码 commit: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+        docker push "$VERSION_TAG"
         docker push "$REMOTE:latest"
