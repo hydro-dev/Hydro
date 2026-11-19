@@ -74,16 +74,20 @@ docker build -f install/docker/source/Dockerfile \
 
 ## 四、启动服务
 
-### 方式 A：使用 CI 推送到 Docker Hub 的镜像（推荐）
+### 方式 A：使用手动发布到 Docker Hub 的镜像（推荐）
 
-`master` 有新提交、且构建和冒烟检查通过后，GitHub Actions 会把镜像推到
-`ztl123z/hgnu-backend`，同时打两个 tag：
+`master` 有新提交时会自动构建并冒烟检查，但**不会自动推送**。需要发版时，到 Actions
+页面选 `Image` → `Run workflow`，**分支选 `master`**、把 `publish` 设为 `true`，
+构建和冒烟检查通过后才会把镜像推到 `ztl123z/hgnu-backend`，同时打两个 tag：
 
-- `latest`：当前 `master` 最新构建
-- `sha-<7 位 commit>`：固定版本，适合回滚 / 核对代码版本
+- `latest`：最近一次手动发布的构建
+- `YYYYMMDD-HHMMSS`：构建时间（UTC），固定版本，适合回滚 / 核对代码版本。
+  例如 `20261119-063000`
 
-这是 **public** 仓库，拉取不需要登录。也可以到 Actions 页面手动
-`Run workflow` 并把 `publish` 设为 `true`；默认 `publish=false` 只试构建，不覆盖 `latest`。
+`publish` 默认是 `false`，所以平时手动运行也只是验证能构建、能跑，不会覆盖 `latest`。
+发布成功后在 Actions 的 run 摘要里会显示本次发布的 tag 和对应 commit。
+
+这是 **public** 仓库，拉取不需要登录。
 
 ```bash
 cd install/docker
@@ -91,7 +95,7 @@ OJ_BACKEND_IMAGE=ztl123z/hgnu-backend:latest docker compose pull oj-backend
 OJ_BACKEND_IMAGE=ztl123z/hgnu-backend:latest docker compose up -d
 ```
 
-固定版本时把 `:latest` 换成 `:sha-abcdefg`。`pull` 和 `up` 要用同一个
+固定版本时把 `:latest` 换成对应的时间戳 tag，例如 `:20261119-063000`。`pull` 和 `up` 要用同一个
 `OJ_BACKEND_IMAGE`，否则 compose 会去拉默认的 `hgnuoj-backend:local`；
 想长期固定，可写入 `install/docker/.env`（该文件已被 `.gitignore` 排除）：
 
@@ -202,8 +206,8 @@ COMPOSE_PROFILES=judge
 
 ## 七、更新代码
 
-使用 Docker Hub 镜像时，先确认 CI 构建成功，然后在 `install/docker` 下拉新镜像并重建
-backend 容器（mongo 和数据不动）：
+使用 Docker Hub 镜像时，先确认有人在 Actions 里手动发布过（`publish=true`），然后在
+`install/docker` 下拉新镜像并重建 backend 容器（mongo 和数据不动）：
 
 ```bash
 export OJ_BACKEND_IMAGE=ztl123z/hgnu-backend:latest
@@ -330,11 +334,11 @@ judge 已移到 `judge` profile，默认不会被构建。
 | `install/docker/judge/Dockerfile` | 测评机镜像，支持换源与本地 sandbox |
 | `install/docker/backend/Dockerfile` | 旧的 npm 安装方式，compose 已不再使用 |
 | `.dockerignore` | 构建上下文排除规则 |
-| `.github/workflows/image.yml` | push 到 master 时构建、冒烟检查，通过后推送 Docker Hub |
+| `.github/workflows/image.yml` | push 到 master 时构建、冒烟检查（不推送）；手动 `publish=true` 才推 Docker Hub |
 
 镜像 tag 可用环境变量覆盖：
 
 ```bash
 OJ_BACKEND_IMAGE=ztl123z/hgnu-backend:latest docker compose up -d
-OJ_BACKEND_IMAGE=ztl123z/hgnu-backend:sha-abc1234 docker compose up -d
+OJ_BACKEND_IMAGE=ztl123z/hgnu-backend:20261119-063000 docker compose up -d
 ```
