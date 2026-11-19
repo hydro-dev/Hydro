@@ -26,6 +26,10 @@ export default async (ctx: KoaContext, next: Next) => {
     const args = {
         domainId, ...ctx.params, ...ctx.query, ...ctx.request.body, __start: Date.now(),
     };
+    // The domainId inferred from the route/host must never be replaced by a
+    // non-string value (e.g. JSON body `{"domainId": 123}`), otherwise user
+    // layer and DomainModel.get crash with "domainId.toLowerCase is not a function".
+    if (typeof args.domainId !== 'string') args.domainId = domainId;
     const UiContext: any = cloneDeep(UiContextBase);
     if (!process.env.DEV) {
         UiContext.cdn_prefix = system.get('server.cdn');
