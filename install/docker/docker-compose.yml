@@ -14,7 +14,11 @@ services:
       retries: 5
       start_period: 30s
   oj-backend:
-    build: ./backend
+    # 用仓库源码构建出来的镜像（含前端编译产物），不再在本地 build。
+    # 构建命令在仓库根目录执行：
+    #   docker build -f install/docker/source/Dockerfile -t hgnuoj-backend:local .
+    # 想换成别的 tag（例如 CI 产出的镜像）时，用 OJ_BACKEND_IMAGE 覆盖即可。
+    image: ${OJ_BACKEND_IMAGE:-hgnuoj-backend:local}
     container_name: oj-backend
     restart: always
     depends_on:
@@ -35,6 +39,13 @@ services:
       start_interval: 5s
 
   oj-judge:
+    # 默认不参与 `docker compose up -d`。
+    # judge 镜像要装一整条编译器链（gcc/g++/openjdk/rustc/ghc/golang/mono...），
+    # 首次构建通常要 30 分钟以上，不该阻塞后端的启动。
+    # 需要测评机时显式带上 profile：
+    #   docker compose --profile judge up -d
+    # 想让它长期默认启动，就在 install/docker/.env 里写 COMPOSE_PROFILES=judge
+    profiles: ["judge"]
     build: ./judge
     container_name: oj-judge
     restart: always
