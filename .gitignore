@@ -71,3 +71,7 @@ ceshi.sh
 packages/*/public/assets
 node_modules.*
 install/docker/data/*
+# compose 本地环境配置（可能包含本地镜像 tag 等），不入库
+install/docker/.env
+# 离线构建用的 sandbox 二进制（go-judge），体积大，不入库
+install/docker/judge/sandbox

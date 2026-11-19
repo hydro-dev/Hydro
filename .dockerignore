@@ -1,0 +1,34 @@
+# 只作用于「以仓库根目录为上下文」的构建（.github/workflows/image.yml）。
+# install/docker/docker-compose.yml 里 backend/judge 的构建上下文是各自子目录，
+# 不受这里影响。
+
+# 版本库与本地开发产物
+.git
+.gitmodules
+node_modules
+**/node_modules
+.cache
+**/*.tsbuildinfo
+.build
+dist
+
+# 由构建过程重新生成的前端产物
+packages/ui-default/public
+packages/ui-default/misc/.iconfont
+packages/ui-default/static/locale
+packages/ui-next/public
+
+# yarn 本地状态（缓存由构建时的 cache mount 提供）
+.yarn/cache
+.yarn/unplugged
+.yarn/sdks
+.yarn/install-state.gz
+
+# 运行时数据与本地配置
+install/docker/data
+*.log
+*.mmdb
+# .env 不只在仓库根目录（install/docker/.env 是 compose 本地配置），
+# 不带目录前缀的写法只匹配根目录，所以这里用 ** 覆盖任意层级
+**/.env
+**/.env.*
