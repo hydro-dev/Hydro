@@ -207,7 +207,7 @@ test('directory route precedes the article fallback and its management link is e
   const routes: [string, string, unknown][] = [];
   wiki.registerWikiRoutes({
     inject: () => {},
-    Route: (...args) => routes.push(args),
+    Route: (...args: [string, string, unknown]) => routes.push(args),
   } as any);
   const i = routes.findIndex(([name]) => name === 'wiki_directory');
   assert.ok(i >= 0 && i < routes.findIndex(([name]) => name === 'wiki_article'));
