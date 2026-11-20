@@ -1,0 +1,88 @@
+{% if externalOj %}
+<section class="external-oj-activity" id="practice-activity" aria-labelledby="practice-title"
+  data-external-oj-activity data-oj-labels="{{ externalOj.labels | dump }}">
+    <div class="section__body">
+      <header class="external-oj-activity__header">
+        <div>
+          <h2 id="practice-title">刷题记录</h2>
+          <p>近一年 · 北京时间 · 同站同题只计首次通过</p>
+        </div>
+        <label for="external-oj-source">站点
+          <select id="external-oj-source" class="select">
+            <option value="all">全部站点</option>
+            {% for label in externalOj.labels %}
+              <option value="{{ loop.index0 }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </header>
+      {% if externalOj.missing.length %}
+        <p class="note">暂无每日明细：{{ externalOj.missing | join('、') }}。总览只汇总有明细的站点。</p>
+      {% endif %}
+      {% if not externalOj.hasRecentPasses %}
+        <p>近一年暂无可显示的通过记录。通过本校题目或同步含每日明细的外站后，日历会显示活动。</p>
+      {% endif %}
+      <div class="external-oj-activity__overflow">
+        <div class="external-oj-activity__months" aria-hidden="true">
+          {% for month in externalOj.months %}<span style="grid-column: {{ month.column }}">{{ month.label }}</span>{% endfor %}
+        </div>
+        <div class="external-oj-activity__calendar" role="group" aria-label="刷题日历，方向键移动，回车查看日期">
+          {% for empty in externalOj.leading %}<span aria-hidden="true"></span>{% endfor %}
+          {% for day in externalOj.days %}
+            {% if day.total is not number %}
+              {% set intensity = 'missing' %}
+            {% elif day.total == 0 %}
+              {% set intensity = 0 %}
+            {% elif day.total == 1 %}
+              {% set intensity = 1 %}
+            {% elif day.total < 4 %}
+              {% set intensity = 2 %}
+            {% elif day.total < 7 %}
+              {% set intensity = 3 %}
+            {% else %}
+              {% set intensity = 4 %}
+            {% endif %}
+            <button type="button" class="external-oj-activity__day" data-oj-day="{{ day.day }}" data-oj-counts="{{ day.counts | dump }}"
+              data-oj-level="{{ intensity }}"
+              aria-label="{{ day.day }}，{{ day.total ~ ' 题' if day.total is number else '暂无数据' }}"
+              aria-pressed="false" tabindex="{{ 0 if loop.last else -1 }}"></button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="external-oj-activity__legend" aria-label="颜色由浅至深表示题数增加">
+        <span>少</span>
+        {% for level in range(5) %}<i aria-hidden="true" data-oj-level="{{ level }}"></i>{% endfor %}
+        <span>多</span> <i aria-hidden="true" data-oj-level="missing"></i><span>暂无数据</span>
+      </div>
+      <div class="external-oj-activity__day-detail" aria-live="polite">点日期查看各站题数。外站数据以最近一次成功同步为准。</div>
+      <table class="data-table external-oj-activity__accounts">
+        <colgroup>
+          <col class="external-oj-activity__platform-col">
+          <col class="external-oj-activity__handle-col">
+          <col>
+        </colgroup>
+        <thead><tr><th scope="col">平台</th><th scope="col">绑定账号</th><th scope="col">累计通过与同步状态</th></tr></thead>
+        <tbody>
+          {% for account in externalOj.accounts %}
+            <tr>
+              <td>{{ account.label }}</td>
+              <td class="external-oj-activity__handle">
+                {% if account.profileUrl %}
+                  <a class="typo-a" href="{{ account.activityUrl or account.profileUrl }}" target="_blank" rel="noopener noreferrer"
+                    {% if account.activityUrl %}title="在 AtCoder Problems 查看公开刷题记录"{% endif %}>{{ account.handle }}</a>
+                  {% if account.activityUrl %}
+                    <small><a class="typo-a" href="{{ account.profileUrl }}" target="_blank" rel="noopener noreferrer">官方主页</a></small>
+                  {% endif %}
+                {% else %}
+                  {{ account.handle or '—' }}
+                {% endif %}
+              </td>
+              <td>{% include "partials/external_oj_state.html" %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if isSelfProfile %}<a class="rounded button" href="{{ url('home_external_oj') }}">管理外站账号</a>{% endif %}
+    </div>
+</section>
+{% endif %}

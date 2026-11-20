@@ -97,6 +97,14 @@
       <div class="profile-content">
         <div class="section__tab-container immersive memo">
           <ul class="section__tabs">
+            {% if externalOj %}
+              <li class="section__tab-item">
+                <h1 class="section__tab-title">刷题记录</h1>
+                <div class="section__tab-main" data-tab-anchor="practice-activity">
+                  {% include "partials/external_oj_activity.html" %}
+                </div>
+              </li>
+            {% endif %}
             {% if pdocs.length %}
               <li class="section__tab-item">
                 <h1 class="section__tab-title">{{ _('Accepted Problems') }}</h1>

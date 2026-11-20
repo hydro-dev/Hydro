@@ -1,76 +1,173 @@
 {% extends "layout/basic.html" %}
 {% import "components/paginator.html" as paginator with context %}
 {% import "components/nothing.html" as nothing with context %}
+{% macro external_sort_header(key, label) %}
+<th scope="col"{% if externalSort == key %} aria-sort="descending"{% endif %}>
+  <a class="typo-a ranking-sort-link"
+    href="{{ url('ranking', query={ grade: grade, page: page, externalSort: key, externalScope: externalScope }) }}#external-ranking">{{ label }}{% if externalSort == key %} <span aria-hidden="true">↓</span>{% endif %}</a>
+</th>
+{% endmacro %}
+{% macro external_pager() %}
+{% if externalPageCount > 1 or (externalPageCount and externalPage > 1) %}
+<ul class="pager pager-bottom">
+  {% for type, number in paginate(externalPage, externalPageCount) %}
+  <li>
+    {% if type == 'current' %}
+      <span class="pager__item current" aria-current="page">{{ number }}</span>
+    {% elif type == 'ellipsis' %}
+      <span class="pager__item ellipsis">...</span>
+    {% else %}
+      <a class="pager__item {{ type }} link"
+        href="{{ url('ranking', query={ grade: grade, page: page, externalPage: number, externalSort: externalSort, externalScope: externalScope }) }}#external-ranking">
+        {{ number if type == 'page' else _('pager_' + type) }}
+      </a>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endmacro %}
 {% block content %}
 <div class="row">
   <div class="medium-12 columns">
-    <div class="section">
-      <div class="section__body no-padding">
-        <div data-fragment-id="ranking">
-          {% if not udocs.length %}
-            {% if page == 1 %}
-              <blockquote class="note">{{ _('The ranking page is not updated realtime.') }}</blockquote>
-            {% endif %}
-          {{ nothing.render('Sorry, there are no users in this domain.') }}
-          {% else %}
-          <table class="data-table">
-            <colgroup>
-              <col class="col--rank">
-              <col class="col--user">
-              <col class="col--rp">
-              {% for key, def in model.rp %}
-                {% if not def.hidden %}
-                  <col class="col--detail rp-{{ key }}">
-                {% endif %}
-              {% endfor %}
-              <col class="col--ac">
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="col--rank">{{ _('Rank') }}</th>
-                <th class="col--user">{{ _('Username') }}</th>
-                <th class="col--rp">{{ _('RP') }}</th>
-                {% for key, def in model.rp %}
-                  {% if not def.hidden %}
-                    <th class="col--detail rp-{{ key }}">{{ _('rpDetailText_' + key) }}</th>
-                  {% endif %}
-                {% endfor %}
-                <th class="col--ac">{{ _('Accept') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-              <tr>
-                <td class="col--rank">{{ handler.user.rank|default('-') }}</td>
-                <td class="col--user">{{ user.render_inline(handler.user) }}</td>
-                <td class="col--rp">{{ handler.user.rp|default(0)|round(0) }}</td>
-                {% for key, def in model.rp %}
-                  {% if not def.hidden %}
-                    <td class="col--detail rp-{{ key }}">{{ handler.user.rpInfo[key]|round if (handler.user.rpInfo|default({}))[key] else '-' }}</td>
-                  {% endif %}
-                {% endfor %}
-                <td class="col--ac">{{ handler.user.nAccept|default(0) }}</td>
-              </tr>
-              {% endif %}
-              {%- for udoc in udocs -%}
-              <tr>
-                <td class="col--rank">{{ (page - 1) * model.system.get('pagination.ranking') + loop.index }}</td>
-                <td class="col--user">{{ user.render_inline(udoc) }}</td>
-                <td class="col--rp">{{ udoc.rp|default(0)|round(0) }}</td>
-                {% for key, def in model.rp %}
-                  {% if not def.hidden %}
-                    <td class="col--detail rp-{{ key }}">{{ udoc.rpInfo[key]|round if udoc.rpInfo[key] else '-' }}</td>
-                  {% endif %}
-                {% endfor %}
-                <td class="col--ac">{{ udoc.nAccept|default(0) }}</td>
-              </tr>
-              {%- endfor -%}
-            </tbody>
-          </table>
-          {{ paginator.render(page, upcount) }}
-          {% endif %}
+    <nav class="ranking-grades" aria-label="年级筛选">
+      <a class="typo-a" href="{{ url('ranking', query={ externalSort: externalSort, externalScope: externalScope }) }}"{% if grade == 'all' %} aria-current="page"{% endif %}>全部年级</a>
+      {% for cohort in grades %}
+        <a class="typo-a" href="{{ url('ranking', query={ grade: cohort, externalSort: externalSort, externalScope: externalScope }) }}"{% if grade == cohort %} aria-current="page"{% endif %}>{{ cohort }}级</a>
+      {% endfor %}
+      <a class="typo-a" href="{{ url('ranking', query={ grade: 'unknown', externalSort: externalSort, externalScope: externalScope }) }}"{% if grade == 'unknown' %} aria-current="page"{% endif %}>未知年级</a>
+    </nav>
+    <div class="ranking-boards">
+      <section class="section" aria-labelledby="rp-ranking-title">
+        <div class="section__header">
+          <h2 class="section__title" id="rp-ranking-title">站内 RP 排行</h2>
         </div>
-      </div>
+        <div class="section__body no-padding">
+          <div data-fragment-id="ranking">
+            {% if not udocs.length %}
+              {% if page == 1 %}
+                <blockquote class="note">{{ _('The ranking page is not updated realtime.') }}</blockquote>
+              {% endif %}
+            {{ nothing.render('Sorry, there are no users in this domain.' if grade == 'all' else '这一页暂无站内排名。') }}
+            {% else %}
+            <div class="ranking-table-scroll" tabindex="0" role="region" aria-labelledby="rp-ranking-title">
+              <table class="data-table ranking-rp-table">
+                <colgroup>
+                  <col class="col--rank">
+                  <col class="col--user">
+                  <col class="col--rp">
+                  {% for key, def in model.rp %}
+                    {% if not def.hidden %}
+                      <col class="col--detail rp-{{ key }}">
+                    {% endif %}
+                  {% endfor %}
+                  <col class="col--ac">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="col--rank">{{ _('Rank') }}</th>
+                    <th class="col--user">{{ _('Username') }}</th>
+                    <th class="col--rp">{{ _('RP') }}</th>
+                    {% for key, def in model.rp %}
+                      {% if not def.hidden %}
+                        <th class="col--detail rp-{{ key }}">{{ _('rpDetailText_' + key) }}</th>
+                      {% endif %}
+                    {% endfor %}
+                    <th class="col--ac">{{ _('Accept') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) and (grade == 'all' or viewerRpRank) %}
+                  <tr>
+                    <td class="col--rank">{{ viewerRpRank|default('-') }}</td>
+                    <td class="col--user">{{ user.render_inline(handler.user) }}</td>
+                    <td class="col--rp">{{ handler.user.rp|default(0)|round(0) }}</td>
+                    {% for key, def in model.rp %}
+                      {% if not def.hidden %}
+                        <td class="col--detail rp-{{ key }}">{{ handler.user.rpInfo[key]|round if (handler.user.rpInfo|default({}))[key] else '-' }}</td>
+                      {% endif %}
+                    {% endfor %}
+                    <td class="col--ac">{{ handler.user.nAccept|default(0) }}</td>
+                  </tr>
+                  {% endif %}
+                  {%- for udoc in udocs -%}
+                  <tr>
+                    <td class="col--rank">{{ rpRanks[loop.index0] if rpRanks else (page - 1) * model.system.get('pagination.ranking') + loop.index }}</td>
+                    <td class="col--user">{{ user.render_inline(udoc) }}</td>
+                    <td class="col--rp">{{ udoc.rp|default(0)|round(0) }}</td>
+                    {% for key, def in model.rp %}
+                      {% if not def.hidden %}
+                        <td class="col--detail rp-{{ key }}">{{ udoc.rpInfo[key]|round if udoc.rpInfo[key] else '-' }}</td>
+                      {% endif %}
+                    {% endfor %}
+                    <td class="col--ac">{{ udoc.nAccept|default(0) }}</td>
+                  </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+            {{ paginator.render(page, upcount, 'grade=' + grade + '&externalPage=' + externalPage + '&externalSort=' + externalSort + '&externalScope=' + externalScope) }}
+          </div>
+        </div>
+      </section>
+      <section class="section" id="external-ranking" aria-labelledby="external-ranking-title">
+        <div class="section__header">
+          <h2 class="section__title" id="external-ranking-title">外站刷题榜</h2>
+          <nav class="ranking-external-scope" aria-label="外站榜成员范围">
+            <a class="typo-a" href="{{ url('ranking', query={ grade: grade, page: page, externalSort: externalSort, externalScope: 'all' }) }}#external-ranking"{% if externalScope == 'all' %} aria-current="page"{% endif %}>全部成员（{{ externalAllCount }}）</a>
+            <a class="typo-a" href="{{ url('ranking', query={ grade: grade, page: page, externalSort: externalSort, externalScope: 'synced' }) }}#external-ranking"{% if externalScope == 'synced' %} aria-current="page"{% endif %}>仅已同步（{{ externalSyncedCount }}）</a>
+          </nav>
+        </div>
+        <div class="section__body no-padding">
+          {% if externalRows.length %}
+          <div class="ranking-table-scroll" tabindex="0" role="region" aria-labelledby="external-ranking-title">
+            <table class="data-table ranking-external-table" aria-describedby="external-ranking-note">
+              <colgroup>
+                <col class="ranking-external-table__rank">
+                <col class="ranking-external-table__user">
+                {% for platform in externalPlatforms %}
+                  <col class="ranking-external-table__site ranking-external-table__site--{{ platform.key }}">
+                {% endfor %}
+                <col class="ranking-external-table__total">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">{{ _('Rank') }}</th>
+                  <th scope="col">{{ _('Username') }}</th>
+                  {% for platform in externalPlatforms %}
+                    {{ external_sort_header(platform.key, platform.label) }}
+                  {% endfor %}
+                  {{ external_sort_header('total', '合计') }}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in externalRows %}
+                <tr>
+                  <td>{{ row.rank }}</td>
+                  <td>{{ user.render_inline(externalUsers[row.uid], avatar=false, badge=false, studentId=false) }}</td>
+                  {% for platform in externalPlatforms %}
+                    {% set snapshot = row.platforms[platform.key] %}
+                    <td>
+                      {% if snapshot %}
+                        {{ snapshot.total }}
+                        {% if snapshot.stale %}<span class="ranking-stale" aria-label="数据可能过期" title="数据可能过期">*</span>{% endif %}
+                      {% else %}—{% endif %}
+                    </td>
+                  {% endfor %}
+                  <td><strong>{{ row.total if row.total != null else '—' }}</strong></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="ranking-external-note" id="external-ranking-note">合计只计入已成功同步的平台。— 表示无数据，* 表示该平台的数据可能过期。</p>
+          {% else %}
+            {{ nothing.render('当前范围暂无已同步成员。' if externalScope == 'synced' else '这一页暂无成员。') }}
+          {% endif %}
+          {{ external_pager() }}
+        </div>
+      </section>
     </div>
   </div>
 </div>

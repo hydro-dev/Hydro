@@ -33,5 +33,126 @@
     height: 36px !important;
 
   +mobile()
-    .col--bio, .col--detail
+    .col--bio
       display: none
+
+.page--homepage
+  +mobile()
+    .col--detail
+      display: none
+
+.page--ranking
+  .ranking-grades
+    display: flex
+    flex-wrap: wrap
+    gap: rem(4px) rem(12px)
+    margin-bottom: rem(12px)
+
+    a
+      padding: rem(4px) rem(6px)
+
+    a[aria-current="page"]
+      font-weight: bold
+      text-decoration: underline
+
+  .ranking-boards
+    display: grid
+    grid-template-columns: minmax(0, 1fr)
+    align-items: start
+    gap: 0 rem(16px)
+
+    @media (min-width: 75rem)
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr)
+
+  .ranking-table-scroll
+    overflow-x: auto
+
+  .ranking-external-scope
+    display: flex
+    flex-wrap: wrap
+    gap: rem(8px) rem(16px)
+    margin-top: rem(8px)
+
+    a[aria-current="page"]
+      font-weight: bold
+      text-decoration: underline
+
+  .ranking-rp-table
+    width: 100%
+    table-layout: fixed
+
+    .col--rank
+      width: rem(46px)
+
+    .col--user
+      width: auto
+      overflow-wrap: anywhere
+
+    .col--rp, .col--detail, .col--ac
+      width: rem(50px)
+      white-space: nowrap
+
+    th, td
+      padding-left: rem(7px)
+      padding-right: rem(7px)
+
+    +mobile()
+      font-size: rem(12px)
+
+      .col--rank, .col--rp, .col--detail, .col--ac
+        width: rem(38px)
+
+      th, td
+        padding-left: rem(3px)
+        padding-right: rem(3px)
+
+  .ranking-external-table
+    width: 100%
+    min-width: rem(520px)
+    table-layout: fixed
+
+    &__rank
+      width: rem(60px)
+
+    &__site
+      width: rem(45px)
+
+    &__site--codeforces
+      width: rem(91px)
+
+    &__site--atcoder
+      width: rem(68px)
+
+    &__total
+      width: rem(63px)
+
+    th, td
+      padding-left: rem(6px)
+      padding-right: rem(6px)
+      text-align: right
+      white-space: nowrap
+
+    th:nth-child(2), td:nth-child(2)
+      text-align: left
+
+    td:first-child
+      font-variant-numeric: tabular-nums
+      text-overflow: clip
+
+    td:nth-child(2)
+      max-width: rem(160px)
+      white-space: normal
+      overflow-wrap: anywhere
+
+    th[aria-sort="descending"] .ranking-sort-link
+      font-weight: bold
+      text-decoration: underline
+
+  .ranking-stale
+    display: inline-block
+    margin-left: rem(2px)
+    font-weight: bold
+
+  .ranking-external-note
+    padding: rem(8px) rem(12px)
+    font-size: rem(12px)
