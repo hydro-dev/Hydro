@@ -4,7 +4,9 @@ import { ValidationError } from '../error';
 import {
     EXTERNAL_PLATFORMS, externalAccountKey, externalOjHandle, ExternalOjHistoryLimit, ExternalOjRateLimit, ExternalPlatform, fetchExternalStats,
 } from '../lib/externalOjs';
-import { beijingDay, FirstPass, firstPasses, nextBeijingNoon, syncState } from '../lib/externalOjStats';
+import {
+    beijingDay, buildExternalDailySnapshot, ExternalDailySnapshot, externalSyncRound, FirstPass, firstPasses, nextBeijingSync, syncState,
+} from '../lib/externalOjStats';
 import db from '../service/db';
 
 export interface ExternalOjBinding {
@@ -23,6 +25,7 @@ export interface ExternalOjBinding {
     solves?: FirstPass[];
     olderSolved?: string[];
     cursorAt?: Date;
+    dailySnapshot?: ExternalDailySnapshot;
 }
 
 declare module '../service/db' {
@@ -95,10 +98,11 @@ export async function bindExternalOj(uid: number, platform: ExternalPlatform, in
         await coll.updateOne(
             { uid, platform },
             {
-                $set: { handle, accountKey, revision: new ObjectId(), syncAfter: nextBeijingNoon(new Date()) },
+                $set: { handle, accountKey, revision: new ObjectId(), syncAfter: nextBeijingSync(new Date()) },
                 $setOnInsert: { uid, platform },
                 $unset: {
-                    leaseUntil: '', leaseToken: '', total: '', solves: '', olderSolved: '', cursorAt: '', lastSuccessAt: '', failedAt: '',
+                    leaseUntil: '', leaseToken: '', total: '', solves: '', olderSolved: '', cursorAt: '',
+                    lastSuccessAt: '', failedAt: '', dailySnapshot: '',
                 },
             },
             { upsert: true },
@@ -122,8 +126,8 @@ export class ExternalOjBudgetExhausted extends Error {
 }
 
 export async function claimExternalOjRequest(platform: ExternalPlatform, now: Date, limit: number) {
-    // A quota round follows the noon job, including the hours after midnight.
-    const id = `${platform}:${beijingDay(new Date(now.getTime() - 12 * HOUR))}`;
+    // One request budget covers the 21:00 round, including work continuing after midnight.
+    const id = `${platform}:${beijingDay(new Date(now.getTime() - 21 * HOUR))}`;
     try {
         await quotas.updateOne(
             { _id: id, used: { $lt: limit } },
@@ -171,7 +175,7 @@ export async function releaseExternalOjQueue(platform: ExternalPlatform, owner: 
 function dueBindings(platform: ExternalPlatform, now: Date) {
     return {
         platform,
-        syncAfter: { $lte: now },
+        syncAfter: { $lte: externalSyncRound(now) },
         $or: [{ leaseUntil: { $lte: now } }, { leaseUntil: { $exists: false } }],
     };
 }
@@ -211,7 +215,7 @@ export async function syncDueExternalOj(
     } catch (error) {
         const at = completion();
         if (error instanceof ExternalOjBudgetExhausted) {
-            await pauses.updateOne({ _id: platform }, { $max: { until: nextBeijingNoon(at) } }, { upsert: true });
+            await pauses.updateOne({ _id: platform }, { $max: { until: nextBeijingSync(at) } }, { upsert: true });
             // Preserve the overdue date and its previous snapshot. It gets priority in the next round.
             await coll.updateOne(currentJob, { $unset: release });
             return false;
@@ -226,7 +230,7 @@ export async function syncDueExternalOj(
         await coll.updateOne(currentJob, {
             $set: {
                 failedAt: at,
-                syncAfter: nextBeijingNoon(error instanceof ExternalOjHistoryLimit ? new Date(at.getTime() + 6 * 24 * HOUR) : at),
+                syncAfter: nextBeijingSync(error instanceof ExternalOjHistoryLimit ? new Date(at.getTime() + 6 * 24 * HOUR) : at),
             },
             $unset: release,
         });
@@ -237,7 +241,8 @@ export async function syncDueExternalOj(
         $set: {
             total: result.total,
             lastSuccessAt: at,
-            syncAfter: nextBeijingNoon(at),
+            dailySnapshot: buildExternalDailySnapshot(result.total, binding.dailySnapshot, now),
+            syncAfter: nextBeijingSync(at),
             ...(solves ? { solves, olderSolved, cursorAt: now } : {}),
         },
         $unset: {

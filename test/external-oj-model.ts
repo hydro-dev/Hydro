@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
 import { EXTERNAL_PLATFORMS, ExternalOjRateLimit } from '../packages/hydrooj/src/lib/externalOjs';
-import { nextBeijingNoon } from '../packages/hydrooj/src/lib/externalOjStats';
+import { nextBeijingSync } from '../packages/hydrooj/src/lib/externalOjStats';
 import {
     acquireExternalOjQueue, bindExternalOj, claimExternalOjRequest, ExternalOjBudgetExhausted,
     getExternalOjBindings, releaseExternalOjQueue, syncDueExternalOj, unbindExternalOj,
@@ -11,7 +11,7 @@ import db from '../packages/hydrooj/src/service/db';
 async function verifyScale() {
     const users = 1700;
     const cap = 1600;
-    const round = nextBeijingNoon(new Date(Date.now() + 7 * 86_400_000));
+    const round = nextBeijingSync(new Date(Date.now() + 7 * 86_400_000));
     const coll = db.collection('external.oj.binding');
     // Dedicated test database; clear only the three bindings made earlier in the same test.
     await coll.deleteMany({ uid: { $in: [900_001, 900_002] } });
@@ -38,7 +38,7 @@ async function verifyScale() {
         assert.equal(await coll.countDocuments({ platform, syncAfter: round, failedAt: { $exists: false } }), users - cap);
         assert.equal(await syncDueExternalOj(platform, round, doMockRequest, cap), false);
 
-        const tomorrow = nextBeijingNoon(round);
+        const tomorrow = nextBeijingSync(round);
         for (let i = 0; i < users - cap; i++) {
             // eslint-disable-next-line no-await-in-loop -- Confirm overdue accounts resume first.
             assert.equal(await syncDueExternalOj(platform, tomorrow, doMockRequest, cap), true);
@@ -55,24 +55,24 @@ export async function run() {
     const firstUid = 900_001;
     const secondUid = 900_002;
     const site = 'codeforces';
-    const noon = nextBeijingNoon(new Date());
+    const round = nextBeijingSync(new Date());
     await bindExternalOj(firstUid, site, 'hgnubindingtest');
     await assert.rejects(bindExternalOj(secondUid, site, 'hgnubindingtest'));
     assert.equal((await getExternalOjBindings(secondUid)).length, 0);
-    assert.equal(await syncDueExternalOj(site, new Date(noon.getTime() - 1000), async () => ({ total: 4 })), false);
-    const recent = [{ problem: 'recent:1', at: new Date(+noon - 45_000) }];
+    assert.equal(await syncDueExternalOj(site, new Date(round.getTime() - 1000), async () => ({ total: 4 })), false);
+    const recent = [{ problem: 'recent:1', at: new Date(+round - 45_000) }];
     const olderSolved = ['old:1', 'old:2', 'old:3'];
-    assert.equal(await syncDueExternalOj(site, noon, async () => ({ total: 4, solves: recent, olderSolved })), true);
-    assert.equal(await syncDueExternalOj(site, noon, async () => ({ total: 999 })), false);
+    assert.equal(await syncDueExternalOj(site, round, async () => ({ total: 4, solves: recent, olderSolved })), true);
+    assert.equal(await syncDueExternalOj(site, round, async () => ({ total: 999 })), false);
     const [synced] = await getExternalOjBindings(firstUid);
     assert.equal(synced.total, 4);
     assert.deepEqual(synced.solves, recent);
     assert.equal(synced.olderSolved, undefined); // Profile/settings queries do not load the lifetime ID set.
     const stored = await db.collection('external.oj.binding').findOne({ uid: firstUid, platform: site });
     assert.deepEqual(stored.olderSolved, olderSolved);
-    assert.equal(+stored.cursorAt, +noon);
+    assert.equal(+stored.cursorAt, +round);
 
-    const following = nextBeijingNoon(noon);
+    const following = nextBeijingSync(round);
     await syncDueExternalOj(site, following, async () => { throw new Error('provider unavailable'); });
     const [failed] = await getExternalOjBindings(firstUid);
     assert.equal(failed.total, 4);
@@ -81,7 +81,7 @@ export async function run() {
 
     const ready = Promise.withResolvers<void>();
     const fetchResult = Promise.withResolvers<{ total: number }>();
-    const activeJob = syncDueExternalOj(site, nextBeijingNoon(following), async () => {
+    const activeJob = syncDueExternalOj(site, nextBeijingSync(following), async () => {
         ready.resolve();
         return await fetchResult.promise;
     });
@@ -102,29 +102,55 @@ export async function run() {
     await bindExternalOj(firstUid, site, 'AccountA');
     await bindExternalOj(secondUid, site, 'AccountB');
     await bindExternalOj(secondUid, 'luogu', '42');
-    assert.equal(await syncDueExternalOj(site, noon, async () => { throw new ExternalOjRateLimit(120_000); }), true);
+    assert.equal(await syncDueExternalOj(site, round, async () => { throw new ExternalOjRateLimit(120_000); }), true);
     let nextCalled = false;
     const fetchNext = async () => {
         nextCalled = true;
         return { total: 1 };
     };
-    assert.equal(await syncDueExternalOj(site, new Date(+noon + 60_000), fetchNext), false);
+    assert.equal(await syncDueExternalOj(site, new Date(+round + 60_000), fetchNext), false);
     assert.equal(nextCalled, false);
-    assert.equal(await syncDueExternalOj('luogu', noon, fetchNext), true);
-    assert.equal(await syncDueExternalOj(site, new Date(+noon + 121_000), fetchNext), true);
+    assert.equal(await syncDueExternalOj('luogu', round, fetchNext), true);
+    assert.equal(await syncDueExternalOj(site, new Date(+round + 121_000), fetchNext), true);
 
-    const competing = await Promise.all(Array.from({ length: 6 }, () => acquireExternalOjQueue('atcoder', noon)));
+    const competing = await Promise.all(Array.from({ length: 6 }, () => acquireExternalOjQueue('atcoder', round)));
     assert.equal(competing.filter(Boolean).length, 1);
-    assert.equal(await acquireExternalOjQueue('atcoder', new Date(+noon + 60_000)), null);
-    await releaseExternalOjQueue('atcoder', competing.find(Boolean), noon);
-    assert.equal(await acquireExternalOjQueue('atcoder', new Date(+noon + 1000)), null);
-    assert.ok(await acquireExternalOjQueue('atcoder', new Date(+noon + 60_000)));
+    assert.equal(await acquireExternalOjQueue('atcoder', new Date(+round + 60_000)), null);
+    await releaseExternalOjQueue('atcoder', competing.find(Boolean), round);
+    assert.equal(await acquireExternalOjQueue('atcoder', new Date(+round + 1000)), null);
+    assert.ok(await acquireExternalOjQueue('atcoder', new Date(+round + 60_000)));
 
-    const quota = await Promise.allSettled(Array.from({ length: 16 }, () => claimExternalOjRequest('nowcoder', noon, 8)));
+    const quota = await Promise.allSettled(Array.from({ length: 16 }, () => claimExternalOjRequest('nowcoder', round, 8)));
     assert.equal(quota.filter((r) => r.status === 'fulfilled').length, 8);
     assert.ok(quota.every((r) => r.status === 'fulfilled' || r.reason instanceof ExternalOjBudgetExhausted));
-    await assert.rejects(claimExternalOjRequest('nowcoder', new Date(+noon + 13 * 60 * 60_000), 8), ExternalOjBudgetExhausted);
-    await claimExternalOjRequest('nowcoder', nextBeijingNoon(noon), 8);
+    await assert.rejects(claimExternalOjRequest('nowcoder', new Date(+round + 13 * 60 * 60_000), 8), ExternalOjBudgetExhausted);
+    await claimExternalOjRequest('nowcoder', nextBeijingSync(round), 8);
+
+    const nightlyUid = 900_003;
+    await bindExternalOj(nightlyUid, 'atcoder', 'NightlyDelta');
+    const next = nextBeijingSync(round);
+    const midnight = new Date(+next + 4 * 60 * 60_000);
+    await db.collection('external.oj.binding').updateOne({ uid: nightlyUid }, { $set: { syncAfter: new Date(+next - 9 * 60 * 60_000) } });
+    assert.equal(await syncDueExternalOj('atcoder', new Date(+next - 1), async () => ({ total: 10 })), false);
+    assert.equal(await syncDueExternalOj('atcoder', next, async () => ({ total: 10 })), true);
+    assert.equal((await getExternalOjBindings(nightlyUid))[0].dailySnapshot.increment, null);
+    assert.equal(await syncDueExternalOj('atcoder', midnight, async () => ({ total: 99 })), false);
+    const followingRound = nextBeijingSync(next);
+    await syncDueExternalOj('atcoder', followingRound, async () => ({ total: 15 }));
+    assert.equal((await getExternalOjBindings(nightlyUid))[0].dailySnapshot.increment, 5);
+    await syncDueExternalOj('atcoder', nextBeijingSync(followingRound), async () => { throw new Error('offline'); });
+    const caughtUp = nextBeijingSync(nextBeijingSync(followingRound));
+    await syncDueExternalOj('atcoder', caughtUp, async () => ({ total: 30 }));
+    assert.equal((await getExternalOjBindings(nightlyUid))[0].dailySnapshot.increment, null);
+    const decreased = nextBeijingSync(caughtUp);
+    await syncDueExternalOj('atcoder', decreased, async () => ({ total: 20 }));
+    assert.equal((await getExternalOjBindings(nightlyUid))[0].dailySnapshot.increment, null);
+    await syncDueExternalOj('atcoder', nextBeijingSync(decreased), async () => ({ total: 20 }));
+    assert.equal((await getExternalOjBindings(nightlyUid))[0].dailySnapshot.increment, 0);
+    await bindExternalOj(nightlyUid, 'atcoder', 'NightlyDelta2');
+    assert.equal((await getExternalOjBindings(nightlyUid))[0].dailySnapshot, undefined);
+    await unbindExternalOj(nightlyUid, 'atcoder');
+
     if (process.env.HGNUOJ_EXTERNAL_SCALE === '1') await verifyScale();
     return 'HGNU_EXTERNAL_MODEL_OK';
 }

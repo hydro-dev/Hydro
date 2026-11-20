@@ -7,7 +7,7 @@ import { after, before, test } from 'node:test';
 import nunjucks from 'nunjucks';
 import { PRIV } from '@hydrooj/common';
 import {
-    EXTERNAL_RANKING_PLATFORMS, getExternalRanking, getGradeOptions, getGradeRpRanking,
+    EXTERNAL_RANKING_PLATFORMS, getDailyExternalRanking, getExternalRanking, getGradeOptions, getGradeRpRanking,
 } from '../packages/hydrooj/src/model/ranking';
 import type { Collections } from '../packages/hydrooj/src/service/db';
 
@@ -31,6 +31,12 @@ before(async () => {
     const localMongo = process.env.HGNUOJ_TEST_MONGO_URI;
     if (!localMongo) mongo = await MongoMemoryServer.create();
     client = await MongoClient.connect(localMongo || mongo.getUri());
+    if (process.env.HGNUOJ_TEST_MONGO_FCV) {
+        const { featureCompatibilityVersion } = await client.db('admin').command({
+            getParameter: 1, featureCompatibilityVersion: 1,
+        });
+        assert.equal(featureCompatibilityVersion.version, process.env.HGNUOJ_TEST_MONGO_FCV);
+    }
     db = client.db(`hgnuoj_ranking_test_${randomUUID().replace(/-/g, '')}`);
     await Promise.all([
         rankingDb.collection('domain.user').insertMany([
@@ -212,10 +218,18 @@ test('each external metric sorts a full grade of 1,120 members before paging', a
     assert.equal(second.rows.at(-1).rank, 1120);
 });
 
-test('ranking template renders sortable headers, distinguishes zero from missing, and keeps each pager state', () => {
+test('one ranking table includes sortable daily practice without a separate board', () => {
     class RankingLoader extends nunjucks.FileSystemLoader {
         getSource(name: string) {
-            if (name === 'layout/basic.html') return { src: '{% block content %}{% endblock %}', path: name, noCache: true };
+            if (name === 'layout/basic.html') {
+                return { src: '{% block content %}{% endblock %}', path: name, noCache: true };
+            }
+            if (name === 'components/user.html') {
+                return {
+                    src: '{% macro render_inline(doc,avatar=true,badge=true,studentId=true) %}{{doc.class}} {{doc.name}}{% endmacro %}',
+                    path: name, noCache: true,
+                };
+            }
             return super.getSource(name);
         }
     }
@@ -226,68 +240,98 @@ test('ranking template renders sortable headers, distinguishes zero from missing
             route === 'ranking' ? `/ranking?${new URLSearchParams(options?.query)}` : '/user'
         ),
         paginate: (page: number) => [['current', page], ['page', page + 1]],
-        datetimeSpan: () => 'old timestamp',
-        handler: { user: { hasPriv: () => false } },
-        // eslint-disable-next-line ts/naming-convention -- Matches the template macro name.
-        user: { render_inline: (doc) => doc?.name ? `${doc.class} ${doc.name}` : (doc?.uname || 'member') },
-        PRIV,
-        model: { rp: {} },
-        grade: '22',
-        grades: ['22', '23'],
-        page: 3,
-        upcount: 4,
-        udocs: [{ rp: 1 }],
-        rpRanks: [3],
-        externalPage: 2,
-        externalPageCount: 3,
-        externalSort,
-        externalScope: 'synced',
-        externalAllCount: 16,
-        externalSyncedCount: 5,
-        externalPlatforms: EXTERNAL_RANKING_PLATFORMS,
-        externalUsers: { 7: { class: '计算机2201', name: '排序甲' }, 6: { uname: 'missing' } },
-        externalRows: [
-            { uid: 7, rank: 3, uname: 'zero', total: 0, platforms: { leetcode: { total: 0, stale: false } } },
-            { uid: 6, rank: 4, uname: 'missing', total: null, platforms: {} },
+        model: { rp: { problem: {}, contest: {}, hidden: { hidden: true } } },
+        grade: '22', grades: ['22', '23'], page: 3, upcount: 4,
+        externalSort, externalScope: 'synced', externalAllCount: 16, externalSyncedCount: 5,
+        externalPlatforms: EXTERNAL_RANKING_PLATFORMS, dailyRound: '2026-11-20',
+        mainRows: [
+            { uid: 7, rank: 3, user: { class: '计算机2201', name: '排序甲', rp: 1, nAccept: 2 }, total: 0, platforms: { leetcode: { total: 0 } }, daily: { total: 5, partial: true } },
+            { uid: 6, rank: 4, user: { name: 'confirmed-zero', rp: 0, nAccept: 0 }, total: null, platforms: {}, daily: { total: 0, partial: false } },
+            { uid: 8, rank: 5, user: { name: 'pending-zero', rp: 0, nAccept: 0 }, total: null, platforms: {}, daily: { total: null, partial: false } },
         ],
     });
     const html = render('luogu');
-    const [rp, external] = html.split('id="external-ranking"');
-    const headers = [...external.matchAll(/<th\b([^>]*)>([\s\S]*?)<\/th>/g)];
-    const metrics = ['codeforces', 'atcoder', 'nowcoder', 'luogu', 'leetcode', 'total'];
-    const labels = ['Codeforces', 'AtCoder', '牛客', '洛谷', '力扣', '合计'];
-    assert.equal(headers.length, 8);
-    for (const [i, [, attrs, content]] of headers.slice(2).entries()) {
-        assert.match(content, new RegExp(`>${labels[i]}(?:\\s|<)`));
-        const link = new URL(content.match(/href="([^"]+)"/)[1].replaceAll('&amp;', '&'), 'http://ranking.test');
-        assert.equal(link.hash, '#external-ranking');
-        assert.deepEqual(Object.fromEntries(link.searchParams), {
-            grade: '22', page: '3', externalSort: metrics[i], externalScope: 'synced',
-        });
-        assert.equal(attrs.includes('aria-sort="descending"'), metrics[i] === 'luogu');
-    }
-    assert.match(external, /<td>\s*0\s*<\/td>\s*<td>\s*<strong>0<\/strong>/);
-    assert.match(external, /<td>\s*—\s*<\/td>\s*<td>\s*<strong>—<\/strong>/);
-    assert.match(external, /计算机2201 排序甲/);
-    assert.match(external, /全部成员（16）/);
-    assert.match(external, /仅已同步（5）/);
-    assert.doesNotMatch(external, /同步时间|old timestamp/);
-
-    const hrefs = (section: string) => [...section.matchAll(/href="([^"]+)"/g)]
+    assert.equal([...html.matchAll(/<table\b/g)].length, 1);
+    assert.equal([...html.matchAll(/<th\b/g)].length, 13);
+    assert.doesNotMatch(html, /每日增量榜|id="daily-ranking"|dailyPage=|ranking-daily-table/);
+    assert.match(html, />每日做题<\/a>/);
+    assert.match(html, />其他<\/a>/);
+    assert.doesNotMatch(html, /未知年级/);
+    assert.match(html, /计算机2201 排序甲/);
+    assert.match(html, /全部成员（16）/);
+    assert.match(html, /仅已同步（5）/);
+    const metrics = ['rp', 'codeforces', 'atcoder', 'nowcoder', 'luogu', 'leetcode', 'total', 'daily'];
+    const sortLinks = [...html.matchAll(/class="typo-a ranking-sort-link"\s+href="([^"]+)"/g)]
         .map(([, href]) => new URL(href.replaceAll('&amp;', '&'), 'http://ranking.test'));
-    const hasLink = (section: string, params: Record<string, string>, hash = '') => {
-        assert(hrefs(section).some((link) => link.hash === hash
-            && link.searchParams.size === Object.keys(params).length
-            && Object.entries(params).every(([key, value]) => link.searchParams.get(key) === value)));
-    };
-    hasLink(rp, {
-        page: '4', grade: '22', externalPage: '2', externalSort: 'luogu', externalScope: 'synced',
-    });
-    hasLink(external, {
-        page: '3', grade: '22', externalPage: '3', externalSort: 'luogu', externalScope: 'synced',
-    }, '#external-ranking');
-    hasLink(rp, { externalSort: 'luogu', externalScope: 'synced' });
-    hasLink(rp, { grade: '23', externalSort: 'luogu', externalScope: 'synced' });
-    hasLink(rp, { grade: 'unknown', externalSort: 'luogu', externalScope: 'synced' });
-    assert.match(render('total'), /aria-sort="descending">\s*<a[^>]*externalSort=total/);
+    assert.deepEqual(sortLinks.map((link) => link.searchParams.get('externalSort')), metrics);
+    for (const link of sortLinks) {
+        assert.equal(link.searchParams.get('page'), '1');
+        assert.equal(link.searchParams.get('grade'), '22');
+        assert.equal(link.searchParams.has('dailyPage'), false);
+        assert.equal(link.hash, '#main-ranking');
+    }
+    assert.match(html, /5<span class="ranking-partial"/);
+    assert.match(html, /confirmed-zero[\s\S]*?class="col--daily">\s*0\s*<\/td>/);
+    assert.match(html, /<span class="ranking-pending"[^>]*title="[^"]*待更新[^"]*"[^>]*>0<\/span>/);
+    assert.match(html, /21:00/);
+    const pageLinks = [...html.matchAll(/href="([^"]+)"/g)]
+        .map(([, href]) => new URL(href.replaceAll('&amp;', '&'), 'http://ranking.test'));
+    assert.ok(pageLinks.some((link) => link.searchParams.get('page') === '4'
+        && link.searchParams.get('grade') === '22' && !link.searchParams.has('dailyPage')
+        && link.searchParams.get('externalSort') === 'luogu' && link.searchParams.get('externalScope') === 'synced'));
+    assert.match(render('rp'), /aria-sort="descending">\s*<a[^>]*externalSort=rp/);
+    assert.match(render('daily'), /aria-sort="descending">\s*<a[^>]*externalSort=daily/);
+});
+
+test('daily increments are scoped by grade, sorted before paging and distinguish missing from zero', async () => {
+    const domainId = 'daily-fixture';
+    const round = new Date('2026-11-18T13:00:00Z');
+    const previous = new Date(+round - 86_400_000);
+    const uids = Array.from({ length: 8 }, (_, i) => 4000 + i);
+    await Promise.all([
+        rankingDb.collection('domain.user').insertMany(uids.map((uid) => ({ uid, domainId, join: true, rp: 0 }))),
+        rankingDb.collection('stu.info').insertMany(uids.map((uid) => ({ _id: uid, class: uid === 4005 ? '计算机2301' : '计算机2201' }))),
+        db.collection<{ _id: number, uname: string, priv: number }>('ranking.test.user').insertMany(uids.map((uid) => ({
+            _id: uid, uname: `daily-${uid}`, priv: uid === 4006 ? 0 : PRIV.PRIV_USER_PROFILE,
+        }))),
+        bindings().insertMany([
+            { uid: 4000, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 100, increment: 2 } },
+            { uid: 4000, platform: 'atcoder', lastSuccessAt: round, dailySnapshot: { round, total: 70, increment: 3 } },
+            { uid: 4001, platform: 'luogu', lastSuccessAt: round, dailySnapshot: { round, total: 10, increment: 0 } },
+            { uid: 4002, platform: 'nowcoder', lastSuccessAt: round, dailySnapshot: { round, total: 20, increment: -1 } },
+            { uid: 4003, platform: 'leetcode', lastSuccessAt: round, dailySnapshot: { round, total: 90, increment: null } },
+            { uid: 4005, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 999, increment: 999 } },
+            { uid: 4006, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 999, increment: 999 } },
+            { uid: 4007, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 90, increment: 4 } },
+            { uid: 4007, platform: 'atcoder', lastSuccessAt: previous, dailySnapshot: { round: previous, total: 70, increment: 60 } },
+        ]),
+    ]);
+    const first = await getDailyExternalRanking(rankingDb, domainId, '22', 1, 2, round);
+    const second = await getDailyExternalRanking(rankingDb, domainId, '22', 2, 2, round);
+    assert.equal(first.count, 6);
+    assert.equal(first.ready, true);
+    assert.deepEqual(first.rows.map(({ uid, total, rank }) => [uid, total, rank]), [[4000, 5, 1], [4007, 4, 2]]);
+    assert.equal(first.rows[0].partial, false);
+    assert.equal(first.rows[1].partial, true);
+    assert.deepEqual(second.rows.map(({ uid, total, rank }) => [uid, total, rank]), [[4001, 0, 3], [4002, null, 4]]);
+    const synced = await getDailyExternalRanking(rankingDb, domainId, '22', 1, 10, round, { scope: 'synced' });
+    assert.equal(synced.count, 3);
+    assert.equal(synced.allCount, 6);
+    assert.equal(synced.syncedCount, 3);
+    assert.deepEqual(synced.rows.map(({ uid }) => uid), [4000, 4007, 4001]);
+    const visible = await getDailyExternalRanking(rankingDb, domainId, 'all', 1, 10, round, { uids: [4001, 4004] });
+    assert.deepEqual(visible.rows.map(({ uid, total }) => [uid, total]), [[4001, 0], [4004, null]]);
+    const tomorrow = await getDailyExternalRanking(rankingDb, domainId, '22', 1, 10, new Date(+round + 86_400_000));
+    assert.equal(tomorrow.ready, false);
+    assert.equal(tomorrow.count, 6);
+    assert.deepEqual(tomorrow.rows.map(({ uid, total }) => [uid, total]), [4000, 4001, 4002, 4003, 4004, 4007].map((uid) => [uid, null]));
+    const third = await getDailyExternalRanking(rankingDb, domainId, '22', 3, 2, round);
+    assert.deepEqual(third.rows.map(({ uid, total, rank }) => [uid, total, rank]), [[4003, null, 5], [4004, null, 6]]);
+    const noMembers = await getDailyExternalRanking(rankingDb, domainId, '24', 1, 10, round);
+    assert.equal(noMembers.count, 0);
+    assert.equal(noMembers.ready, false);
+    assert.deepEqual(noMembers.rows, []);
+    await bindings().deleteOne({ uid: 4000, platform: 'atcoder' });
+    const unbound = await getDailyExternalRanking(rankingDb, domainId, '22', 1, 10, round);
+    assert.equal(unbound.rows.find(({ uid }) => uid === 4000).total, 2);
 });

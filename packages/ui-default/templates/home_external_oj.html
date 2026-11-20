@@ -3,7 +3,7 @@
 <div class="section external-oj-accounts">
   <div class="section__header"><h1 class="section__title">外站账号</h1></div>
   <div class="section__body typo">
-    <p>绑定公开账号后，累计通过题数会显示在个人页，并计入外站刷题榜。北京时间每天 12:00 开始同步，不需要外站密码或 Cookie。</p>
+    <p>绑定公开账号后，累计通过题数会显示在个人页，并计入外站刷题榜。北京时间每天 21:00 开始同步，不需要外站密码或 Cookie。</p>
     {% for account in accounts %}
       {% set attempted = feedback and feedback.platform == account.platform %}
       <form method="post" action="{{ url('home_external_oj') }}" class="external-oj-account">

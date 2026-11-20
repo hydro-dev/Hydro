@@ -42,6 +42,10 @@
       display: none
 
 .page--ranking
+  .ranking-row
+    width: 100%
+    max-width: none
+
   .ranking-grades
     display: flex
     flex-wrap: wrap
@@ -55,17 +59,13 @@
       font-weight: bold
       text-decoration: underline
 
-  .ranking-boards
-    display: grid
-    grid-template-columns: minmax(0, 1fr)
-    align-items: start
-    gap: 0 rem(16px)
-
-    @media (min-width: 75rem)
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr)
-
   .ranking-table-scroll
+    max-width: 100%
     overflow-x: auto
+
+    &:focus-visible
+      outline: 2px solid $primary-color
+      outline-offset: -2px
 
   .ranking-external-scope
     display: flex
@@ -79,80 +79,66 @@
 
   .ranking-rp-table
     width: 100%
-    table-layout: fixed
+
+    th, td
+      padding-left: rem(7px)
+      padding-right: rem(7px)
+      overflow: visible
+      text-overflow: clip
+      white-space: nowrap
+
+    .col--user
+      white-space: normal
+      overflow-wrap: anywhere
+
+    .col--rank
+      font-variant-numeric: tabular-nums
+
+  .ranking-rp-table
+    min-width: rem(960px)
+    table-layout: auto
 
     .col--rank
       width: rem(46px)
 
     .col--user
       width: auto
-      overflow-wrap: anywhere
+      min-width: rem(180px)
 
     .col--rp, .col--detail, .col--ac
       width: rem(50px)
-      white-space: nowrap
 
-    th, td
-      padding-left: rem(7px)
-      padding-right: rem(7px)
-
-    +mobile()
-      font-size: rem(12px)
-
-      .col--rank, .col--rp, .col--detail, .col--ac
-        width: rem(38px)
-
-      th, td
-        padding-left: rem(3px)
-        padding-right: rem(3px)
-
-  .ranking-external-table
-    width: 100%
-    min-width: rem(520px)
-    table-layout: fixed
-
-    &__rank
+    .col--external
       width: rem(60px)
-
-    &__site
-      width: rem(45px)
-
-    &__site--codeforces
-      width: rem(91px)
-
-    &__site--atcoder
-      width: rem(68px)
-
-    &__total
-      width: rem(63px)
-
-    th, td
-      padding-left: rem(6px)
-      padding-right: rem(6px)
       text-align: right
-      white-space: nowrap
 
-    th:nth-child(2), td:nth-child(2)
-      text-align: left
+    .col--external-codeforces
+      width: rem(108px)
 
-    td:first-child
-      font-variant-numeric: tabular-nums
-      text-overflow: clip
+    .col--external-atcoder
+      width: rem(88px)
 
-    td:nth-child(2)
-      max-width: rem(160px)
-      white-space: normal
-      overflow-wrap: anywhere
+    .col--external-total, .col--daily
+      width: rem(88px)
+      text-align: right
 
     th[aria-sort="descending"] .ranking-sort-link
       font-weight: bold
       text-decoration: underline
 
-  .ranking-stale
+  .ranking-stale, .ranking-partial
     display: inline-block
     margin-left: rem(2px)
     font-weight: bold
 
-  .ranking-external-note
+  .ranking-note
     padding: rem(8px) rem(12px)
     font-size: rem(12px)
+    line-height: 1.6
+    color: $text-2-color
+
+    p + p
+      margin-top: rem(4px)
+
+  .ranking-pending
+    color: $text-2-color
