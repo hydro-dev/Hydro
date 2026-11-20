@@ -35,7 +35,7 @@ const configKey = [
 ];
 
 const subtasksKey = [
-  'time', 'memory', 'score', 'if', 'id',
+  'time', 'memory', 'score', 'if', 'if_score', 'id',
   'type', 'cases',
 ];
 
