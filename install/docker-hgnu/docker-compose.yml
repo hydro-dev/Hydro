@@ -1,0 +1,59 @@
+services:
+  # Warning: mongodb here is not password-protected.
+  # DO NOT EXPOSE THIS SERVICE TO THE PUBLIC.
+  oj-mongo:
+    # CI 发布的薄封装镜像（官方 mongo:7-jammy + 首次启动的初始化脚本）。
+    # 默认直接拉 Docker Hub；要用本地构建的镜像时用 OJ_MONGO_IMAGE 覆盖。
+    image: ${OJ_MONGO_IMAGE:-ztl123z/hgnu-mongodb:latest}
+    container_name: oj-mongo
+    restart: always
+    volumes:
+      - ./data/mongo:/data/db
+    healthcheck:
+      test: mongosh --eval "db.adminCommand('ping')"
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  oj-backend:
+    # 本仓库源码 + 编译好的前端产物，由 GitHub Actions 构建发布。
+    # 用本地构建的镜像：在仓库根目录
+    #   docker build -f install/docker-hgnu/source/Dockerfile -t hgnuoj-backend:local .
+    # 然后设 OJ_BACKEND_IMAGE=hgnuoj-backend:local
+    image: ${OJ_BACKEND_IMAGE:-ztl123z/hgnu-backend:latest}
+    container_name: oj-backend
+    restart: always
+    depends_on:
+      oj-mongo:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./data/file:/data/file
+      - ./data/backend:/root/.hydro
+    ports:
+      - "80:8888" # In docker mode, change THIS port instead of port in system settings!
+    healthcheck:
+      test: curl --silent --fail http://localhost:8888/status >/dev/null || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      start_interval: 5s
+
+  oj-judge:
+    # 测评机镜像同样来自 CI 发布，不再本地 build：
+    # 编译器链首次构建半小时以上，用预构建镜像才能三件套一条命令起来。
+    # 需要 rust/ghc/golang/php/ruby/mono 时，自己加 --build-arg COMPILERS=full
+    # 构建一份，再用 OJ_JUDGE_IMAGE 指过去。
+    image: ${OJ_JUDGE_IMAGE:-ztl123z/hgnu-judge:latest}
+    container_name: oj-judge
+    restart: always
+    privileged: true
+    depends_on:
+      oj-backend:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./judge/judge.yaml:/root/.hydro/judge.yaml
+      - ./judge/mount.yaml:/root/.hydro/mount.yaml

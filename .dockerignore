@@ -1,6 +1,5 @@
 # 只作用于「以仓库根目录为上下文」的构建（.github/workflows/image.yml）。
-# install/docker/docker-compose.yml 里 backend/judge 的构建上下文是各自子目录，
-# 不受这里影响。
+# install/docker-hgnu/docker-compose.yml 里 judge 的构建上下文是子目录，不受这里影响。
 
 # 版本库与本地开发产物
 .git
@@ -24,11 +23,12 @@ packages/ui-next/public
 .yarn/sdks
 .yarn/install-state.gz
 
-# 运行时数据与本地配置
+# 运行时数据与本地配置（docker-hgnu 的数据目录不跟随官方 install/docker/data）
 install/docker/data
+install/docker-hgnu/data
 *.log
 *.mmdb
-# .env 不只在仓库根目录（install/docker/.env 是 compose 本地配置），
+# .env 不只在仓库根目录（install/docker-hgnu/.env 是 compose 本地配置），
 # 不带目录前缀的写法只匹配根目录，所以这里用 ** 覆盖任意层级
 **/.env
 **/.env.*

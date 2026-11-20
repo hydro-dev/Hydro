@@ -1,15 +1,27 @@
 name: Image
 
-# 每次 master 有新提交（也就是有分支合并进来）时，从头编译一次前端，
-# 用仓库源码构建 backend 镜像并冒烟检查。**push 触发永远不推送镜像**，
-# 平时只是验证这份代码能构建、能跑起来。
+# 构建并（手动确认后）发布三个镜像到 Docker Hub：
+#   ztl123z/hgnu-backend   本仓库源码 + 编译好的前端，镜像最大、日常更新最频繁
+#   ztl123z/hgnu-judge     go-judge sandbox + 编译器链
+#   ztl123z/hgnu-mongodb   官方 mongo:7-jammy 的薄封装（带首次初始化脚本）
 #
-# 只有手动 Run workflow、选择 master 分支且把 publish 设为 true 时才推送到 Docker Hub
-# public 仓库，相当于发布前必须有人手动确认一次。每次发布打两个 tag：
+# 触发规则：
+#   - push 到 master：只构建 backend 并冒烟检查，**不推送**
+#     judge/mongodb 很少变，push 时连构建都不做（省 Actions 额度）
+#   - 手动 Run workflow：用 target 选择要处理哪个镜像
+#       backend  默认，平时用
+#       all      三个都构建；publish=true 时三个都发布
+#       judge / mongodb  只有手动才构建，publish=true 时才发布
+#   - 任何推送都必须同时满足：手动触发 + 分支 master + publish=true
+#
+# 每次发布打两个 tag：
 #   latest                    最近一次发布的构建
 #   YYYYMMDD-HHMMSS (UTC)     构建时间戳，不可变，便于回滚/核对
-# 推送凭据来自仓库 Actions secret DOCKER_TOKEN（Docker Hub Access Token，需要可 push
-# 到 ztl123z/hgnu-backend）；用户名 ztl123z 不是 secret，直接写在 env 里。
+# 同一批发布的三个镜像共用一个时间戳（由 prepare 作业算一次并传下去），
+# 这样「同一版本的三件套」在仓库里是可以通过 tag 对应上的。
+#
+# 推送凭据来自仓库 Actions secret DOCKER_TOKEN（Docker Hub Access Token，
+# 需要对上面三个仓库有 push 权限）；用户名 ztl123z 不是 secret，直接写在 env 里。
 # 只从 ZTL123Z/HGNUOJ 发布，fork 仍会构建/冒烟检查，但不会推送。
 #
 # 为什么单独一个 workflow：build.yml 是上游 Hydro 的 CI（lint + test + 发布上游 npm 包），
@@ -18,9 +30,19 @@ name: Image
 on:
   push:
     branches: [master]
-  # 手动作业：默认只构建 + 冒烟检查；publish=true 才推送到 Docker Hub
+  # 手动作业：默认只构建 backend；publish=true 才推送到 Docker Hub
   workflow_dispatch:
     inputs:
+      target:
+        description: '要构建/发布的镜像'
+        type: choice
+        required: false
+        default: 'backend'
+        options:
+          - 'backend'
+          - 'judge'
+          - 'mongodb'
+          - 'all'
       publish:
         description: '是否推送到 Docker Hub（仅 master 生效；true 会覆盖 latest，并打时间戳 tag）'
         type: choice
@@ -42,12 +64,85 @@ env:
   CI: true
   # Corepack 首次下载 yarn 时会交互式询问，CI 里必须关掉
   COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
-  LOCAL_IMAGE: hgnuoj-backend
   DOCKERHUB_USERNAME: ztl123z
-  DOCKERHUB_IMAGE: ztl123z/hgnu-backend
 
 jobs:
-  build-image:
+  # 先算一次版本号和是否发布，后面的构建作业直接用，避免每个镜像各算一个时间戳。
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.decide.outputs.publish }}
+      run_backend: ${{ steps.decide.outputs.run_backend }}
+      run_judge: ${{ steps.decide.outputs.run_judge }}
+      run_mongodb: ${{ steps.decide.outputs.run_mongodb }}
+    steps:
+    - name: Compute version and scope
+      id: version
+      run: |
+        set -euo pipefail
+        echo "version=$(date -u +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
+
+    - name: Decide what to build and whether to publish
+      id: decide
+      env:
+        EVENT: ${{ github.event_name }}
+        TARGET: ${{ inputs.target }}
+        PUBLISH_INPUT: ${{ inputs.publish }}
+        REF: ${{ github.ref }}
+        REPO: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        # 只有「手动 + master + publish=true」才真正推送
+        publish=false
+        if [ "$EVENT" = 'workflow_dispatch' ] && [ "$REF" = 'refs/heads/master' ] \
+           && [ "$PUBLISH_INPUT" = 'true' ] && [ "$REPO" = 'ZTL123Z/HGNUOJ' ]; then
+          publish=true
+        fi
+
+        # push 触发只构建 backend；手动触发按 target 决定
+        if [ "$EVENT" = 'push' ]; then
+          target=backend
+        else
+          target="$TARGET"
+        fi
+
+        run_backend=false
+        run_judge=false
+        run_mongodb=false
+        case "$target" in
+          backend) run_backend=true ;;
+          judge) run_judge=true ;;
+          mongodb) run_mongodb=true ;;
+          all) run_backend=true; run_judge=true; run_mongodb=true ;;
+          *) echo "未知 target: $target"; exit 1 ;;
+        esac
+
+        {
+          echo "publish=$publish"
+          echo "run_backend=$run_backend"
+          echo "run_judge=$run_judge"
+          echo "run_mongodb=$run_mongodb"
+        } >> "$GITHUB_OUTPUT"
+
+        {
+          echo "### 镜像构建计划"
+          echo ""
+          echo "| 项 | 值 |"
+          echo "| --- | --- |"
+          echo "| 触发 | $EVENT |"
+          echo "| 分支 | $REF |"
+          echo "| backend | $run_backend |"
+          echo "| judge | $run_judge |"
+          echo "| mongodb | $run_mongodb |"
+          echo "| 发布 | $publish |"
+          echo "| 版本 tag | ${{ steps.version.outputs.version }} |"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+  backend:
+    needs: prepare
+    if: needs.prepare.outputs.run_backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -66,18 +161,18 @@ jobs:
       with:
         # 上下文必须是仓库根目录：Dockerfile 里 COPY 整个工作区
         context: .
-        file: install/docker/source/Dockerfile
+        file: install/docker-hgnu/source/Dockerfile
         # 只构建当前 runner 的架构（amd64），先加载到本地做冒烟检查；
         # 推送放到验证之后，确保推上去的就是被测试过的同一个镜像。
         platforms: linux/amd64
         push: false
         load: true
-        tags: ${{ env.LOCAL_IMAGE }}:${{ github.sha }}
+        tags: hgnuoj-backend:${{ github.sha }}
         # Dockerfile 里的 yarn 缓存用 cache mount，默认只活在单次构建内；
         # type=gha 把构建层和 cache mount 一起存进 Actions 缓存，下次运行可直接复用，
         # 不用每次重新下载依赖、重编译 webpack。
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=backend
+        cache-to: type=gha,mode=max,scope=backend
 
     # 构建成功不代表镜像能跑起来，这里做一次冒烟检查：
     # 1. 前端产物确实在镜像里
@@ -85,7 +180,7 @@ jobs:
     - name: Smoke test image
       run: |
         set -euo pipefail
-        IMAGE="${{ env.LOCAL_IMAGE }}:${{ github.sha }}"
+        IMAGE="hgnuoj-backend:${{ github.sha }}"
 
         echo '::group::前端构建产物'
         docker run --rm --entrypoint sh "$IMAGE" -c '
@@ -105,14 +200,12 @@ jobs:
         echo '::endgroup::'
 
     - name: Image size
-      run: docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' "${{ env.LOCAL_IMAGE }}:${{ github.sha }}"
+      run: docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' "hgnuoj-backend:${{ github.sha }}"
 
     # 先验证再登录、打 tag 和推送；保证 latest / 版本 tag 指向同一个已测试的本地镜像。
-    # 只有「手动运行 + publish=true + 选的是 master」才推送：push 到 master、手动运行但
-    # 没勾 publish、或手动运行选了其他分支，都只构建和冒烟检查。fork 永远不会执行推送。
-    # 限制 master 是为了避免把未合并的分支构建覆盖成 latest。
+    # 是否推送已经由 prepare 作业统一判定（手动 + master + publish=true）。
     - name: Log in to Docker Hub
-      if: ${{ github.repository == 'ZTL123Z/HGNUOJ' && github.event_name == 'workflow_dispatch' && inputs.publish == 'true' && github.ref == 'refs/heads/master' }}
+      if: needs.prepare.outputs.publish == 'true'
       uses: docker/login-action@v3
       with:
         registry: docker.io
@@ -120,20 +213,143 @@ jobs:
         password: ${{ secrets.DOCKER_TOKEN }}
         logout: true
 
-    - name: Push image to Docker Hub
-      if: ${{ github.repository == 'ZTL123Z/HGNUOJ' && github.event_name == 'workflow_dispatch' && inputs.publish == 'true' && github.ref == 'refs/heads/master' }}
+    - name: Push backend image
+      if: needs.prepare.outputs.publish == 'true'
+      env:
+        VERSION: ${{ needs.prepare.outputs.version }}
+      run: bash .github/workflows/scripts/push-image.sh hgnuoj-backend:${{ github.sha }} ztl123z/hgnu-backend "$VERSION"
+
+  judge:
+    needs: prepare
+    if: needs.prepare.outputs.run_judge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # 构建上下文是 install/docker-hgnu/judge（Dockerfile 里 COPY ./entrypoint.sh），
+    # sandbox 二进制不进仓库，由 Dockerfile 的 GO_JUDGE_URLS 下载。
+    - name: Build judge image
+      uses: docker/build-push-action@v6
+      with:
+        context: install/docker-hgnu/judge
+        file: install/docker-hgnu/judge/Dockerfile
+        platforms: linux/amd64
+        push: false
+        load: true
+        tags: hgnuoj-judge:${{ github.sha }}
+        build-args: |
+          COMPILERS=minimal
+        cache-from: type=gha,scope=judge
+        cache-to: type=gha,mode=max,scope=judge
+
+    # 冒烟检查：sandbox 可执行、hydrojudge 已安装、入口脚本带可执行位。
+    # 不启动容器连接后端，避免依赖外部环境。
+    - name: Smoke test judge image
       run: |
         set -euo pipefail
-        LOCAL="${{ env.LOCAL_IMAGE }}:${{ github.sha }}"
-        REMOTE="${{ env.DOCKERHUB_IMAGE }}"
-        # 版本号用 UTC 构建时间，格式 YYYYMMDD-HHMMSS（Docker tag 不允许冒号，
-        # 所以用 - 分隔日期和时间）。同一个 run 里只算一次，latest 与版本 tag 同源。
-        VERSION_TAG="$REMOTE:$(date -u +'%Y%m%d-%H%M%S')"
+        IMAGE="hgnuoj-judge:${{ github.sha }}"
 
-        docker tag "$LOCAL" "$VERSION_TAG"
-        docker tag "$LOCAL" "$REMOTE:latest"
-        echo "Publishing $VERSION_TAG and $REMOTE:latest"
-        echo "### 发布镜像: \`$VERSION_TAG\`" >> "$GITHUB_STEP_SUMMARY"
-        echo "> 源码 commit: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
-        docker push "$VERSION_TAG"
-        docker push "$REMOTE:latest"
+        echo '::group::sandbox 与编译器'
+        docker run --rm --entrypoint sh "$IMAGE" -c '
+          test -x /usr/bin/sandbox
+          /usr/bin/sandbox -version
+          gcc --version | head -1
+          g++ --version | head -1
+          python3 --version
+          java -version 2>&1 | head -1
+        '
+        echo '::endgroup::'
+
+        echo '::group::hydrojudge 与入口脚本'
+        # 不能跑 hydrojudge --version：它一加载就读 /root/.config/hydro/judge.yaml，
+        # 没有配置会直接 ENOENT。这里改用 package.json 读版本，并确认入口脚本可执行。
+        docker run --rm --entrypoint sh "$IMAGE" -c '
+          test -x /root/entrypoint.sh
+          test -x /usr/local/bin/hydrojudge
+          test -x /usr/local/bin/pm2
+          node -e "const p = require(\"/usr/local/lib/node_modules/@hydrooj/hydrojudge/package.json\"); console.log(\"hydrojudge\", p.version)"
+        '
+        echo '::endgroup::'
+
+    - name: Image size
+      run: docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' "hgnuoj-judge:${{ github.sha }}"
+
+    - name: Log in to Docker Hub
+      if: needs.prepare.outputs.publish == 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: docker.io
+        username: ${{ env.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+        logout: true
+
+    - name: Push judge image
+      if: needs.prepare.outputs.publish == 'true'
+      env:
+        VERSION: ${{ needs.prepare.outputs.version }}
+      run: bash .github/workflows/scripts/push-image.sh hgnuoj-judge:${{ github.sha }} ztl123z/hgnu-judge "$VERSION"
+
+  mongodb:
+    needs: prepare
+    if: needs.prepare.outputs.run_mongodb == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build mongodb image
+      uses: docker/build-push-action@v6
+      with:
+        context: install/docker-hgnu/mongodb
+        file: install/docker-hgnu/mongodb/Dockerfile
+        platforms: linux/amd64
+        push: false
+        load: true
+        tags: hgnuoj-mongodb:${{ github.sha }}
+        cache-from: type=gha,scope=mongodb
+        cache-to: type=gha,mode=max,scope=mongodb
+
+    # 冒烟检查：初始化脚本在镜像里，且 mongod/mongosh 可用。
+    # 真正的「脚本执行一次」由官方 entrypoint 在空数据目录时完成，这里只验证文件就位。
+    - name: Smoke test mongodb image
+      run: |
+        set -euo pipefail
+        IMAGE="hgnuoj-mongodb:${{ github.sha }}"
+
+        echo '::group::初始化脚本与命令行'
+        docker run --rm --entrypoint sh "$IMAGE" -c '
+          test -f /docker-entrypoint-initdb.d/10-hgnu-init.js
+          ls -l /docker-entrypoint-initdb.d
+          mongod --version | head -3
+          mongosh --version
+        '
+        echo '::endgroup::'
+
+    - name: Image size
+      run: docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' "hgnuoj-mongodb:${{ github.sha }}"
+
+    - name: Log in to Docker Hub
+      if: needs.prepare.outputs.publish == 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: docker.io
+        username: ${{ env.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+        logout: true
+
+    - name: Push mongodb image
+      if: needs.prepare.outputs.publish == 'true'
+      env:
+        VERSION: ${{ needs.prepare.outputs.version }}
+      run: bash .github/workflows/scripts/push-image.sh hgnuoj-mongodb:${{ github.sha }} ztl123z/hgnu-mongodb "$VERSION"
