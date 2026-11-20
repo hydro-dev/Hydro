@@ -86,6 +86,9 @@ export const PERM = {
     // Ranking
     PERM_VIEW_RANKING: 1n << 59n,
 
+    // Wiki
+    PERM_EDIT_WIKI: 1n << 71n,
+
     // Placeholder
     PERM_ALL: -1n,
     PERM_BASIC: 0n,

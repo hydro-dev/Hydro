@@ -1,0 +1,266 @@
+.algo-wiki
+  &__directory
+    margin: 1rem 0
+
+  &__directory-row
+    display: grid
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(5rem, .4fr)
+    align-items: end
+    gap: .6rem
+    padding: .65rem 0
+    border-bottom: 1px solid var(--wiki-line)
+
+    label, input
+      width: 100%
+
+    @media (max-width: 40rem)
+      grid-template-columns: minmax(0, 1fr) minmax(4.5rem, .4fr)
+
+      > a
+        grid-column: 1 / -1
+
+  --wiki-accent: #215d8b
+  --wiki-line: rgba(81, 115, 142, .3)
+  --wiki-selected: rgba(58, 129, 187, .14)
+  width: calc(100% - 2rem)
+  max-width: 83rem
+  margin: 0 auto 2rem
+
+  &__header
+    display: flex
+    align-items: flex-end
+    justify-content: space-between
+    gap: 1rem 2rem
+    border-bottom: 1px solid var(--wiki-line)
+    padding: 0 0 1rem
+    margin-bottom: 1.5rem
+
+  &__eyebrow
+    color: var(--wiki-accent)
+    font-size: .8125rem
+    font-weight: 600
+    letter-spacing: .04em
+    margin: 0 0 .375rem
+
+  &__name,
+  &__name:visited
+    display: inline-block
+    color: inherit
+    font-size: 1.75rem
+    font-weight: 700
+    line-height: 1.25
+    margin: 0
+
+  &__search
+    display: flex
+    gap: .5rem
+    width: 100%
+    max-width: 22rem
+
+    .textbox,
+    .button
+      box-sizing: border-box
+      margin: 0
+      min-height: 44px
+
+    .textbox
+      flex: 1
+      min-width: 0
+
+    .button
+      flex-shrink: 0
+
+  &__grid
+    display: grid
+    grid-template-columns: 11.5rem minmax(0, 1fr)
+    gap: 1.5rem
+    align-items: start
+
+  &__grid--article
+    grid-template-columns: 11.5rem minmax(0, 1fr) 10rem
+
+  &__rail
+    position: sticky
+    top: 4.5rem
+    max-height: calc(100vh - 5.5rem)
+    overflow-y: auto
+
+    h2
+      font-size: 1rem
+      font-weight: 700
+      margin: .375rem 0 .75rem
+
+  &__rail--right
+    border-inline-start: 1px solid var(--wiki-line)
+    padding-inline-start: .875rem
+
+  &__mobile
+    display: none
+
+  &__links ul,
+  &__entries
+    list-style: none
+    padding: 0
+    margin: 0
+
+  &__links
+    h3
+      font-size: .875rem
+      font-weight: 700
+      margin: 1rem .5rem .375rem
+
+    a
+      display: block
+      color: inherit
+      padding: .375rem .5rem
+      border-radius: .25rem
+      overflow-wrap: anywhere
+
+    a:hover,
+    a[aria-current="page"]
+      background: var(--wiki-selected)
+      color: var(--wiki-accent)
+
+    a[aria-current="page"]
+      font-weight: 700
+
+  &__subheading
+    padding-inline-start: .75rem
+
+  &__reader
+    min-width: 0
+    width: 100%
+    max-width: 56rem
+    padding: clamp(1rem, 3vw, 2.5rem)
+    margin: 0
+    overflow-wrap: anywhere
+
+    h1,
+    > h2
+      font-size: clamp(1.5rem, 3vw, 2.125rem)
+      font-weight: 700
+      line-height: 1.25
+      margin: 0 0 .75rem
+
+  &__article-header
+    border-bottom: 1px solid var(--wiki-line)
+    margin-bottom: 1.5rem
+    padding-bottom: .875rem
+
+  &__intro
+    font-size: 1rem
+    line-height: 1.65
+    margin: 0 0 .75rem
+
+  &__content
+    h2[id],
+    h3[id]
+      scroll-margin-top: 4.5rem
+
+    pre
+      overflow-x: auto
+      padding-top: 2rem
+
+    pre > code
+      overflow-wrap: normal
+
+  &__list-title
+    margin: 1.75rem 0 .375rem
+    font-size: 1rem
+    font-weight: 700
+
+  &__entries
+    li
+      padding: .75rem 0
+      border-top: 1px solid var(--wiki-line)
+
+    a
+      color: var(--wiki-accent)
+      font-weight: 600
+
+    p
+      margin: .25rem 0 0
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  summary:focus-visible
+    outline: 2px solid var(--wiki-accent)
+    outline-offset: 2px
+
+.theme--dark .algo-wiki
+  --wiki-accent: #9ccdee
+  --wiki-line: rgba(151, 183, 207, .3)
+  --wiki-selected: rgba(128, 188, 233, .18)
+
+@media (max-width: 959px)
+  .algo-wiki
+    margin-top: 1rem
+
+    &__grid,
+    &__grid--article
+      grid-template-columns: minmax(0, 1fr)
+      gap: 1rem
+
+    &__rail
+      display: none
+
+    &__mobile
+      display: grid
+      gap: .5rem
+
+      details
+        border: 1px solid var(--wiki-line)
+        border-radius: .375rem
+
+      summary
+        cursor: pointer
+        font-weight: 600
+        padding: .75rem
+
+      nav
+        padding: 0 .75rem .75rem
+
+      a
+        padding: .625rem .5rem
+
+@media (max-width: 540px)
+  .algo-wiki__header
+    align-items: flex-start
+    flex-direction: column
+
+.algo-wiki
+  &__actions,
+  &__article-title,
+  &__editor-actions
+    display: flex
+    flex-wrap: wrap
+    align-items: center
+    gap: .5rem 1rem
+
+    .button
+      margin: 0
+
+  &__actions
+    width: 100%
+    max-width: 30rem
+    justify-content: flex-end
+
+  &__article-title
+    justify-content: space-between
+
+  &__editor
+    max-width: 56rem
+    margin: 0 auto
+
+    label
+      font-weight: 600
+
+  &__field-hint
+    font-size: .875rem
+    margin-bottom: .625rem
+
+  &__markdown
+    min-height: 24rem
+    resize: vertical
+    font-family: monospace

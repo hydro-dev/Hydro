@@ -14,6 +14,7 @@ export const PERMS = [
     Permission('perm_general', PERM.PERM_VIEW_USER_PRIVATE_INFO, 'View domain user private info'),
     Permission('perm_general', PERM.PERM_EDIT_DOMAIN, 'Edit domain settings'),
     Permission('perm_general', PERM.PERM_MOD_BADGE, 'Show MOD badge'),
+    Permission('perm_general', PERM.PERM_EDIT_WIKI, 'Edit Wiki articles'),
     Permission('perm_problem', PERM.PERM_CREATE_PROBLEM, 'Create problems'),
     Permission('perm_problem', PERM.PERM_EDIT_PROBLEM, 'Edit problems'),
     Permission('perm_problem', PERM.PERM_EDIT_PROBLEM_SELF, 'Edit own problems'),

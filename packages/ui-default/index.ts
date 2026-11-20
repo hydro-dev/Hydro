@@ -9,6 +9,7 @@ import convert from 'schemastery-jsonschema';
 import { presetRenderers } from './backendlib/contentRenderer';
 import markdown from './backendlib/markdown';
 import { TemplateService } from './backendlib/template';
+import { registerWikiRoutes } from './wiki/handler';
 
 declare module 'hydrooj' {
   interface UiContextBase {
@@ -223,6 +224,8 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
   const assetRevision = !process.env.DEV && getAssetRevision(global.Hydro.version['ui-default']);
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
+  registerWikiRoutes(ctx);
+  ctx.injectUI('Nav', 'wiki_main', { prefix: 'Wiki', displayName: 'Wiki', before: 'homework_main' });
   ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
   ctx.Route('set_legacy', '/legacy', LegacyModeHandler);
   ctx.Route('markdown', '/markdown', MarkdownHandler);
