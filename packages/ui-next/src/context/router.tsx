@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { endpointOrigins, endpoints, isInjected, routeMapStore } from '../globals';
+import { resolvePage } from '../registry/page';
 import { useSetPageData } from './page-data';
 
 interface InternalState {
@@ -81,13 +82,24 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
             window.location.href = res.url;
             return false;
           }
-          if (!res.ok) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
+          if (gen !== genRef.current) return false;
+          if (res.headers.get('x-hydro-ui-next') !== 'true') {
+            window.location.assign(url);
+            return false;
+          }
           const body = await res.json();
           const pageName = res.headers.get('x-hydro-page') || '';
-          const template = res.headers.get('x-hydro-template') || '';
           console.log('[Hydro] data from', reqUrl, 'received:', body, 'pageName:', pageName);
 
           if (gen !== genRef.current) return false;
+
+          const isError = !!(body && typeof body === 'object' && body.error);
+          if (!res.ok && !isError) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
+          const [, page] = resolvePage(pageName, isError);
+          if (!page) {
+            window.location.assign(url);
+            return false;
+          }
 
           if (init && body.routeMap && typeof body.routeMap === 'object') {
             routeMapStore.set(body.routeMap);
@@ -96,7 +108,6 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
             ...prev,
             args: body,
             name: pageName,
-            template,
             url,
           }));
           dispatch({ type: 'FETCH_SUCCESS' });
