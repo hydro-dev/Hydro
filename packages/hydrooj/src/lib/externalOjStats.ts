@@ -16,9 +16,27 @@ export function beijingDay(at: Date) {
     return new Date(at.getTime() + BEIJING_OFFSET).toISOString().slice(0, 10);
 }
 
-export function nextBeijingNoon(at: Date) {
-    const today = Date.parse(`${beijingDay(at)}T12:00:00+08:00`);
-    return new Date(today > at.getTime() ? today : today + DAY);
+export interface ExternalDailySnapshot {
+    round: Date;
+    total: number;
+    increment: number | null;
+}
+
+export function externalSyncRound(at: Date) {
+    const today = Date.parse(`${beijingDay(at)}T21:00:00+08:00`);
+    return new Date(today <= at.getTime() ? today : today - DAY);
+}
+
+export function nextBeijingSync(at: Date) {
+    return new Date(externalSyncRound(at).getTime() + DAY);
+}
+
+export function buildExternalDailySnapshot(total: number, previous: ExternalDailySnapshot | undefined, at: Date) {
+    const round = externalSyncRound(at);
+    if (previous?.round?.getTime() === round.getTime()) return previous;
+    const consecutive = previous?.round?.getTime() === round.getTime() - DAY;
+    const validBaseline = Number.isSafeInteger(previous?.total) && previous.total >= 0 && total >= previous.total;
+    return { round, total, increment: consecutive && validBaseline ? total - previous.total : null };
 }
 
 export function firstPasses(solves: FirstPass[]) {

@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-    beijingDay, buildDailyActivity, firstPasses, nextBeijingNoon, syncState,
+    beijingDay, buildDailyActivity, buildExternalDailySnapshot, externalSyncRound, firstPasses, nextBeijingSync, syncState,
 } from '../packages/hydrooj/src/lib/externalOjStats';
 
-test('Beijing day and next noon use UTC+08 independently of host timezone', () => {
+test('Beijing day and next 21:00 refresh use UTC+08 independently of host timezone', () => {
     assert.equal(beijingDay(new Date('2026-11-18T16:00:00Z')), '2026-11-19');
-    assert.equal(nextBeijingNoon(new Date('2026-11-18T03:59:59Z')).toISOString(), '2026-11-18T04:00:00.000Z');
-    assert.equal(nextBeijingNoon(new Date('2026-11-18T04:00:00Z')).toISOString(), '2026-11-19T04:00:00.000Z');
+    assert.equal(nextBeijingSync(new Date('2026-11-18T12:59:59Z')).toISOString(), '2026-11-18T13:00:00.000Z');
+    assert.equal(nextBeijingSync(new Date('2026-11-18T13:00:00Z')).toISOString(), '2026-11-19T13:00:00.000Z');
 });
 
 test('first AC is per platform problem and uses the earliest successful timestamp', () => {
@@ -50,4 +50,19 @@ test('sync failure is visible even when the previously successful count was zero
     assert.equal(syncState({}), 'pending');
     assert.equal(syncState({ lastSuccessAt: previous }), 'success');
     assert.equal(syncState({ lastSuccessAt: previous, failedAt: failure }), 'failed');
+});
+
+test('nightly snapshot increments require consecutive rounds and keep the first sample of a round', () => {
+    const first = new Date('2026-11-18T13:00:00Z');
+    const second = new Date('2026-11-19T13:00:00Z');
+    assert.equal(externalSyncRound(new Date('2026-11-19T12:59:59Z')).toISOString(), first.toISOString());
+    assert.equal(externalSyncRound(new Date('2026-11-19T16:01:00Z')).toISOString(), second.toISOString());
+    const baseline = buildExternalDailySnapshot(100, undefined, first);
+    assert.equal(baseline.increment, null);
+    const updated = buildExternalDailySnapshot(107, baseline, second);
+    assert.equal(updated.increment, 7);
+    assert.deepEqual(buildExternalDailySnapshot(109, updated, new Date(+second + 60_000)), updated);
+    assert.equal(buildExternalDailySnapshot(110, baseline, new Date(+second + 86_400_000)).increment, null);
+    assert.equal(buildExternalDailySnapshot(90, baseline, second).increment, null);
+    assert.equal(buildExternalDailySnapshot(100, baseline, second).increment, 0);
 });

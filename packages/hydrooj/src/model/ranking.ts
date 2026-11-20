@@ -45,13 +45,13 @@ const CLASS_COHORT = '^[\u4E00-\u9FA5]{2,4}([12][0-9])[0-9]{2}\\z';
 const STALE_AFTER_MS = 36 * 60 * 60 * 1000; // Daily refresh plus time for jobs to finish.
 
 function withCohort(db: RankingDb): Document[] {
+    // MongoDB 5.0 can still use FCV 4.4; keep equality lookups separate from pipeline lookups.
     return [
         {
             $lookup: {
                 from: db.collection('stu.info').collectionName,
                 localField: 'uid',
                 foreignField: '_id',
-                pipeline: [{ $project: { _id: 0, class: 1 } }],
                 as: 'student',
             },
         },
@@ -162,10 +162,9 @@ export async function getExternalRanking(
         {
             $lookup: {
                 from: db.collection('user').collectionName,
-                localField: 'uid',
-                foreignField: '_id',
+                let: { uid: '$uid' },
                 pipeline: [
-                    { $match: { priv: { $bitsAllSet: PRIV.PRIV_USER_PROFILE } } },
+                    { $match: { $expr: { $eq: ['$_id', '$$uid'] }, priv: { $bitsAllSet: PRIV.PRIV_USER_PROFILE } } },
                     { $project: { _id: 0, uname: 1 } },
                 ],
                 as: 'account',
@@ -175,8 +174,7 @@ export async function getExternalRanking(
         {
             $lookup: {
                 from: db.collection('external.oj.binding').collectionName,
-                localField: 'uid',
-                foreignField: 'uid',
+                let: { uid: '$uid' },
                 pipeline: [
                     {
                         $match: {
@@ -184,6 +182,7 @@ export async function getExternalRanking(
                             total: { $gte: 0, $lte: Number.MAX_SAFE_INTEGER },
                             $expr: {
                                 $and: [
+                                    { $eq: ['$uid', '$$uid'] },
                                     {
                                         $cond: [
                                             { $isNumber: '$total' },
@@ -246,4 +245,134 @@ export async function getExternalRanking(
     });
     const { all: allCount, synced: syncedCount } = result.counts[0] || { all: 0, synced: 0 };
     return { rows, count: scope === 'synced' ? syncedCount : allCount, allCount, syncedCount };
+}
+
+export async function getUserExternalSnapshots(db: RankingDb, uids: number[], now = new Date()) {
+    const snapshots = await db.collection('external.oj.binding').aggregate<Snapshot & { uid: number }>([
+        {
+            $match: {
+                uid: { $in: [...new Set(uids)] },
+                platform: { $in: EXTERNAL_RANKING_PLATFORMS.map(({ key }) => key) },
+                total: { $gte: 0, $lte: Number.MAX_SAFE_INTEGER },
+                $expr: {
+                    $and: [
+                        { $cond: [{ $isNumber: '$total' }, { $eq: ['$total', { $trunc: '$total' }] }, false] },
+                        { $eq: [{ $type: '$lastSuccessAt' }, 'date'] },
+                    ],
+                },
+            },
+        },
+        { $project: { _id: 0, uid: 1, platform: 1, total: 1, lastSuccessAt: 1, failedAt: 1 } },
+    ]).toArray();
+    return Object.fromEntries(uids.map((uid) => {
+        const entries = snapshots.filter((snapshot) => snapshot.uid === uid);
+        return [uid, {
+            platforms: Object.fromEntries(entries.map((snapshot) => [snapshot.platform, {
+                total: snapshot.total,
+                stale: snapshot.failedAt > snapshot.lastSuccessAt
+                    || now.getTime() - snapshot.lastSuccessAt.getTime() > STALE_AFTER_MS,
+            }])),
+            total: entries.length ? entries.reduce((sum, snapshot) => sum + snapshot.total, 0) : null,
+        }];
+    }));
+}
+
+export async function getDailyExternalRanking(
+    db: RankingDb, domainId: string, grade: string, page: number, pageSize: number, round: Date,
+    options: { uids?: number[], scope?: 'all' | 'synced' } = {},
+) {
+    const [result] = await db.collection('domain.user').aggregate<{
+        rows: { uid: number, total: number | null, partial: boolean }[];
+        counts: { count: number }[];
+        ready: { count: number }[];
+    }>([
+        { $match: { domainId, ...MEMBER } },
+        ...(options.uids ? [{ $match: { uid: { $in: options.uids } } }] : []),
+        ...gradeFilter(db, grade),
+        {
+            $lookup: {
+                from: db.collection('user').collectionName,
+                let: { uid: '$uid' },
+                pipeline: [
+                    { $match: { $expr: { $eq: ['$_id', '$$uid'] }, priv: { $bitsAllSet: PRIV.PRIV_USER_PROFILE } } },
+                    { $project: { _id: 1 } },
+                ],
+                as: 'account',
+            },
+        },
+        { $match: { 'account.0': { $exists: true } } },
+        {
+            $lookup: {
+                from: db.collection('external.oj.binding').collectionName,
+                let: { uid: '$uid' },
+                pipeline: [
+                    {
+                        $match: {
+                            platform: { $in: EXTERNAL_RANKING_PLATFORMS.map(({ key }) => key) },
+                            $expr: { $eq: ['$uid', '$$uid'] },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            increment: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            { $eq: ['$dailySnapshot.round', round] },
+                                            { $eq: [{ $type: '$lastSuccessAt' }, 'date'] },
+                                            { $lte: [{ $ifNull: ['$failedAt', new Date(0)] }, '$lastSuccessAt'] },
+                                            {
+                                                $cond: [
+                                                    { $isNumber: '$dailySnapshot.increment' },
+                                                    {
+                                                        $and: [
+                                                            { $gte: ['$dailySnapshot.increment', 0] },
+                                                            { $lte: ['$dailySnapshot.increment', Number.MAX_SAFE_INTEGER] },
+                                                            { $eq: ['$dailySnapshot.increment', { $trunc: '$dailySnapshot.increment' }] },
+                                                        ],
+                                                    },
+                                                    false,
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                    '$dailySnapshot.increment',
+                                    null,
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: 'dailyBindings',
+            },
+        },
+        { $set: { increments: { $filter: { input: '$dailyBindings', cond: { $ne: ['$$this.increment', null] } } } } },
+        {
+            $project: {
+                _id: 0, uid: 1,
+                total: { $cond: [{ $size: '$increments' }, { $sum: '$increments.increment' }, null] },
+                partial: { $gt: [{ $size: '$dailyBindings' }, { $size: '$increments' }] },
+            },
+        },
+        {
+            $facet: {
+                rows: [
+                    ...(options.scope === 'synced' ? [{ $match: { total: { $ne: null } } }] : []),
+                    { $sort: { total: -1, uid: 1 } }, ...paging(page, pageSize),
+                ],
+                counts: [{ $count: 'count' }],
+                ready: [{ $match: { total: { $ne: null } } }, { $count: 'count' }],
+            },
+        },
+    ]).toArray();
+    const allCount = result.counts[0]?.count || 0;
+    const syncedCount = result.ready[0]?.count || 0;
+    return {
+        allCount,
+        syncedCount,
+        rows: result.rows.map((row, i) => ({ ...row, rank: (page - 1) * pageSize + i + 1 })),
+        count: options.scope === 'synced' ? syncedCount : allCount,
+        ready: !!syncedCount,
+    };
 }

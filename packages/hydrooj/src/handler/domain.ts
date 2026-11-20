@@ -9,13 +9,14 @@ import {
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
+import { beijingDay, externalSyncRound } from '../lib/externalOjStats';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
 import MessageModel from '../model/message';
 import * as oplog from '../model/oplog';
 import {
-    EXTERNAL_RANKING_PLATFORMS, getExternalRanking, getGradeOptions, getGradeRpRanking,
+    EXTERNAL_RANKING_PLATFORMS, getDailyExternalRanking, getExternalRanking, getGradeOptions, getGradeRpRanking, getUserExternalSnapshots,
 } from '../model/ranking';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import system from '../model/system';
@@ -28,51 +29,64 @@ import { log2 } from '../utils';
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     @query('grade', Types.String, true)
-    @query('externalPage', Types.PositiveInt, true)
     @query('externalSort', Types.String, true)
     @query('externalScope', Types.String, true)
-    async get(domainId: string, page = 1, grade = 'all', externalPage = 1, sort = 'total', scope = 'all') {
+    async get(domainId: string, page = 1, grade = 'all', sort = 'rp', scope = 'all') {
         const { db } = this.ctx;
-        const externalSort = EXTERNAL_RANKING_PLATFORMS.find(({ key }) => key === sort)?.key ?? 'total';
+        const externalSort = sort === 'daily' || sort === 'total'
+            || EXTERNAL_RANKING_PLATFORMS.some(({ key }) => key === sort) ? sort : 'rp';
         const externalScope = scope === 'synced' ? 'synced' : 'all';
         const grades = await getGradeOptions(db, domainId);
         if (grade !== 'unknown' && !grades.includes(grade)) grade = 'all';
         const pageSize = this.ctx.setting.get('pagination.ranking') || 20;
         const viewerUid = this.user.hasPriv(PRIV.PRIV_USER_PROFILE) ? this.user._id : undefined;
-        const [rp, external] = await Promise.all([
-            grade === 'all'
+        const now = new Date();
+        const round = externalSyncRound(now);
+        const main = await (externalSort === 'rp'
+            ? grade === 'all'
                 ? this.paginate(
                     domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 }, join: true }).sort({ rp: -1 }),
-                    page,
-                    'ranking',
+                    page, 'ranking',
                 ).then(([rows, pages, count]) => ({ rows, pages, count, viewerRank: this.user.rank }))
                 : getGradeRpRanking(db, domainId, grade, page, pageSize, viewerUid)
-                    .then((result) => ({ ...result, pages: Math.ceil(result.count / pageSize) })),
-            getExternalRanking(db, domainId, grade, externalPage, pageSize, externalSort, new Date(), externalScope),
+                    .then((result) => ({ ...result, pages: Math.ceil(result.count / pageSize) }))
+            : externalSort === 'daily'
+                ? getDailyExternalRanking(db, domainId, grade, page, pageSize, round, { scope: externalScope })
+                    .then((result) => ({ ...result, pages: Math.ceil(result.count / pageSize), viewerRank: undefined }))
+                : getExternalRanking(
+                    db, domainId, grade, page, pageSize,
+                    externalSort as typeof EXTERNAL_RANKING_PLATFORMS[number]['key'] | 'total', now, externalScope,
+                ).then((result) => ({ ...result, pages: Math.ceil(result.count / pageSize), viewerRank: undefined })));
+        const uids = [...new Set([...main.rows.map(({ uid }) => uid), ...(viewerUid ? [viewerUid] : [])])];
+        const [udict, snapshots, daily] = await Promise.all([
+            user.getList(domainId, uids),
+            getUserExternalSnapshots(db, uids, now),
+            getDailyExternalRanking(db, domainId, 'all', 1, Math.max(uids.length, 1), round, { uids }),
         ]);
-        const udict = await user.getList(domainId, [...rp.rows, ...external.rows].map(({ uid }) => uid));
-        const externalUsers = Object.fromEntries(external.rows.map(({ uid, uname }) => [uid, {
-            _id: uid, uname, class: udict[uid]?.class, name: udict[uid]?.name,
-        }]));
+        const dailySnapshots = Object.fromEntries(daily.rows.map(({ uid, total, partial }) => [uid, { total, partial }]));
+        const mainRows = main.rows.map(({ uid }, i) => ({
+            uid, rank: (page - 1) * pageSize + i + 1, user: udict[uid], ...snapshots[uid],
+            daily: dailySnapshots[uid] || { total: null, partial: false },
+        }));
+        const showViewer = externalSort === 'rp' && viewerUid && (grade === 'all' || main.viewerRank);
         this.response.template = 'ranking.html';
         this.response.body = {
-            udocs: rp.rows.map(({ uid }) => udict[uid]),
-            upcount: rp.pages,
-            ucount: rp.count,
+            mainRows,
+            viewerRow: showViewer ? {
+                uid: viewerUid, rank: main.viewerRank, user: this.user, ...snapshots[viewerUid],
+                daily: dailySnapshots[viewerUid] || { total: null, partial: false },
+            } : undefined,
+            upcount: main.pages,
+            ucount: main.count,
             page,
-            rpRanks: grade === 'all' ? undefined : rp.rows.map(({ rank }) => rank),
-            viewerRpRank: rp.viewerRank,
             grades,
             grade,
-            externalRows: external.rows,
-            externalUsers,
-            externalPlatforms: EXTERNAL_RANKING_PLATFORMS,
-            externalPage,
             externalSort,
             externalScope,
-            externalAllCount: external.allCount,
-            externalSyncedCount: external.syncedCount,
-            externalPageCount: Math.ceil(external.count / pageSize),
+            externalPlatforms: EXTERNAL_RANKING_PLATFORMS,
+            externalAllCount: 'allCount' in main ? main.allCount : undefined,
+            externalSyncedCount: 'syncedCount' in main ? main.syncedCount : undefined,
+            dailyRound: beijingDay(round),
         };
     }
 }
