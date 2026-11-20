@@ -30,6 +30,7 @@ export interface WikiLink {
   title: string;
   summary: string;
   category: string;
+  aliases?: string;
 }
 
 export interface WikiSource extends WikiLink {
@@ -72,8 +73,8 @@ export function getBundledWikiSource(slug: unknown) {
   return typeof slug === 'string' ? bundled.get(slug) : undefined;
 }
 
-function wikiLink({ slug, title, summary, category }: WikiLink): WikiLink {
-  return { slug, title, summary, category };
+function wikiLink({ slug, title, summary, category, aliases }: WikiLink): WikiLink {
+  return aliases ? { slug, title, summary, category, aliases } : { slug, title, summary, category };
 }
 
 function withFallback<T extends WikiLink>(stored: readonly T[]) {
@@ -100,6 +101,24 @@ export function getWikiCategories(stored: readonly WikiLink[] = [], settings: re
     categories.get(article.category).push(wikiLink(article));
   }
   return [...categories].map(([name, articles]) => ({ name, articles }));
+}
+
+export function getAdjacentWikiArticles(
+  categories: readonly { name: string, articles: readonly WikiLink[] }[],
+  slug: string,
+) {
+  const ordered = categories.flatMap((group) => group.articles);
+  const index = ordered.findIndex((item) => item.slug === slug);
+  if (index === -1) return { prevArticle: null, nextArticle: null };
+  return {
+    prevArticle: index > 0 ? ordered[index - 1] : null,
+    nextArticle: index < ordered.length - 1 ? ordered[index + 1] : null,
+  };
+}
+
+export function splitWikiAliases(aliases?: string) {
+  if (!aliases) return [];
+  return [...new Set(aliases.split(/[\s,，、;；]+/).map((item) => item.trim()).filter(Boolean))];
 }
 
 export function renderWikiArticle(source: WikiSource) {
@@ -136,7 +155,7 @@ export function searchWiki(input: unknown, stored: readonly WikiSource[] = [], s
   const categories = new Map(settings.map(({ slug, category }) => [slug, category]));
   const ranked = [...withFallback(stored).values()].flatMap((source) => {
     const entry = { ...source, category: categories.get(source.slug) ?? source.category };
-    const aliases = bundled.get(entry.slug)?.aliases || '';
+    const aliases = entry.aliases || bundled.get(entry.slug)?.aliases || '';
     const primary = normalize([entry.title, entry.slug, aliases].join(' '));
     const secondary = normalize([entry.category, entry.summary].join(' '));
     let prose: string;

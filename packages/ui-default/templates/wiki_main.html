@@ -2,7 +2,7 @@
 
 {% macro article_navigation() %}
 <nav class="algo-wiki__links" aria-label="算法文章">
-  <a href="{{ url('wiki_main') }}"{% if not article and not query %} aria-current="page"{% endif %}>文章总览</a>
+  <a href="{{ url('wiki_main') }}"{% if not article and not query and directory is not defined %} aria-current="page"{% endif %}>文章总览</a>
   {% for group in categories %}
     <h3>{{ group.name }}</h3>
     <ul>
@@ -21,20 +21,42 @@
 
 {% macro section_navigation() %}
 <nav class="algo-wiki__links algo-wiki__anchors" aria-label="本页目录">
-  <ul>
-    {% for heading in article.headings %}
-      <li{% if heading.level > 2 %} class="algo-wiki__subheading"{% endif %}><a href="{{ heading.href }}">{{ heading.title }}</a></li>
-    {% endfor %}
-  </ul>
+  {% if article.headings.length %}
+    <ul>
+      {% for heading in article.headings %}
+        <li{% if heading.level > 2 %} class="algo-wiki__subheading"{% endif %}><a href="{{ heading.href }}">{{ heading.title }}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="algo-wiki__rail-empty">当前文章暂无二级标题目录。</p>
+  {% endif %}
 </nav>
 {% endmacro %}
 
+{% macro alias_tags(aliases) %}
+{% set tags = splitWikiAliases(aliases) if splitWikiAliases else [] %}
+{% if tags.length %}
+  <ul class="algo-wiki__tags" aria-label="关键词">
+    {% for tag in tags %}
+      <li>{{ tag }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endmacro %}
+
 {% macro article_list(entries) %}
-<ul class="algo-wiki__entries">
+<ul class="algo-wiki__cards">
   {% for entry in entries %}
-    <li>
-      <a href="{{ url('wiki_article', slug=entry.slug) }}">{{ entry.title }}</a>
-      <p>{{ entry.summary }}</p>
+    <li class="algo-wiki__card">
+      <a class="algo-wiki__card-link" href="{{ url('wiki_article', slug=entry.slug) }}">
+        <div class="algo-wiki__card-head">
+          <span class="algo-wiki__card-title">{{ entry.title }}</span>
+          <span class="algo-wiki__card-badge">{{ entry.category }}</span>
+        </div>
+        <p class="algo-wiki__card-summary">{{ entry.summary }}</p>
+        {{ alias_tags(entry.aliases) }}
+        <span class="algo-wiki__card-cta">查看原理与 C++ 模板 →</span>
+      </a>
     </li>
   {% endfor %}
 </ul>
@@ -43,7 +65,7 @@
 {% block content %}
 <div class="algo-wiki" lang="zh-CN">
   <header class="algo-wiki__header">
-    <div>
+    <div class="algo-wiki__brand">
       <p class="algo-wiki__eyebrow">HGNUOJ / 学习资料</p>
       {% if article or query or directory is defined %}
         <a class="algo-wiki__name" href="{{ url('wiki_main') }}">算法 Wiki</a>
@@ -52,14 +74,14 @@
       {% endif %}
     </div>
     <div class="algo-wiki__actions">
-    {% if canEditWiki %}
-      <a class="button" href="{{ url('wiki_create') }}">新建文章</a>
-      <a class="button" href="{{ url('wiki_directory') }}">管理目录</a>
-    {% endif %}
-    <form class="algo-wiki__search" action="{{ url('wiki_main') }}" method="get" role="search" aria-label="Wiki 搜索">
-      <input class="textbox" type="search" name="q" maxlength="100" value="{{ query|default('') }}" placeholder="二分、BFS、最短路" aria-label="搜索算法文章">
-      <button class="primary button" type="submit">搜索</button>
-    </form>
+      {% if canEditWiki %}
+        <a class="button" href="{{ url('wiki_create') }}">新建文章</a>
+        <a class="button" href="{{ url('wiki_directory') }}">管理目录</a>
+      {% endif %}
+      <form class="algo-wiki__search" action="{{ url('wiki_main') }}" method="get" role="search" aria-label="Wiki 搜索">
+        <input class="textbox" type="search" name="q" maxlength="100" value="{{ query|default('') }}" placeholder="二分、BFS、DSU、最短路" aria-label="搜索算法文章">
+        <button class="primary button" type="submit">搜索</button>
+      </form>
     </div>
   </header>
 
@@ -86,7 +108,7 @@
       <section class="section algo-wiki__reader">
         <h1>管理目录</h1>
         {% if directory.length %}
-          <p>同名分类会合并。数字越小越靠前，分类按其中最靠前的文章排列；留空使用原有顺序。</p>
+          <p class="algo-wiki__intro">同名分类会自动合并。数字越小越靠前，分类按其中最靠前的文章排列；留空则保持默认顺序。</p>
           <form method="post" action="{{ url('wiki_directory') }}">
             <div class="algo-wiki__directory">
               {% for entry in directory %}
@@ -111,7 +133,12 @@
     {% elif article %}
       <article class="section algo-wiki__reader">
         <header class="algo-wiki__article-header">
-          <p class="algo-wiki__eyebrow">{{ article.category }}</p>
+          <div class="algo-wiki__meta">
+            <span class="algo-wiki__eyebrow">{{ article.category }}</span>
+            {% if updatedAtLabel %}
+              <span class="algo-wiki__updated">最后更新：{{ updatedAtLabel }}</span>
+            {% endif %}
+          </div>
           <div class="algo-wiki__article-title">
             <h1>{{ article.title }}</h1>
             {% if canEditWiki %}
@@ -119,8 +146,27 @@
             {% endif %}
           </div>
           <p class="algo-wiki__intro">{{ article.summary }}</p>
+          {{ alias_tags(article.aliases) }}
         </header>
         <div class="typo richmedia algo-wiki__content">{{ article.html|safe }}</div>
+        {% if prevArticle or nextArticle %}
+          <nav class="algo-wiki__pager" aria-label="上下篇导航">
+            {% if prevArticle %}
+              <a class="algo-wiki__pager-link" href="{{ url('wiki_article', slug=prevArticle.slug) }}">
+                <span class="algo-wiki__pager-label">← 上一篇</span>
+                <span class="algo-wiki__pager-title">{{ prevArticle.title }}</span>
+              </a>
+            {% else %}
+              <span></span>
+            {% endif %}
+            {% if nextArticle %}
+              <a class="algo-wiki__pager-link algo-wiki__pager-link--next" href="{{ url('wiki_article', slug=nextArticle.slug) }}">
+                <span class="algo-wiki__pager-label">下一篇 →</span>
+                <span class="algo-wiki__pager-title">{{ nextArticle.title }}</span>
+              </a>
+            {% endif %}
+          </nav>
+        {% endif %}
       </article>
       <aside class="algo-wiki__rail algo-wiki__rail--right">
         <h2>本页目录</h2>
@@ -133,19 +179,30 @@
           <p class="algo-wiki__intro">“{{ query }}” · 找到 {{ results.length }} 篇文章</p>
           {{ article_list(results) }}
         {% else %}
-          <p class="algo-wiki__intro">没有找到与“{{ query }}”匹配的文章。试试算法名称或缩写。</p>
-          <a href="{{ url('wiki_main') }}">返回文章总览</a>
+          <div class="algo-wiki__empty">
+            <p class="algo-wiki__intro">没有找到与“{{ query }}”匹配的文章。可以试试算法名称、英文缩写或关键词。</p>
+            <a class="button" href="{{ url('wiki_main') }}">返回文章总览</a>
+          </div>
         {% endif %}
       </section>
     {% else %}
       <section class="section algo-wiki__reader">
         <h2>文章总览</h2>
-        {% if not categories.length %}<p>暂时没有 Wiki 文章。</p>{% endif %}
-        <p class="algo-wiki__intro">从题目场景出发，理解算法为什么可行，再用 C++ 模板练习。</p>
-        {% for group in categories %}
-          <h3 class="algo-wiki__list-title">{{ group.name }}</h3>
-          {{ article_list(group.articles) }}
-        {% endfor %}
+        <p class="algo-wiki__intro">从题目场景出发，理解算法核心思想与执行过程，配合标准 C++ 代码模板直接练习。</p>
+        {% if not categories.length %}
+          <div class="algo-wiki__empty">
+            <p class="algo-wiki__empty-title">暂时没有 Wiki 文章。</p>
+            <p class="algo-wiki__empty-desc">这里将按分类收录算法简介、执行步骤推演以及竞赛常用 C++ 代码模板。</p>
+            {% if canEditWiki %}
+              <a class="primary button" href="{{ url('wiki_create') }}">新建第一篇文章</a>
+            {% endif %}
+          </div>
+        {% else %}
+          {% for group in categories %}
+            <h3 class="algo-wiki__list-title">{{ group.name }}</h3>
+            {{ article_list(group.articles) }}
+          {% endfor %}
+        {% endif %}
       </section>
     {% endif %}
   </div>

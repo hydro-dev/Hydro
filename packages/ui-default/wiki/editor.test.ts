@@ -70,7 +70,7 @@ function handler<T extends Handler>(Type: new (...args: any[]) => T, {
     checkPerm(perm: bigint) {
       if (!h.user.hasPerm(perm)) throw new PermissionError(perm);
     },
-    url: (name, urlArgs) => `/d/${urlArgs.domainId}/wiki/${name === 'wiki_directory' ? 'directory' : urlArgs.slug}`,
+    url: (name, urlArgs) => `/d/${urlArgs.domainId}/wiki${name === 'wiki_directory' ? '/directory' : name === 'wiki_main' ? '' : `/${urlArgs.slug}`}`,
   });
   return h;
 }
@@ -364,4 +364,104 @@ test('an empty Wiki offers creation to editors and an empty hint to readers', as
   assert.match(html, /暂时没有 Wiki 文章/);
   assert.doesNotMatch(html, /新建文章|管理目录/);
   assert.match(renderWikiTemplate('wiki_main', directory.response.body), /暂时没有可管理的文章/);
+});
+
+test('articles support optional aliases, adjacent navigation, updated date, and template editor controls', async () => {
+  const domainId = 'wiki-enhanced-features';
+  await handler(wiki.WikiCreateHandler, {
+    domainId,
+    body: { ...data, slug: 'algo-a', title: '算法 A', aliases: 'alpha-algo, 别名A' },
+  }).post();
+  await handler(wiki.WikiCreateHandler, {
+    domainId,
+    body: { ...data, slug: 'algo-b', title: '算法 B', category: '进阶算法' },
+  }).post();
+
+  const search = handler(wiki.WikiIndexHandler, { domainId, query: { q: 'alpha-algo' } });
+  await search.get();
+  assert.deepEqual(search.response.body.results.map(({ slug }) => slug), ['algo-a']);
+  assert.match(renderWikiTemplate('wiki_main', search.response.body), /别名A/);
+
+  const first = handler(wiki.WikiArticleHandler, { domainId, slug: 'algo-a' });
+  await first.get();
+  assert.equal(first.response.body.prevArticle, null);
+  assert.equal(first.response.body.nextArticle?.slug, 'algo-b');
+  assert.match(first.response.body.updatedAtLabel, /^\d{4}-\d{2}-\d{2}$/);
+  const firstHtml = renderWikiTemplate('wiki_main', first.response.body);
+  assert.match(firstHtml, /最后更新：/);
+  assert.match(firstHtml, /下一篇 →/);
+  assert.match(firstHtml, /算法 B/);
+
+  const editForm = handler(wiki.WikiEditHandler, { domainId, slug: 'algo-a' });
+  await editForm.get();
+  const editHtml = renderWikiTemplate('wiki_edit', editForm.response.body);
+  assert.match(editHtml, /data-markdown/);
+  assert.match(editHtml, /填充算法文章模板/);
+  assert.match(editHtml, /删除文章/);
+
+  // Clearing aliases on edit removes them cleanly.
+  await handler(wiki.WikiEditHandler, {
+    domainId,
+    slug: 'algo-a',
+    body: { ...data, title: '算法 A', aliases: '   ' },
+  }).post();
+  const afterClear = handler(wiki.WikiIndexHandler, { domainId, query: { q: 'alpha-algo' } });
+  await afterClear.get();
+  assert.deepEqual(afterClear.response.body.results, []);
+
+  // Reject invalid aliases (too long or control chars).
+  await assert.rejects(
+    handler(wiki.WikiCreateHandler, { domainId, body: { ...data, slug: 'bad-alias', aliases: 'x'.repeat(161) } }).post(),
+    { name: 'ValidationError' },
+  );
+  await assert.rejects(
+    handler(wiki.WikiCreateHandler, { domainId, body: { ...data, slug: 'bad-alias-nl', aliases: 'a\nb' } }).post(),
+    { name: 'ValidationError' },
+  );
+});
+
+test('delete route precedes article fallback and enforces permissions, CSRF, and directory cleanup', async () => {
+  const routes: [string, string, unknown][] = [];
+  wiki.registerWikiRoutes({
+    inject: () => {},
+    Route: (...args: [string, string, unknown]) => routes.push(args),
+  } as any);
+  const delIdx = routes.findIndex(([name]) => name === 'wiki_delete');
+  assert.ok(delIdx >= 0 && delIdx < routes.findIndex(([name]) => name === 'wiki_article'));
+
+  const domainId = 'wiki-delete-flow';
+  await handler(wiki.WikiCreateHandler, { domainId, body: { ...data, slug: 'to-delete' } }).post();
+  await handler(wiki.WikiDirectoryHandler, {
+    domainId,
+    headers: directoryHeaders,
+    body: { entries: { ...sampleFields(), 'slug-to-delete': { category: '基础算法', order: '1' } } },
+  }).post();
+
+  for (const [options, name] of [
+    [{ uid: 0 }, 'PrivilegeError'],
+    [{ permissions: PERM.PERM_DEFAULT }, 'PermissionError'],
+    [{ assertedDomain: 'other-domain' }, 'NotFoundError'],
+  ] as const) {
+    await assert.rejects(
+      handler(wiki.WikiDeleteHandler, { domainId, slug: 'to-delete', headers: directoryHeaders, ...options }).post(),
+      { name },
+    );
+  }
+
+  for (const headers of [{}, { origin: 'https://elsewhere.test' }]) {
+    await assert.rejects(
+      handler(wiki.WikiDeleteHandler, { domainId, slug: 'to-delete', headers }).post(),
+      { name: 'CsrfTokenError' },
+    );
+  }
+
+  const del = handler(wiki.WikiDeleteHandler, { domainId, slug: 'to-delete', headers: directoryHeaders });
+  await del.post();
+  assert.equal(del.response.redirect, '/d/wiki-delete-flow/wiki');
+
+  await assert.rejects(handler(wiki.WikiArticleHandler, { domainId, slug: 'to-delete' }).get(), { name: 'NotFoundError' });
+  await assert.rejects(handler(wiki.WikiDeleteHandler, { domainId, slug: 'to-delete', headers: directoryHeaders }).post(), { name: 'NotFoundError' });
+
+  const dirDoc = await db.collection<{ _id: string, entries: { slug: string }[] }>('wiki.directory').findOne({ _id: domainId });
+  assert.equal(dirDoc?.entries.some(({ slug }) => slug === 'to-delete'), false);
 });

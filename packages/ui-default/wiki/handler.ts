@@ -2,7 +2,8 @@ import {
   Context, CsrfTokenError, Handler, NotFoundError, PERM, PRIV, PrivilegeError,
 } from 'hydrooj';
 import {
-  getWikiCategories, getWikiDirectory, renderWikiArticle, searchWiki, WikiSource,
+  getAdjacentWikiArticles, getWikiCategories, getWikiDirectory, renderWikiArticle, searchWiki,
+  splitWikiAliases, WikiSource,
 } from './catalog';
 import {
   isWikiSlug, parseWikiFields, registerWikiStorage, requireWikiSlug, wikiLimits, WikiStore,
@@ -39,6 +40,7 @@ export class WikiIndexHandler extends WikiHandler {
       page_name: 'Wiki',
       categories: getWikiCategories(articles, settings),
       canEditWiki: this.canEditWiki,
+      splitWikiAliases,
       ...searchWiki(input, searching ? articles as WikiSource[] : [], settings),
     };
   }
@@ -47,14 +49,23 @@ export class WikiIndexHandler extends WikiHandler {
 export class WikiArticleHandler extends WikiHandler {
   async get() {
     const store = this.wikiStore;
-    const [source, articles, settings] = await Promise.all([
-      store.get(this.context.params.slug), store.list(), store.getDirectorySettings(),
+    const [{ source, updatedAt }, articles, settings] = await Promise.all([
+      store.getWithMeta(this.context.params.slug), store.list(), store.getDirectorySettings(),
     ]);
+    const categories = getWikiCategories(articles, settings);
     const article = renderWikiArticle({ ...source, category: settings.find(({ slug }) => slug === source.slug)?.category ?? source.category });
+    const { prevArticle, nextArticle } = getAdjacentWikiArticles(categories, source.slug);
     this.UiContext.extraTitleContent = article.title;
     this.response.template = 'wiki_main.html';
     this.response.body = {
-      page_name: 'Wiki', categories: getWikiCategories(articles, settings), article, canEditWiki: this.canEditWiki,
+      page_name: 'Wiki',
+      categories,
+      article,
+      prevArticle,
+      nextArticle,
+      updatedAtLabel: updatedAt ? updatedAt.toISOString().slice(0, 10) : '',
+      splitWikiAliases,
+      canEditWiki: this.canEditWiki,
     };
   }
 }
@@ -127,6 +138,16 @@ export class WikiEditHandler extends WikiEditorHandler {
   }
 }
 
+export class WikiDeleteHandler extends WikiEditorHandler {
+  async post() {
+    this.checkEditorPost(true);
+    const slug = this.context.params.slug;
+    if (!isWikiSlug(slug)) throw new NotFoundError();
+    await this.wikiStore.delete(slug);
+    this.response.redirect = this.url('wiki_main', { domainId: this.getWikiDomainId() });
+  }
+}
+
 export class WikiDirectoryHandler extends WikiEditorHandler {
   async get() {
     this.checkEditor();
@@ -156,5 +177,6 @@ export function registerWikiRoutes(ctx: Context) {
   ctx.Route('wiki_create', '/wiki/new', WikiCreateHandler);
   ctx.Route('wiki_directory', '/wiki/directory', WikiDirectoryHandler);
   ctx.Route('wiki_edit', '/wiki/:slug/edit', WikiEditHandler);
+  ctx.Route('wiki_delete', '/wiki/:slug/delete', WikiDeleteHandler);
   ctx.Route('wiki_article', '/wiki/:slug', WikiArticleHandler);
 }

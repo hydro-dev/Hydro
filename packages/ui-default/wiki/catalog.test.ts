@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { getBundledWikiSource, getWikiCategories, renderWikiArticle, searchWiki } from './catalog';
+import { getAdjacentWikiArticles, getBundledWikiSource, getWikiCategories, renderWikiArticle, searchWiki, splitWikiAliases } from './catalog';
 
 const sampleSlugs = ['binary-search', 'dsu', 'bfs', 'dijkstra'].filter((slug) => getBundledWikiSource(slug));
 
@@ -42,4 +42,35 @@ test('search bounds reflected input and ignores blank or repeated query paramete
   assert.deepEqual(searchWiki(' \n\t '), { query: '', results: [] });
   assert.deepEqual(searchWiki(['bfs', 'dsu']), { query: '', results: [] });
   assert.equal(searchWiki('a'.repeat(101)).query.length, 100);
+});
+
+test('splitWikiAliases normalizes separators and removes duplicates', () => {
+  assert.deepEqual(splitWikiAliases('DSU, union-find、并查集；DSU  连通性'), ['DSU', 'union-find', '并查集', '连通性']);
+  assert.deepEqual(splitWikiAliases(''), []);
+  assert.deepEqual(splitWikiAliases(undefined), []);
+});
+
+test('searchWiki matches custom article aliases and getAdjacentWikiArticles tracks reading order', () => {
+  const articles = [
+    { slug: 'kmp', title: 'KMP 字符串匹配', category: '字符串', summary: '线性时间前缀函数。', aliases: 'prefix function 前缀函数', markdown: '## 简介\n\nKMP。' },
+    { slug: 'trie', title: '字典树', category: '字符串', summary: '高效存储前缀集合。', aliases: 'Trie, prefix tree', markdown: '## 简介\n\nTrie。' },
+    { slug: 'seg', title: '线段树', category: '数据结构', summary: '区间修改与区间查询。', markdown: '## 简介\n\nSegment Tree。' },
+  ];
+  assert.deepEqual(searchWiki('prefix function', articles).results.map(({ slug }) => slug), ['kmp']);
+  assert.deepEqual(searchWiki('prefix tree', articles).results.map(({ slug }) => slug), ['trie']);
+
+  const categories = getWikiCategories(articles);
+  const first = getAdjacentWikiArticles(categories, 'kmp');
+  assert.equal(first.prevArticle, null);
+  assert.equal(first.nextArticle?.slug, 'trie');
+
+  const middle = getAdjacentWikiArticles(categories, 'trie');
+  assert.equal(middle.prevArticle?.slug, 'kmp');
+  assert.equal(middle.nextArticle?.slug, 'seg');
+
+  const last = getAdjacentWikiArticles(categories, 'seg');
+  assert.equal(last.prevArticle?.slug, 'trie');
+  assert.equal(last.nextArticle, null);
+
+  assert.deepEqual(getAdjacentWikiArticles(categories, 'missing'), { prevArticle: null, nextArticle: null });
 });

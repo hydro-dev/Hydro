@@ -3,7 +3,7 @@ import { CreateError, NotFoundError, UserFacingError, ValidationError } from 'hy
 import { getBundledWikiSource, getWikiDirectory, WikiDirectoryEntry, WikiLink, WikiSource } from './catalog';
 
 export const wikiLimits = {
-  slug: 64, title: 100, category: 50, summary: 240, markdown: 64 * 1024, order: 999999,
+  slug: 64, title: 100, category: 50, summary: 240, aliases: 160, markdown: 64 * 1024, order: 999999,
 };
 
 const reservedSlugs = new Set(['about', 'help', 'new', 'directory']);
@@ -45,16 +45,28 @@ function wikiLabel(name: 'title' | 'category' | 'summary', raw: unknown) {
   return value;
 }
 
+function optionalWikiAliases(raw: unknown) {
+  if (raw === undefined || raw === null) return undefined;
+  if (typeof raw !== 'string') throw new ValidationError('aliases');
+  if (/[\p{Cc}\p{Zl}\p{Zp}]/u.test(raw)) throw new ValidationError('aliases');
+  const value = raw.trim().replace(/\s+/g, ' ');
+  if (!value) return undefined;
+  if (value.length > wikiLimits.aliases) throw new ValidationError('aliases');
+  return value;
+}
+
 export function parseWikiFields(body: Record<string, unknown> | undefined) {
   const markdown = body?.markdown;
   if (typeof markdown !== 'string' || markdown.length > wikiLimits.markdown
     || Buffer.byteLength(markdown, 'utf8') > wikiLimits.markdown || !markdown.trim() || markdown.includes('\0')) {
     throw new ValidationError('Markdown');
   }
+  const aliases = optionalWikiAliases(body?.aliases);
   return {
     title: wikiLabel('title', body?.title),
     category: wikiLabel('category', body?.category),
     summary: wikiLabel('summary', body?.summary),
+    ...(aliases ? { aliases } : {}),
     markdown: markdown.replace(/\r\n?/g, '\n'),
   };
 }
@@ -99,7 +111,7 @@ export class WikiStore {
   async list(): Promise<WikiLink[]> {
     return await this.collection.find<WikiLink>(
       { domainId: this.domainId },
-      { projection: { _id: 0, slug: 1, title: 1, category: 1, summary: 1 }, sort: { slug: 1 } },
+      { projection: { _id: 0, slug: 1, title: 1, category: 1, summary: 1, aliases: 1 }, sort: { slug: 1 } },
     ).toArray();
   }
 
@@ -116,22 +128,29 @@ export class WikiStore {
   async searchSources(): Promise<WikiSource[]> {
     return await this.collection.find<WikiSource>(
       { domainId: this.domainId },
-      { projection: { _id: 0, slug: 1, title: 1, category: 1, summary: 1, markdown: 1 }, sort: { slug: 1 } },
+      { projection: { _id: 0, slug: 1, title: 1, category: 1, summary: 1, aliases: 1, markdown: 1 }, sort: { slug: 1 } },
     ).toArray();
   }
 
-  async get(slug: unknown): Promise<WikiSource> {
+  async getWithMeta(slug: unknown): Promise<{ source: WikiSource, updatedAt: Date | null }> {
     if (!isWikiSlug(slug)) throw new NotFoundError();
-    const stored = await this.collection.findOne<WikiSource>(
+    const stored = await this.collection.findOne<WikiSource & { updatedAt?: Date }>(
       { _id: this.id(slug) },
-      { projection: { _id: 0, slug: 1, title: 1, category: 1, summary: 1, markdown: 1 } },
+      { projection: { _id: 0, slug: 1, title: 1, category: 1, summary: 1, aliases: 1, markdown: 1, updatedAt: 1 } },
     );
     const source = stored ?? getBundledWikiSource(slug);
     if (!source) throw new NotFoundError();
     const {
-      title, category, summary, markdown,
+      title, category, summary, aliases, markdown,
     } = source;
-    return { slug, title, category, summary, markdown };
+    return {
+      source: aliases ? { slug, title, category, summary, aliases, markdown } : { slug, title, category, summary, markdown },
+      updatedAt: stored?.updatedAt ?? null,
+    };
+  }
+
+  async get(slug: unknown): Promise<WikiSource> {
+    return (await this.getWithMeta(slug)).source;
   }
 
   async create(article: WikiSource, uid: number) {
@@ -146,19 +165,31 @@ export class WikiStore {
     }
   }
 
-  async edit({ slug, ...fields }: WikiSource, uid: number) {
+  async edit({ slug, aliases, ...fields }: WikiSource, uid: number) {
+    const update: Record<string, unknown> = {
+      $set: { ...fields, ...(aliases ? { aliases } : {}), updatedAt: new Date(), updatedBy: uid },
+      $setOnInsert: { slug, domainId: this.domainId },
+    };
+    if (!aliases) update.$unset = { aliases: '' };
     const result = await this.collection.updateOne(
       { _id: this.id(slug) },
-      {
-        $set: { ...fields, updatedAt: new Date(), updatedBy: uid },
-        $setOnInsert: { slug, domainId: this.domainId },
-      },
+      update,
       { upsert: !!getBundledWikiSource(slug) },
     );
     if (!result.matchedCount && !result.upsertedCount) throw new NotFoundError();
     await this.directoryCollection.updateOne(
       { _id: this.domainId, 'entries.slug': slug },
       { $set: { 'entries.$.category': fields.category } },
+    );
+  }
+
+  async delete(slug: unknown) {
+    if (!isWikiSlug(slug)) throw new NotFoundError();
+    const result = await this.collection.deleteOne({ _id: this.id(slug) });
+    if (!result.deletedCount) throw new NotFoundError();
+    await this.directoryCollection.updateOne(
+      { _id: this.domainId },
+      { $pull: { entries: { slug } } },
     );
   }
 }
