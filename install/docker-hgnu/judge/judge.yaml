@@ -1,0 +1,7 @@
+hosts:
+  localhost:
+    type: hydro
+    server_url: http://oj-backend:8888/
+    uname: judge
+    password: examplepassword
+    detail: full

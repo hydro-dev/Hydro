@@ -75,3 +75,7 @@ install/docker/data/*
 install/docker/.env
 # 离线构建用的 sandbox 二进制（go-judge），体积大，不入库
 install/docker/judge/sandbox
+# HGNU 定制编排：运行时数据、compose 本地配置、sandbox 二进制都不入库
+install/docker-hgnu/data/*
+install/docker-hgnu/.env
+install/docker-hgnu/judge/sandbox

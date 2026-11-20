@@ -2,15 +2,15 @@
 #
 # 从本仓库源码构建 Hydro 后端镜像（内含已编译的前端静态资源）。
 #
-# 与 install/docker/backend/Dockerfile 的区别：
+# 与 install/docker-hgnu/backend/Dockerfile 的区别：
 #   - 上面那个从 npm 安装发布版 hydrooj / @hydrooj/ui-default，不含本仓库的定制代码
 #   - 这个用仓库源码 + 前端 production 构建产物，镜像里就是当前 commit 的真实代码
 #
 # 构建（上下文必须是仓库根目录，否则 COPY 不到 packages/、framework/）：
-#   docker build -f install/docker/source/Dockerfile -t hgnuoj-backend:local .
+#   docker build -f install/docker-hgnu/source/Dockerfile -t hgnuoj-backend:local .
 #
 # 国内网络可以换源：
-#   docker build -f install/docker/source/Dockerfile \
+#   docker build -f install/docker-hgnu/source/Dockerfile \
 #     --build-arg NPM_REGISTRY=https://registry.npmmirror.com \
 #     --build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn \
 #     -t hgnuoj-backend:local .
@@ -100,8 +100,8 @@ WORKDIR /app
 # 运行时代码由 @hydrooj/register 用 esbuild 直接从 TS 源码加载，不需要 tsc 产物。
 COPY --from=builder /app /app
 
-# 沿用 install/docker 的启动脚本（初始化 addon.json / config.json / 系统测评账号并启动 pm2）
-COPY --from=builder /app/install/docker/backend/entrypoint.sh /root/entrypoint.sh
+# 沿用 install/docker-hgnu 的启动脚本（初始化 addon.json / config.json / 系统测评账号并启动 pm2）
+COPY --from=builder /app/install/docker-hgnu/backend/entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
 
 EXPOSE 8888
