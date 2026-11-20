@@ -6,7 +6,7 @@ import { Context } from '../context';
 import {
     Content, ContestClarificationDoc, ContestPrintDoc, ContestStatusDoc,
     DiscussionDoc, DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
-    Tdoc, TrainingDoc, TrainingStatusDoc,
+    RecordRejudgeDoc, Tdoc, TrainingDoc, TrainingStatusDoc,
 } from '../interface';
 import bus from '../service/bus';
 import db from '../service/db';
@@ -29,6 +29,7 @@ export const TYPE_CONTEST = 30 as const;
 export const TYPE_CONTEST_CLARIFICATION = 31 as const;
 export const TYPE_CONTEST_PRINT = 32 as const;
 export const TYPE_TRAINING = 40 as const;
+export const TYPE_REJUDGE = 50 as const;
 
 export interface DocType {
     [TYPE_PROBLEM]: ProblemDoc;
@@ -41,6 +42,7 @@ export interface DocType {
     [TYPE_CONTEST_PRINT]: ContestPrintDoc;
     [TYPE_CONTEST_CLARIFICATION]: ContestClarificationDoc;
     [TYPE_TRAINING]: TrainingDoc;
+    [TYPE_REJUDGE]: RecordRejudgeDoc;
 }
 
 export interface DocStatusType {
@@ -497,5 +499,6 @@ global.Hydro.model.document = {
     TYPE_PROBLEM,
     TYPE_PROBLEM_LIST,
     TYPE_PROBLEM_SOLUTION,
+    TYPE_REJUDGE,
     TYPE_TRAINING,
 };

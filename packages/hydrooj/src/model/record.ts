@@ -7,11 +7,12 @@ import {
 import { ProblemConfigFile, STATUS_TEXTS } from '@hydrooj/common';
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
-import { JudgeMeta, RecordDoc } from '../interface';
+import { JudgeMeta, RecordDoc, RecordRejudgeDoc } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
+import * as document from './document';
 import DomainModel from './domain';
 import MessageModel from './message';
 import problem from './problem';
@@ -22,6 +23,7 @@ export default class RecordModel {
     static coll = db.collection('record');
     static collStat = db.collection('record.stat');
     static collHistory = db.collection('record.history');
+    static collRejudge = db.collection('record.rejudge');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
@@ -280,6 +282,32 @@ export default class RecordModel {
         for (const rdoc of rdocs) r[rdoc._id.toHexString()] = rdoc;
         return r;
     }
+
+    static getMultiRejudgeTask(domainId: string | undefined, query: Filter<RecordRejudgeDoc> = {}) {
+        const filter: any = { docType: document.TYPE_REJUDGE, ...query };
+        if (domainId) filter.domainId = domainId;
+        return document.coll.find(filter).sort({ _id: -1 });
+    }
+
+    static async getRejudgeTask(domainId: string, _id: ObjectId) {
+        return document.get(domainId, document.TYPE_REJUDGE, _id);
+    }
+
+    static async addRejudgeTask(domainId: string, doc: Partial<RecordRejudgeDoc>) {
+        return await document.add(domainId, '', doc.owner, document.TYPE_REJUDGE, null, null, null, doc);
+    }
+
+    static async pushRejudgeResult(rrid: ObjectId, newStatus: number, newScore: number, newRev) {
+        await RecordModel.collRejudge.updateOne({ rrid }, {
+            $set: {
+                newStatus,
+                newScore,
+                newRev,
+            },
+        }, {
+            upsert: true,
+        });
+    }
 }
 
 export async function apply(ctx: Context) {
@@ -342,6 +370,10 @@ export async function apply(ctx: Context) {
         db.ensureIndexes(
             RecordModel.collHistory,
             { key: { rid: 1, _id: -1 }, name: 'basic' },
+        ),
+        db.ensureIndexes(
+            RecordModel.collRejudge,
+            { key: { domainId: 1, rrid: 1, rid: 1 }, name: 'basic' },
         ),
     ]);
 }
