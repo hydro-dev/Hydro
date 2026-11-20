@@ -5,31 +5,152 @@
   <section class="section algo-wiki__reader algo-wiki__editor">
     <p class="algo-wiki__eyebrow"><a href="{{ url('wiki_main') }}">算法 Wiki</a></p>
     <h1>{{ '编辑文章' if article else '新建文章' }}</h1>
-    <form method="post" action="{{ url('wiki_edit', slug=article.slug) if article else url('wiki_create') }}">
+    <form id="wiki-editor-form" method="post" action="{{ url('wiki_edit', slug=article.slug) if article else url('wiki_create') }}">
       {% if article %}
-        <p>文章地址：<a href="{{ url('wiki_article', slug=article.slug) }}">{{ article.slug }}</a></p>
+        <p class="algo-wiki__slug-note">文章地址：<a href="{{ url('wiki_article', slug=article.slug) }}">{{ article.slug }}</a></p>
       {% else %}
         <label for="wiki-slug">文章地址</label>
         <input class="textbox" id="wiki-slug" name="slug" required maxlength="{{ limits.slug }}"
           pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="two-pointers" aria-describedby="wiki-slug-hint">
-        <p class="algo-wiki__field-hint" id="wiki-slug-hint">使用小写英文字母、数字或连字符。保存后地址固定。</p>
+        <p class="algo-wiki__field-hint" id="wiki-slug-hint">使用小写英文字母、数字或连字符（如 <code>dijkstra</code>、<code>segment-tree</code>），保存后地址固定。</p>
       {% endif %}
-      <label for="wiki-title">标题</label>
-      <input class="textbox" id="wiki-title" name="title" value="{{ article.title }}" required maxlength="{{ limits.title }}">
-      <label for="wiki-category">分类</label>
-      <input class="textbox" id="wiki-category" name="category" value="{{ article.category }}" required maxlength="{{ limits.category }}">
+
+      <div class="algo-wiki__editor-meta">
+        <div>
+          <label for="wiki-title">标题</label>
+          <input class="textbox" id="wiki-title" name="title" value="{{ article.title }}" required maxlength="{{ limits.title }}" placeholder="例如：并查集（DSU）">
+        </div>
+        <div>
+          <label for="wiki-category">分类</label>
+          <input class="textbox" id="wiki-category" name="category" value="{{ article.category }}" required maxlength="{{ limits.category }}" placeholder="例如：基础算法 / 数据结构 / 图论">
+        </div>
+      </div>
+
       <label for="wiki-summary">摘要</label>
-      <input class="textbox" id="wiki-summary" name="summary" value="{{ article.summary }}" required maxlength="{{ limits.summary }}">
-      <label for="wiki-markdown">Markdown 正文</label>
-      <p class="algo-wiki__field-hint" id="wiki-markdown-hint">正文最多 64 KiB。用 ##、### 创建目录，用三反引号标记代码块。</p>
-      <textarea class="textbox algo-wiki__markdown" id="wiki-markdown" name="markdown" required maxlength="{{ limits.markdown }}"
-        spellcheck="false" aria-describedby="wiki-markdown-hint">
-{{ article.markdown }}</textarea>
+      <input class="textbox" id="wiki-summary" name="summary" value="{{ article.summary }}" required maxlength="{{ limits.summary }}" placeholder="一句话概括算法用途、适用场景与核心复杂度">
+
+      <label for="wiki-aliases">搜索关键词 / 别名（可选）</label>
+      <input class="textbox" id="wiki-aliases" name="aliases" value="{{ article.aliases|default('') }}" maxlength="{{ limits.aliases }}" placeholder="例如：DSU, union-find, 并查集, 连通性（空格或逗号分隔）">
+
+      <div class="algo-wiki__markdown-bar">
+        <label for="wiki-markdown">Markdown 正文</label>
+        <button class="button" type="button" id="wiki-insert-template">填充算法文章模板</button>
+      </div>
+      <p class="algo-wiki__field-hint" id="wiki-markdown-hint">正文最多 64 KiB。支持实时预览、<code>$...$</code> / <code>$$...$$</code> 数学公式、表格演示执行过程、<code>##</code>/<code>###</code> 自动生成右侧目录，以及 <code>```cpp</code> 代码块（阅读页自带一键复制）。</p>
+      <div class="algo-wiki__editor-field">
+        <textarea class="textbox algo-wiki__markdown" id="wiki-markdown" name="markdown" data-markdown maxlength="{{ limits.markdown }}"
+          spellcheck="false" aria-describedby="wiki-markdown-hint">{{ article.markdown }}</textarea>
+      </div>
+
       <div class="algo-wiki__editor-actions">
         <button class="primary button" type="submit">保存文章</button>
-        <a href="{{ url('wiki_article', slug=article.slug) if article else url('wiki_main') }}">取消</a>
+        <a class="button" href="{{ url('wiki_article', slug=article.slug) if article else url('wiki_main') }}">取消</a>
       </div>
     </form>
+
+    {% if article %}
+      <form class="algo-wiki__delete-form" method="post" action="{{ url('wiki_delete', slug=article.slug) }}"
+        data-title="{{ article.title }}" onsubmit="return confirm('确认删除文章《' + (this.dataset.title || '') + '》吗？删除后无法恢复。');">
+        <button class="button algo-wiki__danger" type="submit">删除文章</button>
+      </form>
+    {% endif %}
   </section>
 </div>
+
+<script>
+(function () {
+  var template = [
+    '## 算法简介',
+    '',
+    '简述该算法解决什么问题、核心思想以及适用条件。',
+    '',
+    '- 适用场景：',
+    '- 时间复杂度：$O()$',
+    '- 空间复杂度：$O()$',
+    '',
+    '## 执行过程',
+    '',
+    '按步骤拆解算法执行过程，可以配合表格或具体样例逐步模拟：',
+    '',
+    '1. 初始化：',
+    '2. 主循环 / 状态转移：',
+    '3. 终止条件与答案提取：',
+    '',
+    '| 步骤 | 当前状态 | 关键操作 |',
+    '| --- | --- | --- |',
+    '| 1 | | |',
+    '| 2 | | |',
+    '',
+    '## C++ 代码模板',
+    '',
+    '```cpp',
+    '#include <bits/stdc++.h>',
+    'using namespace std;',
+    '',
+    'int main() {',
+    '    ios::sync_with_stdio(false);',
+    '    cin.tie(nullptr);',
+    '',
+    '    return 0;',
+    '}',
+    '```',
+    '',
+    '## 易错点与注意事项',
+    '',
+    '- 边界条件（空输入、下标起点、数据范围与 `long long` 溢出）：',
+    '- 常见调试与优化提示：',
+    ''
+  ].join('\n');
+
+  var form = document.getElementById('wiki-editor-form');
+  var textarea = document.getElementById('wiki-markdown');
+  var btn = document.getElementById('wiki-insert-template');
+  if (!form || !textarea || !btn) return;
+
+  function getEditorInstance() {
+    var $ = window.jQuery || window.$;
+    if (!$) return null;
+    return $(textarea).data('vjEditorInstance') || null;
+  }
+
+  function getMarkdownValue() {
+    var inst = getEditorInstance();
+    if (inst && typeof inst.value === 'function') {
+      try {
+        var v = inst.value();
+        if (typeof v === 'string') return v;
+      } catch (e) {}
+    }
+    return textarea.value || '';
+  }
+
+  function setMarkdownValue(next) {
+    textarea.value = next;
+    var $ = window.jQuery || window.$;
+    if ($) $(textarea).text(next);
+    var inst = getEditorInstance();
+    if (inst && typeof inst.value === 'function') {
+      try {
+        inst.valueCache = next;
+        inst.value(next);
+      } catch (e) {}
+    }
+  }
+
+  btn.addEventListener('click', function () {
+    var current = getMarkdownValue();
+    if (current.trim() && !window.confirm('当前正文已有内容，确定用标准算法模板替换吗？')) return;
+    setMarkdownValue(template);
+  });
+
+  form.addEventListener('submit', function (e) {
+    var current = getMarkdownValue();
+    textarea.value = current;
+    if (!current.trim()) {
+      e.preventDefault();
+      window.alert('请填写 Markdown 正文内容后再保存。');
+    }
+  });
+})();
+</script>
 {% endblock %}

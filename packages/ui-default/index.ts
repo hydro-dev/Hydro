@@ -225,7 +225,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
   registerWikiRoutes(ctx);
-  ctx.injectUI('Nav', 'wiki_main', { prefix: 'Wiki', displayName: 'Wiki', before: 'homework_main' });
+  ctx.injectUI('Nav', 'wiki_main', { prefix: 'Wiki', displayName: 'Wiki', before: 'domain_dashboard' });
   ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
   ctx.Route('set_legacy', '/legacy', LegacyModeHandler);
   ctx.Route('markdown', '/markdown', MarkdownHandler);
