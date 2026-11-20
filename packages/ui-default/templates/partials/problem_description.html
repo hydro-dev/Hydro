@@ -4,7 +4,7 @@
     <div class="section__tab-header-wrapper">
       <ul class="section__tab-header flex-row">
         {% for k in stmtLangs %}
-        <a class="section__tab-header-item {{'tab--active' if activeLang == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
+        <a class="section__tab-header-item {{'tab--active' if activeLang == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}{% if tdoc %}&tid={{tdoc.docId}}{% endif %}">
           {{ handler.ctx.i18n.get('__langname', k) or _('Unknown language') }}
         </a>
         {% endfor %}
@@ -17,7 +17,7 @@
     <div class="section__tab-header-wrapper">
       <ul class="section__tab-header flex-row">
         {% for f in stmtFiles %}
-        <a class="section__tab-header-item statement-file-tab {{'tab--active' if (handler.request.query.file or stmtFiles[0]) == f }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{activeLang}}&file={{ f|urlencode }}">
+        <a class="section__tab-header-item statement-file-tab {{'tab--active' if (handler.request.query.file or stmtFiles[0]) == f }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{activeLang}}&file={{ f|urlencode }}{% if tdoc %}&tid={{tdoc.docId}}{% endif %}">
           {{ f }}
         </a>
         {% endfor %}
