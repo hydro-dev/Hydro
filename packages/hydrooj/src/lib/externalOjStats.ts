@@ -23,8 +23,11 @@ export interface ExternalDailySnapshot {
 }
 
 export function externalSyncRound(at: Date) {
-    const today = Date.parse(`${beijingDay(at)}T21:00:00+08:00`);
-    return new Date(today <= at.getTime() ? today : today - DAY);
+    return new Date(`${beijingDay(at)}T00:00:00+08:00`);
+}
+
+export function previousBeijingDayStart(round: Date) {
+    return new Date(round.getTime() - DAY);
 }
 
 export function nextBeijingSync(at: Date) {

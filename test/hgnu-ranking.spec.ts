@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
-import { Db, MongoClient } from 'mongodb';
+import { Db, MongoClient, ObjectId } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { after, before, test } from 'node:test';
 import nunjucks from 'nunjucks';
-import { PRIV } from '@hydrooj/common';
+import { PRIV, STATUS } from '@hydrooj/common';
 import {
     EXTERNAL_RANKING_PLATFORMS, getDailyExternalRanking, getExternalRanking, getGradeOptions, getGradeRpRanking,
 } from '../packages/hydrooj/src/model/ranking';
@@ -254,7 +254,7 @@ test('one ranking table includes sortable daily practice without a separate boar
     assert.equal([...html.matchAll(/<table\b/g)].length, 1);
     assert.equal([...html.matchAll(/<th\b/g)].length, 13);
     assert.doesNotMatch(html, /每日增量榜|id="daily-ranking"|dailyPage=|ranking-daily-table/);
-    assert.match(html, />每日做题<\/a>/);
+    assert.match(html, />昨日做题<\/a>/);
     assert.match(html, />其他<\/a>/);
     assert.doesNotMatch(html, /未知年级/);
     assert.match(html, /计算机2201 排序甲/);
@@ -273,7 +273,8 @@ test('one ranking table includes sortable daily practice without a separate boar
     assert.match(html, /5<span class="ranking-partial"/);
     assert.match(html, /confirmed-zero[\s\S]*?class="col--daily">\s*0\s*<\/td>/);
     assert.match(html, /<span class="ranking-pending"[^>]*title="[^"]*待更新[^"]*"[^>]*>0<\/span>/);
-    assert.match(html, /21:00/);
+    assert.match(html, /昨日做题（2026-11-20）/);
+    assert.match(html, /00:00/);
     const pageLinks = [...html.matchAll(/href="([^"]+)"/g)]
         .map(([, href]) => new URL(href.replaceAll('&amp;', '&'), 'http://ranking.test'));
     assert.ok(pageLinks.some((link) => link.searchParams.get('page') === '4'
@@ -285,7 +286,7 @@ test('one ranking table includes sortable daily practice without a separate boar
 
 test('daily increments are scoped by grade, sorted before paging and distinguish missing from zero', async () => {
     const domainId = 'daily-fixture';
-    const round = new Date('2026-11-18T13:00:00Z');
+    const round = new Date('2026-11-18T16:00:00Z');
     const previous = new Date(+round - 86_400_000);
     const uids = Array.from({ length: 8 }, (_, i) => 4000 + i);
     await Promise.all([
@@ -295,15 +296,15 @@ test('daily increments are scoped by grade, sorted before paging and distinguish
             _id: uid, uname: `daily-${uid}`, priv: uid === 4006 ? 0 : PRIV.PRIV_USER_PROFILE,
         }))),
         bindings().insertMany([
-            { uid: 4000, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 100, increment: 2 } },
-            { uid: 4000, platform: 'atcoder', lastSuccessAt: round, dailySnapshot: { round, total: 70, increment: 3 } },
+            { uid: 4000, platform: 'nowcoder', lastSuccessAt: round, dailySnapshot: { round, total: 100, increment: 2 } },
+            { uid: 4000, platform: 'leetcode', lastSuccessAt: round, dailySnapshot: { round, total: 70, increment: 3 } },
             { uid: 4001, platform: 'luogu', lastSuccessAt: round, dailySnapshot: { round, total: 10, increment: 0 } },
             { uid: 4002, platform: 'nowcoder', lastSuccessAt: round, dailySnapshot: { round, total: 20, increment: -1 } },
             { uid: 4003, platform: 'leetcode', lastSuccessAt: round, dailySnapshot: { round, total: 90, increment: null } },
-            { uid: 4005, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 999, increment: 999 } },
-            { uid: 4006, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 999, increment: 999 } },
-            { uid: 4007, platform: 'codeforces', lastSuccessAt: round, dailySnapshot: { round, total: 90, increment: 4 } },
-            { uid: 4007, platform: 'atcoder', lastSuccessAt: previous, dailySnapshot: { round: previous, total: 70, increment: 60 } },
+            { uid: 4005, platform: 'nowcoder', lastSuccessAt: round, dailySnapshot: { round, total: 999, increment: 999 } },
+            { uid: 4006, platform: 'nowcoder', lastSuccessAt: round, dailySnapshot: { round, total: 999, increment: 999 } },
+            { uid: 4007, platform: 'nowcoder', lastSuccessAt: round, dailySnapshot: { round, total: 90, increment: 4 } },
+            { uid: 4007, platform: 'leetcode', lastSuccessAt: previous, dailySnapshot: { round: previous, total: 70, increment: 60 } },
         ]),
     ]);
     const first = await getDailyExternalRanking(rankingDb, domainId, '22', 1, 2, round);
@@ -331,7 +332,78 @@ test('daily increments are scoped by grade, sorted before paging and distinguish
     assert.equal(noMembers.count, 0);
     assert.equal(noMembers.ready, false);
     assert.deepEqual(noMembers.rows, []);
-    await bindings().deleteOne({ uid: 4000, platform: 'atcoder' });
+    await bindings().deleteOne({ uid: 4000, platform: 'leetcode' });
     const unbound = await getDailyExternalRanking(rankingDb, domainId, '22', 1, 10, round);
     assert.equal(unbound.rows.find(({ uid }) => uid === 4000).total, 2);
+});
+
+test('daily practice combines yesterday’s Beijing first ACs with external natural-day solves', async () => {
+    const domainId = 'daily-local-fixture';
+    const refNow = new Date('2026-11-21T08:15:00Z'); // 2026-11-21 16:15:00+08:00
+    const round = new Date('2026-11-20T16:00:00Z'); // 2026-11-21 00:00:00+08:00
+    const beforeYesterday = new Date('2026-11-19T15:59:00Z'); // 2026-11-19 23:59:00+08:00
+    const yesterdayEarly = new Date('2026-11-19T16:00:00Z'); // 2026-11-20 00:00:00+08:00
+    const yesterdayLater = new Date('2026-11-20T02:00:00Z'); // 2026-11-20 10:00:00+08:00
+    const uids = [5000, 5001, 5002];
+    let seq = 1;
+    const oid = (at: Date) => new ObjectId(Math.floor(at.getTime() / 1000).toString(16).padStart(8, '0') + (seq++).toString(16).padStart(16, '0'));
+    await Promise.all([
+        rankingDb.collection('domain.user').insertMany(uids.map((uid) => ({ uid, domainId, join: true, rp: 0 }))),
+        rankingDb.collection('stu.info').insertMany(uids.map((uid) => ({ _id: uid, class: '计算机2401' }))),
+        db.collection<{ _id: number, uname: string, priv: number }>('ranking.test.user').insertMany(uids.map((uid) => ({
+            _id: uid, uname: `local-${uid}`, priv: PRIV.PRIV_USER_PROFILE,
+        }))),
+        rankingDb.collection('record').insertMany([
+            // 5000: no external bindings; 2 distinct first ACs yesterday (pid 101 twice, pid 102 once), plus pid 100 already AC'd earlier.
+            { _id: oid(beforeYesterday), domainId, uid: 5000, pid: 100, status: STATUS.STATUS_ACCEPTED } as any,
+            { _id: oid(yesterdayEarly), domainId, uid: 5000, pid: 100, status: STATUS.STATUS_ACCEPTED } as any,
+            { _id: oid(yesterdayEarly), domainId, uid: 5000, pid: 101, status: STATUS.STATUS_ACCEPTED } as any,
+            { _id: oid(yesterdayLater), domainId, uid: 5000, pid: 101, status: STATUS.STATUS_ACCEPTED } as any,
+            { _id: oid(yesterdayLater), domainId, uid: 5000, pid: 102, status: STATUS.STATUS_ACCEPTED } as any,
+            { _id: oid(round), domainId, uid: 5000, pid: 104, status: STATUS.STATUS_ACCEPTED } as any,
+            { _id: oid(yesterdayLater), domainId, uid: 5000, pid: 105, status: STATUS.STATUS_ACCEPTED, judgeAt: round } as any,
+            { _id: oid(beforeYesterday), domainId, uid: 5000, pid: 106, status: STATUS.STATUS_ACCEPTED, judgeAt: yesterdayEarly } as any,
+            // Non-AC yesterday for pid 103 should not count.
+            { _id: oid(yesterdayLater), domainId, uid: 5000, pid: 103, status: STATUS.STATUS_WRONG_ANSWER } as any,
+            // 5001: 1 local first AC yesterday + 2 CF solves yesterday (outside dates ignored).
+            { _id: oid(yesterdayEarly), domainId, uid: 5001, pid: 201, status: STATUS.STATUS_ACCEPTED } as any,
+        ]),
+        bindings().insertMany([
+            {
+                uid: 5001,
+                platform: 'codeforces',
+                lastSuccessAt: refNow,
+                solves: [
+                    { problem: '1A', at: beforeYesterday },
+                    { problem: '2A', at: yesterdayEarly },
+                    { problem: '3A', at: yesterdayLater },
+                    { problem: '4A', at: round },
+                ],
+                dailySnapshot: { round, total: 10, increment: null },
+            },
+            { uid: 5001, platform: 'nowcoder', lastSuccessAt: round, dailySnapshot: { round, total: 12, increment: 4 } },
+            {
+                uid: 5002,
+                platform: 'luogu',
+                lastSuccessAt: round,
+                dailySnapshot: { round, total: 5, increment: null },
+            },
+        ]),
+    ]);
+    const all = await getDailyExternalRanking(rankingDb, domainId, '24', 1, 10, round);
+    assert.equal(all.allCount, 3);
+    assert.equal(all.syncedCount, 2);
+    assert.deepEqual(
+        all.rows.map(({ uid, total, partial }) => [uid, total, partial]),
+        [
+            [5001, 7, false],
+            [5000, 3, false],
+            [5002, null, true],
+        ],
+    );
+    const synced = await getDailyExternalRanking(rankingDb, domainId, '24', 1, 10, round, { scope: 'synced' });
+    assert.equal(synced.count, 2);
+    assert.deepEqual(synced.rows.map(({ uid, total }) => [uid, total]), [[5001, 7], [5000, 3]]);
+    const nextDay = await getDailyExternalRanking(rankingDb, domainId, '24', 1, 10, new Date(+round + 86_400_000), { uids: [5000] });
+    assert.equal(nextDay.rows[0].total, 2);
 });

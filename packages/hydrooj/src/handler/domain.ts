@@ -9,7 +9,7 @@ import {
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
-import { beijingDay, externalSyncRound } from '../lib/externalOjStats';
+import { beijingDay, externalSyncRound, previousBeijingDayStart } from '../lib/externalOjStats';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
@@ -86,7 +86,7 @@ class DomainRankHandler extends Handler {
             externalPlatforms: EXTERNAL_RANKING_PLATFORMS,
             externalAllCount: 'allCount' in main ? main.allCount : undefined,
             externalSyncedCount: 'syncedCount' in main ? main.syncedCount : undefined,
-            dailyRound: beijingDay(round),
+            dailyRound: beijingDay(previousBeijingDayStart(round)),
         };
     }
 }

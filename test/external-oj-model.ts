@@ -4,7 +4,7 @@ import { EXTERNAL_PLATFORMS, ExternalOjRateLimit } from '../packages/hydrooj/src
 import { nextBeijingSync } from '../packages/hydrooj/src/lib/externalOjStats';
 import {
     acquireExternalOjQueue, bindExternalOj, claimExternalOjRequest, ExternalOjBudgetExhausted,
-    getExternalOjBindings, releaseExternalOjQueue, syncDueExternalOj, unbindExternalOj,
+    getExternalOjBindings, releaseExternalOjQueue, syncDueExternalOj, syncExternalOjBinding, unbindExternalOj,
 } from '../packages/hydrooj/src/model/externalOj';
 import db from '../packages/hydrooj/src/service/db';
 
@@ -150,6 +150,85 @@ export async function run() {
     await bindExternalOj(nightlyUid, 'atcoder', 'NightlyDelta2');
     assert.equal((await getExternalOjBindings(nightlyUid))[0].dailySnapshot, undefined);
     await unbindExternalOj(nightlyUid, 'atcoder');
+
+    const manualUid = 900_004;
+    await db.collection('external.oj.binding').deleteMany({ uid: manualUid });
+    assert.deepEqual(await syncExternalOjBinding(manualUid, 'luogu'), { status: 'unbound' });
+    await bindExternalOj(manualUid, 'luogu', '12345');
+    const manualBinding = () => db.collection('external.oj.binding').findOne({ uid: manualUid, platform: 'luogu' });
+    const scheduledAt = (await manualBinding()).syncAfter;
+    const t0 = new Date(scheduledAt.getTime() - 1);
+    assert.deepEqual(
+        await syncExternalOjBinding(manualUid, 'luogu', {
+            now: t0,
+            cooldownMs: 0,
+            fetchStats: async () => {
+                await new Promise((resolve) => setTimeout(resolve, 15));
+                return { total: 42 };
+            },
+        }),
+        { status: 'success' },
+    );
+    const [manualSynced] = await getExternalOjBindings(manualUid);
+    assert.equal(manualSynced.total, 42);
+    assert.ok(manualSynced.lastSuccessAt >= scheduledAt);
+    assert.equal(manualSynced.dailySnapshot, undefined);
+    assert.deepEqual((await manualBinding()).syncAfter, scheduledAt);
+
+    let cooldownCalled = false;
+    const cooldownResult = await syncExternalOjBinding(manualUid, 'luogu', {
+        now: new Date(manualSynced.lastSuccessAt.getTime() + 10_000),
+        cooldownMs: 60_000,
+        fetchStats: async () => {
+            cooldownCalled = true;
+            return { total: 99 };
+        },
+    });
+    assert.equal(cooldownResult.status, 'cooldown');
+    assert.equal(cooldownResult.retryAfterSec, 50);
+    assert.equal(cooldownCalled, false);
+
+    assert.deepEqual(
+        await syncExternalOjBinding(manualUid, 'luogu', {
+            now: new Date(t0.getTime() + 90_000),
+            cooldownMs: 60_000,
+            fetchStats: async () => ({ total: 45 }),
+        }),
+        { status: 'success' },
+    );
+    const [manualUpdated] = await getExternalOjBindings(manualUid);
+    assert.equal(manualUpdated.total, 45);
+    assert.equal(manualUpdated.dailySnapshot, undefined);
+    assert.deepEqual((await manualBinding()).syncAfter, scheduledAt);
+    assert.equal(await syncDueExternalOj('luogu', new Date(t0.getTime() + 91_000), async () => ({ total: 45 })), true);
+    assert.equal((await manualBinding()).dailySnapshot.total, 45);
+
+    assert.deepEqual(
+        await syncExternalOjBinding(manualUid, 'luogu', {
+            now: new Date(t0.getTime() + 155_000),
+            cooldownMs: 60_000,
+            fetchStats: async () => { throw new Error('upstream down'); },
+        }),
+        { status: 'failed' },
+    );
+    assert.equal((await getExternalOjBindings(manualUid))[0].total, 45);
+
+    assert.deepEqual(
+        await syncExternalOjBinding(manualUid, 'luogu', {
+            now: new Date(t0.getTime() + 220_000),
+            cooldownMs: 60_000,
+            fetchStats: async () => { throw new ExternalOjRateLimit(120_000); },
+        }),
+        { status: 'paused', retryAfterSec: 120 },
+    );
+    const pausedAgain = await syncExternalOjBinding(manualUid, 'luogu', {
+        now: new Date(t0.getTime() + 230_000),
+        cooldownMs: 0,
+        fetchStats: async () => ({ total: 50 }),
+    });
+    assert.equal(pausedAgain.status, 'paused');
+    await db.collection('external.oj.pause').deleteOne({ _id: 'luogu' });
+    await unbindExternalOj(manualUid, 'luogu');
 
     if (process.env.HGNUOJ_EXTERNAL_SCALE === '1') await verifyScale();
     return 'HGNU_EXTERNAL_MODEL_OK';

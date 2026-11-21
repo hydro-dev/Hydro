@@ -3,7 +3,8 @@
 <div class="section external-oj-accounts">
   <div class="section__header"><h1 class="section__title">外站账号</h1></div>
   <div class="section__body typo">
-    <p>绑定公开账号后，累计通过题数会显示在个人页，并计入外站刷题榜。北京时间每天 21:00 开始同步，不需要外站密码或 Cookie。</p>
+    <p><strong>怎么填外站账号？</strong> 打开对应站点的个人主页，填写网址路径的最后一段。Codeforces、AtCoder 和力扣中国站填用户名，牛客和洛谷填数字 ID。也可以直接粘贴个人主页的完整链接，无需提供外站密码或 Cookie。</p>
+    <p>绑定后会立即同步一次。之后可点击「立即刷新」，同一账号每分钟最多刷新一次。通过题数会显示在本站个人页和排行榜。系统每天北京时间 00:00 自动同步一次。</p>
     {% for account in accounts %}
       {% set attempted = feedback and feedback.platform == account.platform %}
       <form method="post" action="{{ url('home_external_oj') }}" class="external-oj-account">
@@ -12,7 +13,7 @@
           <label for="external-{{ account.platform }}"><strong>{{ account.label }}</strong></label>
           <input class="textbox" type="text" maxlength="256" autocomplete="off" name="handle" id="external-{{ account.platform }}"
                  placeholder="{{ '数字 UID 或个人主页链接' if account.platform in ['luogu', 'nowcoder'] else '用户名或个人主页链接' }}"
-                 value="{{ feedback.input if attempted else account.handle | default('') }}"
+                 value="{{ feedback.input if attempted and feedback.input is defined else account.handle | default('') }}"
                  {% if attempted %} aria-invalid="true" aria-describedby="external-{{ account.platform }}-error" autofocus{% endif %}>
           {% if attempted %}<p class="external-oj-account__error" id="external-{{ account.platform }}-error" role="alert">{{ feedback.message }}</p>{% endif %}
         </div>
@@ -22,6 +23,7 @@
         <div class="external-oj-account__actions">
           <button class="rounded primary button" name="operation" value="bind">{{ '保存修改' if account.handle else '绑定' }}</button>
           {% if account.handle %}
+            <button class="rounded button" name="operation" value="refresh">立即刷新</button>
             <button class="rounded button" name="operation" value="unbind">解绑 {{ account.handle }}</button>
           {% endif %}
         </div>
