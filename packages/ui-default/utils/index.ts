@@ -27,7 +27,7 @@ async function writeDomainInfoCache(cache: DomainInfoCache) {
 }
 
 async function loadDomainInfo() {
-  let cached: DomainInfoCache | null = null;
+  let cached: DomainInfoCache | null = UiContext.domain;
   try {
     cached = await readDomainInfoCache(UiContext.domainId);
   } catch (e) { }
