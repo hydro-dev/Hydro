@@ -29,6 +29,16 @@
     th { text-align: center; }
     td.unattempted, td.empty { background-color: transparent !important; }
     #app main { overflow-y: auto; overflow-x: hidden; }
+    #app img[alt="badge"], #app img[alt="team badge"] {
+        width: 4rem;
+        height: 4rem;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+    #app td img[alt="badge"] { width: 2rem; height: 2rem; }
+    #app img[alt="team badge"] { width: 3rem; height: 3rem; }
 </style>
 <script type="module" crossorigin src="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ js }}.js"></script>
 <link rel="stylesheet" crossorigin href="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ css }}.css">
