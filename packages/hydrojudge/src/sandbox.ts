@@ -184,7 +184,9 @@ export async function runPiped(
     } catch (e) {
         if (e instanceof FormatError || e instanceof SystemError) throw e;
         console.error(e);
-        throw new SystemError('Sandbox Error', [e]);
+        // Judge messages are persisted in MongoDB. HTTP errors may contain circular references.
+        const detail = e instanceof Error ? e.message.slice(0, 512) : 'Unknown sandbox failure';
+        throw new SystemError('Sandbox Error', [detail]);
     }
     return res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[];
 }
