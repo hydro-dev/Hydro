@@ -4,10 +4,10 @@ import {
     beijingDay, buildDailyActivity, buildExternalDailySnapshot, externalSyncRound, firstPasses, nextBeijingSync, syncState,
 } from '../packages/hydrooj/src/lib/externalOjStats';
 
-test('Beijing day and next 21:00 refresh use UTC+08 independently of host timezone', () => {
+test('Beijing day and next 00:00 refresh use UTC+08 independently of host timezone', () => {
     assert.equal(beijingDay(new Date('2026-11-18T16:00:00Z')), '2026-11-19');
-    assert.equal(nextBeijingSync(new Date('2026-11-18T12:59:59Z')).toISOString(), '2026-11-18T13:00:00.000Z');
-    assert.equal(nextBeijingSync(new Date('2026-11-18T13:00:00Z')).toISOString(), '2026-11-19T13:00:00.000Z');
+    assert.equal(nextBeijingSync(new Date('2026-11-18T15:59:59Z')).toISOString(), '2026-11-18T16:00:00.000Z');
+    assert.equal(nextBeijingSync(new Date('2026-11-18T16:00:00Z')).toISOString(), '2026-11-19T16:00:00.000Z');
 });
 
 test('first AC is per platform problem and uses the earliest successful timestamp', () => {
@@ -53,9 +53,9 @@ test('sync failure is visible even when the previously successful count was zero
 });
 
 test('nightly snapshot increments require consecutive rounds and keep the first sample of a round', () => {
-    const first = new Date('2026-11-18T13:00:00Z');
-    const second = new Date('2026-11-19T13:00:00Z');
-    assert.equal(externalSyncRound(new Date('2026-11-19T12:59:59Z')).toISOString(), first.toISOString());
+    const first = new Date('2026-11-18T16:00:00Z');
+    const second = new Date('2026-11-19T16:00:00Z');
+    assert.equal(externalSyncRound(new Date('2026-11-19T15:59:59Z')).toISOString(), first.toISOString());
     assert.equal(externalSyncRound(new Date('2026-11-19T16:01:00Z')).toISOString(), second.toISOString());
     const baseline = buildExternalDailySnapshot(100, undefined, first);
     assert.equal(baseline.increment, null);

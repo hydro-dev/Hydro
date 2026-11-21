@@ -32,8 +32,8 @@
   <td class="col--external-total"><strong>{{ row.total if row.total != null else '—' }}</strong></td>
   <td class="col--daily">
     {% if row.daily.total != null %}
-      {{ row.daily.total }}{% if row.daily.partial %}<span class="ranking-partial" title="仅统计有可用增量的平台">*</span>{% endif %}
-    {% else %}<span class="ranking-pending" title="待更新，尚未取得本轮有效增量，暂显示 0">0</span>{% endif %}
+      {{ row.daily.total }}{% if row.daily.partial %}<span class="ranking-partial" title="部分外站数据待同步，当前显示已有小计">*</span>{% endif %}
+    {% else %}<span class="ranking-pending" title="待更新：暂无昨日首次 AC 或有效外站增量，暂显示 0">0</span>{% endif %}
   </td>
 </tr>
 {% endmacro %}
@@ -93,7 +93,7 @@
                       {{ main_sort_header(platform.key, platform.label, 'col--external') }}
                     {% endfor %}
                     {{ main_sort_header('total', '外站合计', 'col--external-total') }}
-                    {{ main_sort_header('daily', '每日做题', 'col--daily') }}
+                    {{ main_sort_header('daily', '昨日做题', 'col--daily') }}
                   </tr>
                 </thead>
                 <tbody>
@@ -108,7 +108,7 @@
             </div>
             <div class="ranking-note" id="main-ranking-note">
               <p>外站合计只计入已成功同步的平台。— 表示无数据，* 表示该平台的数据可能过期。</p>
-              <p>每日做题（{{ dailyRound }}）：统计五个外站前一日 21:00 至当日 21:00 的累计题数增量，每日 21:00 开始更新。首次同步建立基线；待更新暂显示 0，悬停可查看状态。每日做题的 * 表示仅汇总有可用增量的平台。</p>
+              <p>昨日做题（{{ dailyRound }}）：统计北京时间昨天的本站首次 AC 和外站做题数量，本站按评测判定 AC 的时间归日。Codeforces、AtCoder 按首次 AC 时间统计，牛客、洛谷、力扣按相邻两轮 00:00 同步的累计差值估算。* 表示部分外站数据待同步。</p>
             </div>
             {% else %}
               {{ nothing.render('当前范围暂无已同步成员。' if externalSort != 'rp' and externalScope == 'synced' else '这一页暂无成员。') }}

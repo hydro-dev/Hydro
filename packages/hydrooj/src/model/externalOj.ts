@@ -126,8 +126,8 @@ export class ExternalOjBudgetExhausted extends Error {
 }
 
 export async function claimExternalOjRequest(platform: ExternalPlatform, now: Date, limit: number) {
-    // One request budget covers the 21:00 round, including work continuing after midnight.
-    const id = `${platform}:${beijingDay(new Date(now.getTime() - 21 * HOUR))}`;
+    // One request budget covers each Beijing calendar day.
+    const id = `${platform}:${beijingDay(now)}`;
     try {
         await quotas.updateOne(
             { _id: id, used: { $lt: limit } },
@@ -180,18 +180,20 @@ function dueBindings(platform: ExternalPlatform, now: Date) {
     };
 }
 
-export async function syncDueExternalOj(
-    platform: ExternalPlatform, now = new Date(), fetchStats = fetchExternalStats, limit = DEFAULT_DAILY_REQUESTS,
-) {
-    const pause = await pauses.findOne({ _id: platform });
-    if (pause?.until > now) return false;
-    const leaseToken = new ObjectId();
-    const binding = await coll.findOneAndUpdate(
-        dueBindings(platform, now),
-        { $set: { leaseToken, leaseUntil: new Date(now.getTime() + 30 * 60_000) } },
-        { sort: { syncAfter: 1, _id: 1 }, returnDocument: 'after' },
-    );
-    if (!binding) return false;
+export interface ExternalOjSyncResult {
+    status: 'success' | 'unbound' | 'cooldown' | 'paused' | 'budget' | 'busy' | 'failed';
+    retryAfterSec?: number;
+}
+
+async function runExternalOjSync(
+    binding: ExternalOjBinding,
+    leaseToken: ObjectId,
+    now: Date,
+    fetchStats: typeof fetchExternalStats,
+    limit: number,
+    mode: 'scheduled' | 'manual',
+): Promise<ExternalOjSyncResult> {
+    const platform = binding.platform;
     const currentJob = { _id: binding._id, revision: binding.revision, leaseToken };
     const release = { leaseToken: '' as const, leaseUntil: '' as const };
     const started = Date.now();
@@ -215,34 +217,41 @@ export async function syncDueExternalOj(
     } catch (error) {
         const at = completion();
         if (error instanceof ExternalOjBudgetExhausted) {
-            await pauses.updateOne({ _id: platform }, { $max: { until: nextBeijingSync(at) } }, { upsert: true });
+            const until = nextBeijingSync(at);
+            await pauses.updateOne({ _id: platform }, { $max: { until } }, { upsert: true });
             // Preserve the overdue date and its previous snapshot. It gets priority in the next round.
             await coll.updateOne(currentJob, { $unset: release });
-            return false;
+            return { status: 'budget', retryAfterSec: Math.max(1, Math.ceil((until.getTime() - at.getTime()) / 1000)) };
         }
+        let pausedRetrySec: number | undefined;
         if (error instanceof ExternalOjRateLimit) {
             await pauses.updateOne(
                 { _id: platform },
                 { $max: { until: new Date(at.getTime() + error.retryMs) } },
                 { upsert: true },
             );
+            pausedRetrySec = Math.max(1, Math.ceil(error.retryMs / 1000));
         }
         await coll.updateOne(currentJob, {
             $set: {
                 failedAt: at,
-                syncAfter: nextBeijingSync(error instanceof ExternalOjHistoryLimit ? new Date(at.getTime() + 6 * 24 * HOUR) : at),
+                ...(mode === 'scheduled' ? {
+                    syncAfter: nextBeijingSync(error instanceof ExternalOjHistoryLimit ? new Date(now.getTime() + 6 * 24 * HOUR) : now),
+                } : {}),
             },
             $unset: release,
         });
-        return true;
+        return pausedRetrySec ? { status: 'paused', retryAfterSec: pausedRetrySec } : { status: 'failed' };
     }
     const at = completion();
     await coll.updateOne(currentJob, {
         $set: {
             total: result.total,
             lastSuccessAt: at,
-            dailySnapshot: buildExternalDailySnapshot(result.total, binding.dailySnapshot, now),
-            syncAfter: nextBeijingSync(at),
+            ...(mode === 'scheduled' ? {
+                dailySnapshot: buildExternalDailySnapshot(result.total, binding.dailySnapshot, now),
+                syncAfter: nextBeijingSync(now),
+            } : {}),
             ...(solves ? { solves, olderSolved, cursorAt: now } : {}),
         },
         $unset: {
@@ -251,7 +260,66 @@ export async function syncDueExternalOj(
             ...(!solves ? { solves: '' as const, olderSolved: '' as const, cursorAt: '' as const } : {}),
         },
     });
-    return true;
+    return { status: 'success' };
+}
+
+export async function syncDueExternalOj(
+    platform: ExternalPlatform, now = new Date(), fetchStats = fetchExternalStats, limit = DEFAULT_DAILY_REQUESTS,
+) {
+    const pause = await pauses.findOne({ _id: platform });
+    if (pause?.until > now) return false;
+    const leaseToken = new ObjectId();
+    const binding = await coll.findOneAndUpdate(
+        dueBindings(platform, now),
+        { $set: { leaseToken, leaseUntil: new Date(now.getTime() + 30 * 60_000) } },
+        { sort: { syncAfter: 1, _id: 1 }, returnDocument: 'after' },
+    );
+    if (!binding) return false;
+    const outcome = await runExternalOjSync(binding, leaseToken, now, fetchStats, limit, 'scheduled');
+    return outcome.status !== 'budget';
+}
+
+export async function syncExternalOjBinding(
+    uid: number,
+    platform: ExternalPlatform,
+    options: {
+        now?: Date;
+        cooldownMs?: number;
+        fetchStats?: typeof fetchExternalStats;
+        limit?: number;
+    } = {},
+): Promise<ExternalOjSyncResult> {
+    const now = options.now ?? new Date();
+    const cooldownMs = options.cooldownMs ?? 60_000;
+    const fetchStats = options.fetchStats ?? fetchExternalStats;
+    const limit = options.limit ?? DEFAULT_DAILY_REQUESTS;
+    const existing = await coll.findOne({ uid, platform });
+    if (!existing) return { status: 'unbound' };
+    const pause = await pauses.findOne({ _id: platform });
+    if (pause?.until > now) {
+        return { status: 'paused', retryAfterSec: Math.max(1, Math.ceil((pause.until.getTime() - now.getTime()) / 1000)) };
+    }
+    if (cooldownMs > 0) {
+        const lastAttempt = Math.max(existing.lastSuccessAt?.getTime() || 0, existing.failedAt?.getTime() || 0);
+        if (lastAttempt && now.getTime() - lastAttempt < cooldownMs) {
+            return { status: 'cooldown', retryAfterSec: Math.max(1, Math.ceil((lastAttempt + cooldownMs - now.getTime()) / 1000)) };
+        }
+    }
+    const leaseToken = new ObjectId();
+    const binding = await coll.findOneAndUpdate(
+        {
+            uid,
+            platform,
+            $or: [{ leaseUntil: { $lte: now } }, { leaseUntil: { $exists: false } }],
+        },
+        { $set: { leaseToken, leaseUntil: new Date(now.getTime() + 30 * 60_000) } },
+        { returnDocument: 'after' },
+    );
+    if (!binding) {
+        const latest = await coll.findOne({ uid, platform }, { projection: { _id: 1 } });
+        return { status: latest ? 'busy' : 'unbound' };
+    }
+    return await runExternalOjSync(binding, leaseToken, now, fetchStats, limit, 'manual');
 }
 
 export async function apply(ctx: Context) {

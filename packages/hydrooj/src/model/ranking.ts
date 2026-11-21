@@ -1,5 +1,6 @@
-import type { Document } from 'mongodb';
-import { PRIV } from '@hydrooj/common';
+import { type Document, ObjectId } from 'mongodb';
+import { PRIV, STATUS } from '@hydrooj/common';
+import { previousBeijingDayStart } from '../lib/externalOjStats';
 import type { MongoService } from '../service/db';
 
 type RankingDb = Pick<MongoService, 'collection'>;
@@ -277,10 +278,73 @@ export async function getUserExternalSnapshots(db: RankingDb, uids: number[], no
     }));
 }
 
+async function getLocalDailyFirstAcCounts(db: RankingDb, domainId: string, round: Date) {
+    const dayStart = previousBeijingDayStart(round);
+    const startId = ObjectId.createFromTime(Math.floor(dayStart.getTime() / 1000));
+    const endId = ObjectId.createFromTime(Math.floor(round.getTime() / 1000));
+    const match: Document = {
+        domainId,
+        status: STATUS.STATUS_ACCEPTED,
+        $or: [
+            { judgeAt: { $gte: dayStart, $lt: round } },
+            { judgeAt: null, _id: { $gte: startId, $lt: endId } },
+        ],
+    };
+    const dailyPairs = await db.collection('record').aggregate<{ _id: { uid: number, pid: number } }>([
+        { $match: match },
+        { $group: { _id: { uid: '$uid', pid: '$pid' } } },
+    ]).toArray();
+    if (!dailyPairs.length) return new Map<number, number>();
+    const priorPairs = await db.collection('record').aggregate<{ _id: { uid: number, pid: number } }>([
+        {
+            $match: {
+                domainId,
+                status: STATUS.STATUS_ACCEPTED,
+                $and: [
+                    { $or: [{ judgeAt: { $lt: dayStart } }, { judgeAt: null, _id: { $lt: startId } }] },
+                    { $or: dailyPairs.map(({ _id }) => ({ uid: _id.uid, pid: _id.pid })) },
+                ],
+            },
+        },
+        { $group: { _id: { uid: '$uid', pid: '$pid' } } },
+    ]).toArray();
+    const seenBefore = new Set(priorPairs.map(({ _id }) => `${_id.uid}:${_id.pid}`));
+    const counts = new Map<number, number>();
+    for (const { _id } of dailyPairs) {
+        if (seenBefore.has(`${_id.uid}:${_id.pid}`)) continue;
+        counts.set(_id.uid, (counts.get(_id.uid) || 0) + 1);
+    }
+    return counts;
+}
+
+type LocalDailyCounts = ReturnType<typeof getLocalDailyFirstAcCounts>;
+const dailyCountsCache = new WeakMap<RankingDb, Map<string, { round: number, counts: LocalDailyCounts }>>();
+
+function cachedLocalDailyCounts(db: RankingDb, domainId: string, round: Date) {
+    let cache = dailyCountsCache.get(db);
+    if (!cache) {
+        cache = new Map();
+        dailyCountsCache.set(db, cache);
+    }
+    const entry = cache.get(domainId);
+    if (entry?.round === round.getTime()) return entry.counts;
+    const counts = getLocalDailyFirstAcCounts(db, domainId, round);
+    cache.set(domainId, { round: round.getTime(), counts });
+    counts.catch(() => {
+        if (cache.get(domainId)?.counts === counts) cache.delete(domainId);
+    });
+    return counts;
+}
+
 export async function getDailyExternalRanking(
     db: RankingDb, domainId: string, grade: string, page: number, pageSize: number, round: Date,
     options: { uids?: number[], scope?: 'all' | 'synced' } = {},
 ) {
+    const dayStart = previousBeijingDayStart(round);
+    const localCounts = await cachedLocalDailyCounts(db, domainId, round);
+    const localEntries = options.uids
+        ? options.uids.map((uid) => ({ uid, count: localCounts.get(uid) || 0 }))
+        : [...localCounts].map(([uid, count]) => ({ uid, count }));
     const [result] = await db.collection('domain.user').aggregate<{
         rows: { uid: number, total: number | null, partial: boolean }[];
         counts: { count: number }[];
@@ -315,30 +379,59 @@ export async function getDailyExternalRanking(
                     {
                         $project: {
                             _id: 0,
+                            pendingTimeline: {
+                                $and: [
+                                    { $in: ['$platform', ['codeforces', 'atcoder']] },
+                                    { $lt: [{ $ifNull: ['$cursorAt', '$lastSuccessAt'] }, round] },
+                                ],
+                            },
                             increment: {
                                 $cond: [
+                                    { $in: ['$platform', ['codeforces', 'atcoder']] },
                                     {
-                                        $and: [
-                                            { $eq: ['$dailySnapshot.round', round] },
-                                            { $eq: [{ $type: '$lastSuccessAt' }, 'date'] },
-                                            { $lte: [{ $ifNull: ['$failedAt', new Date(0)] }, '$lastSuccessAt'] },
+                                        $cond: [
+                                            { $isArray: '$solves' },
                                             {
-                                                $cond: [
-                                                    { $isNumber: '$dailySnapshot.increment' },
-                                                    {
-                                                        $and: [
-                                                            { $gte: ['$dailySnapshot.increment', 0] },
-                                                            { $lte: ['$dailySnapshot.increment', Number.MAX_SAFE_INTEGER] },
-                                                            { $eq: ['$dailySnapshot.increment', { $trunc: '$dailySnapshot.increment' }] },
-                                                        ],
+                                                $size: {
+                                                    $filter: {
+                                                        input: '$solves',
+                                                        cond: {
+                                                            $and: [
+                                                                { $gte: ['$$this.at', dayStart] },
+                                                                { $lt: ['$$this.at', round] },
+                                                            ],
+                                                        },
                                                     },
-                                                    false,
-                                                ],
+                                                },
                                             },
+                                            null,
                                         ],
                                     },
-                                    '$dailySnapshot.increment',
-                                    null,
+                                    {
+                                        $cond: [
+                                            {
+                                                $and: [
+                                                    { $eq: ['$dailySnapshot.round', round] },
+                                                    { $eq: [{ $type: '$lastSuccessAt' }, 'date'] },
+                                                    {
+                                                        $cond: [
+                                                            { $isNumber: '$dailySnapshot.increment' },
+                                                            {
+                                                                $and: [
+                                                                    { $gte: ['$dailySnapshot.increment', 0] },
+                                                                    { $lte: ['$dailySnapshot.increment', Number.MAX_SAFE_INTEGER] },
+                                                                    { $eq: ['$dailySnapshot.increment', { $trunc: '$dailySnapshot.increment' }] },
+                                                                ],
+                                                            },
+                                                            false,
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                            '$dailySnapshot.increment',
+                                            null,
+                                        ],
+                                    },
                                 ],
                             },
                         },
@@ -347,12 +440,44 @@ export async function getDailyExternalRanking(
                 as: 'dailyBindings',
             },
         },
-        { $set: { increments: { $filter: { input: '$dailyBindings', cond: { $ne: ['$$this.increment', null] } } } } },
+        {
+            $set: {
+                increments: { $filter: { input: '$dailyBindings', cond: { $ne: ['$$this.increment', null] } } },
+                localDaily: localEntries.length
+                    ? {
+                        $let: {
+                            vars: {
+                                matched: {
+                                    $first: {
+                                        $filter: {
+                                            input: localEntries,
+                                            cond: { $eq: ['$$this.uid', '$uid'] },
+                                        },
+                                    },
+                                },
+                            },
+                            in: { $ifNull: ['$$matched.count', 0] },
+                        },
+                    }
+                    : 0,
+            },
+        },
         {
             $project: {
                 _id: 0, uid: 1,
-                total: { $cond: [{ $size: '$increments' }, { $sum: '$increments.increment' }, null] },
-                partial: { $gt: [{ $size: '$dailyBindings' }, { $size: '$increments' }] },
+                total: {
+                    $cond: [
+                        { $or: [{ $gt: ['$localDaily', 0] }, { $gt: [{ $size: '$increments' }, 0] }] },
+                        { $add: ['$localDaily', { $sum: '$increments.increment' }] },
+                        null,
+                    ],
+                },
+                partial: {
+                    $or: [
+                        { $gt: [{ $size: '$dailyBindings' }, { $size: '$increments' }] },
+                        { $in: [true, '$dailyBindings.pendingTimeline'] },
+                    ],
+                },
             },
         },
         {

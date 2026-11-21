@@ -49,7 +49,11 @@ export async function run() {
     accepted(await post(0, { operation: 'bind', platform: 'codeforces', handle: 'http-review-changed', uid: String(uids[1]) }));
     assert.equal((await binding(uids[0])).handle, 'http-review-changed');
     assert.equal((await binding(uids[1])).handle, 'http-review-b');
+    const cooldownRefresh = await post(0, { operation: 'refresh', platform: 'codeforces' });
+    assert.equal(cooldownRefresh.status, 429);
     accepted(await post(0, { operation: 'unbind', platform: 'codeforces', uid: String(uids[1]) }));
+    const unboundRefresh = await post(0, { operation: 'refresh', platform: 'codeforces' });
+    assert.equal(unboundRefresh.status, 400);
     assert.equal(await binding(uids[0]), null);
     assert.equal((await binding(uids[1])).handle, 'http-review-b');
     return 'HGNU_EXTERNAL_HTTP_OK';

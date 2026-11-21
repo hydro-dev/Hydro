@@ -336,6 +336,9 @@ export async function apply(ctx: Context) {
             { key: { domainId: 1, contest: 1, pid: 1, _id: -1 }, name: 'withProblem' },
             { key: { domainId: 1, contest: 1, pid: 1, uid: 1, _id: -1 }, name: 'withUserAndProblem' },
             { key: { domainId: 1, contest: 1, status: 1, _id: -1 }, name: 'withStatus' },
+            { key: { domainId: 1, status: 1, _id: -1 }, name: 'domainStatusId' },
+            { key: { domainId: 1, status: 1, judgeAt: 1 }, name: 'dailyJudgedAc' },
+            { key: { domainId: 1, uid: 1, pid: 1, status: 1, _id: 1 }, name: 'firstAc' },
         ),
         db.ensureIndexes(
             RecordModel.collStat,
