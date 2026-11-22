@@ -30,6 +30,7 @@ import { resolverFreeze } from './resolver';
 import { createResolverPackage } from './resolver-package';
 import { avatarImage, badgeTextColor, medalCounts, medalFor, problemColors, summarize } from './scoreboard';
 import { finalizedSnapshot, pendingStatuses, ranked, ratingReady, score, stats, verdicts } from './scoring';
+import { submissionResult } from './submission';
 
 export const name = 'contest-arena';
 const RULE = 'icpc_domjudge';
@@ -666,19 +667,23 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             if (!rdoc || hex(rdoc.contest) !== hex(this.tid)) throw new NotFoundError('提交');
             const canView = rdoc.uid === this.user._id || this.tsdoc?.members?.includes(rdoc.uid);
             if (!canView && !this.jury) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
+            const language = SettingModel.langs[rdoc.lang];
+            const result = submissionResult(rdoc, this.jury || ended, language ? !!language.compile : undefined);
+            const submitter = udict[rdoc.uid] || await user.getById(this.domainId, rdoc.uid);
+            const judger = this.jury && rdoc.judger > 0 ? await user.getById(this.domainId, rdoc.judger) : null;
+            const position = this.tdoc.pids.indexOf(rdoc.pid);
             arena.submission = {
+                ...result,
                 id: rawId,
-                label: alphabet(this.tdoc.pids.indexOf(rdoc.pid)),
+                label: position >= 0 ? alphabet(position) : `P${rdoc.pid}`,
                 title: pdict[rdoc.pid]?.title,
+                submitter: submitter?.name || submitter?.displayName || submitter?.uname || String(rdoc.uid),
+                class: submitter?.class || '',
                 code: rdoc.code || '',
-                language: SettingModel.langs[rdoc.lang]?.display || rdoc.lang,
-                verdict: verdicts[rdoc.status] || 'JUDGE-ERROR',
-                status: rdoc.status,
-                pending: pendingStatuses.has(rdoc.status),
+                language: language?.display || rdoc.lang,
                 time: contestTime(rdoc._id.getTimestamp(), this.tdoc.beginAt),
-                compiler: (rdoc.compilerTexts || [])
-                    .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
-                    .join('\n'),
+                judgedAt: 'details' in result && result.details.judgedAt ? this.formatTime(rdoc.judgeAt) : '',
+                judger: judger ? judger.name || judger.displayName || judger.uname : '',
                 download: this.url('record_detail', { rid: rdoc._id, query: { download: true } }),
                 original: this.url('record_detail', { rid: rdoc._id }),
                 rejudge: this.url('record_detail', { rid: rdoc._id }),

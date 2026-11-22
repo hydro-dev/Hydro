@@ -28,6 +28,16 @@
     const home = state.replace(/\/state$/, '');
     const detailDialog = document.getElementById('detail-modal');
     const hasDraft = (element) => [...(element?.querySelectorAll('textarea') || [])].some((input) => input.value.trim());
+    const replaceDetailFragment = (target, html) => {
+        if (!target || target.innerHTML === html) return;
+        const open = new Set([...target.querySelectorAll('details[open][data-detail-key]')].map((el) => el.dataset.detailKey));
+        const scroll = target.scrollTop;
+        target.innerHTML = html;
+        for (const element of target.querySelectorAll('details[data-detail-key]')) {
+            element.open = open.has(element.dataset.detailKey);
+        }
+        target.scrollTop = scroll;
+    };
     let detailUrl = '';
     let detailLoading = false;
     const readDetail = async (href, initial = true) => {
@@ -41,10 +51,11 @@
         ) {
             return;
         }
+        const submission = url.pathname.endsWith('/submission');
         detailUrl = href;
         detailLoading = true;
         if (initial) {
-            detailDialog.querySelector('#detail-title').textContent = url.pathname.endsWith('/submission')
+            detailDialog.querySelector('#detail-title').textContent = submission
                 ? 'Submission details'
                 : 'Clarification';
             detailDialog.querySelector('[data-detail-body]').textContent = 'Loading…';
@@ -52,7 +63,11 @@
             detailDialog.showModal();
         }
         try {
-            url.searchParams.set('modal', '1');
+            if (!initial && submission) {
+                url.pathname = `${base.pathname}/state`;
+                url.searchParams.set('view', 'submission');
+                url.searchParams.delete('modal');
+            } else url.searchParams.set('modal', '1');
             const response = await fetch(url, {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' },
@@ -61,11 +76,17 @@
             });
             if (!response.ok) throw new Error('Unable to load details. Close this window and try again.');
             const data = await response.json();
-            if (typeof data.html !== 'string') throw new TypeError('Unable to load details. Reload the page and try again.');
             if (!detailDialog.open || detailUrl !== href) return;
             if (!initial && hasDraft(detailDialog)) return;
-            detailDialog.querySelector('#detail-title').textContent = data.title;
-            detailDialog.querySelector('[data-detail-body]').innerHTML = data.html;
+            if (!initial && submission) {
+                const html = data.fragments?.['submission-status'];
+                if (typeof html !== 'string') throw new TypeError('Unable to refresh submission details.');
+                replaceDetailFragment(detailDialog.querySelector('[data-arena-live="submission-status"]'), html);
+            } else {
+                if (typeof data.html !== 'string') throw new TypeError('Unable to load details. Reload the page and try again.');
+                detailDialog.querySelector('#detail-title').textContent = data.title;
+                detailDialog.querySelector('[data-detail-body]').innerHTML = data.html;
+            }
         } catch (error) {
             if (detailDialog.open && detailUrl === href && initial) {
                 detailDialog.querySelector('[data-detail-body]').textContent = error.message;
@@ -76,9 +97,7 @@
         }
     };
     setInterval(() => {
-        const status = Number(detailDialog?.querySelector('[data-verdict]')?.dataset.verdict);
-        const clarification = detailUrl && new URL(detailUrl, location.href).pathname.endsWith('/clarification');
-        if (detailDialog?.open && (clarification || [0, 20, 21, 22].includes(status)) && !busy && !document.hidden) {
+        if (detailDialog?.open && detailUrl && !busy && !document.hidden) {
             readDetail(detailUrl, false);
         }
     }, 4000);
@@ -179,7 +198,8 @@
                 const target = document.querySelector(`[data-arena-live="${key}"]`);
                 if (!target || rendered.get(key) === html) continue;
                 if (['jury-requests', 'clarification-details'].includes(key) && hasDraft(target)) continue;
-                if (target.querySelector('details[open]') && key === 'clarifications') {
+                if (key === 'submission-status') replaceDetailFragment(target, html);
+                else if (target.querySelector('details[open]') && key === 'clarifications') {
                     const open = [...target.querySelectorAll('details')].map((el, i) => (el.open ? i : -1));
                     target.innerHTML = html;
                     for (const [i, el] of target.querySelectorAll('details').entries()) {
