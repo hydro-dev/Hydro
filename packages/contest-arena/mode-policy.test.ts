@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-const { identityKey, modeWindow, MODE_LEAD_MS, canReuseTeamRoster }: typeof import('./mode-policy') = await import(new URL('./mode-policy.ts', import.meta.url).href);
+const { identityKey, modeWindow, MODE_LEAD_MS, canReuseTeamRoster }: typeof import('./mode-policy') = await import(
+    new URL('./mode-policy.ts', import.meta.url).href
+);
 
 const beginAt = new Date('2026-11-08T10:00:00Z');
 const endAt = new Date(+beginAt + 3 * 3600000);

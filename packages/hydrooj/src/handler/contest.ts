@@ -139,7 +139,8 @@ export class ContestDetailBaseHandler extends Handler {
             {
                 name: 'contest_print',
                 args: { tid, prefix: 'contest_print' },
-                checker: () => this.tdoc.rule !== 'icpc_domjudge' && this.tdoc.allowPrint && (this.tsdoc?.attend || this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST)),
+                checker: () => this.tdoc.rule !== 'icpc_domjudge' && this.tdoc.allowPrint
+                    && (this.tsdoc?.attend || this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST)),
             },
             {
                 name: 'contest_scoreboard',
@@ -510,7 +511,9 @@ export class ContestEditHandler extends Handler {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration, ...options });
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, {
+                duration: contestDuration, ...options,
+            });
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,

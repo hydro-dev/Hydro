@@ -212,7 +212,9 @@ export class RecordDetailHandler extends ContestDetailBaseHandler {
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
                 canViewCode ||= !!this.tsdoc?.attend;
             }
-            if (!this.tsdoc?.attend && !onsiteJury(this.user, this.tdoc) && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            if (!this.tsdoc?.attend && !onsiteJury(this.user, this.tdoc) && pdoc && !problem.canViewBy(pdoc, this.user)) {
+                throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            }
         } else if (pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!canViewCode) {
             rdoc.code = '';
@@ -449,7 +451,9 @@ export class RecordDetailConnectionHandler extends ConnectionHandler {
         this.canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         this.canViewCode ||= onsiteJury(this.user, this.tdoc);
 
-        if (!this.tsdoc?.attend && !onsiteJury(this.user, this.tdoc) && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        if (!this.tsdoc?.attend && !onsiteJury(this.user, this.tdoc) && pdoc && !problem.canViewBy(pdoc, this.user)) {
+            throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        }
 
         this.pdoc = pdoc;
         this.noTemplate = noTemplate;

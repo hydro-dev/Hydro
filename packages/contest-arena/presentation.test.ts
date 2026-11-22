@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { contestTime, juryAnswered } from './presentation.ts';
+const { contestTime, juryAnswered }: typeof import('./presentation') = await import(
+    new URL('./presentation.ts', import.meta.url).href
+);
 
 test('submission and clarification times preserve seconds and elapsed hours', () => {
     assert.equal(contestTime(0, 1000), '-0:00:01');

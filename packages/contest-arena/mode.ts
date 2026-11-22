@@ -1,11 +1,22 @@
-import { ContestModel as contest, Context, Handler, ObjectId, PERM, PermissionError, ProblemModel as problem, RecordModel as record } from 'hydrooj';
-import { modeFor, modes, imports } from './enrollment';
+/* eslint-disable no-await-in-loop -- Each registration must be checked before selecting its account restriction. */
+import {
+    ContestModel as contest,
+    Context,
+    Handler,
+    ObjectId,
+    PERM,
+    PermissionError,
+    ProblemModel as problem,
+    RecordModel as record,
+} from 'hydrooj';
+import { imports, modeFor, modes } from './enrollment';
 
 async function permitted(context: any, mode: Awaited<ReturnType<typeof modeFor>>) {
     const request = context.HydroContext.request;
-    const path = request.path, method = request.method.toLowerCase();
+    const path = request.path;
+    const method = request.method.toLowerCase();
     if (path === '/arena-mode/status' && method === 'get') return true;
-    if (['get', 'head'].includes(method) && /^\/arena-assets\/(?:[a-f0-9]{16}|logo)\/(?:[\w.-]+|fonts\/[\w.-]+)$/.test(path)) return true;
+    if (['get', 'head'].includes(method) && /^\/arena-assets\/(?:[a-f0-9]{16}|logo)\/(?:[\w.-]+|fonts\/[\w.-]+)$/.test(path)) { return true; }
     // This endpoint only streams files after checking the expiring server-signed link.
     if (path === '/storage' && ['get', 'head'].includes(method)) return true;
     const args = context.HydroContext.args;
@@ -14,20 +25,37 @@ async function permitted(context: any, mode: Awaited<ReturnType<typeof modeFor>>
     if (path === arena || path.startsWith(`${arena}/`)) return true;
     const query = context.query;
     const submission = /^\/p\/([0-9]+)\/submit$/.exec(path);
-    if (submission && method === 'post' && query.tid === String(mode.tdoc.docId)
-        && String(args.tid) === String(mode.tdoc.docId) && (args.pid === undefined || String(args.pid) === submission[1])
-        && mode.tdoc.pids.includes(+submission[1])) return true;
+    if (
+        submission
+        && method === 'post'
+        && query.tid === String(mode.tdoc.docId)
+        && String(args.tid) === String(mode.tdoc.docId)
+        && (args.pid === undefined || String(args.pid) === submission[1])
+        && mode.tdoc.pids.includes(+submission[1])
+    ) { return true; }
     const source = /^\/record\/([a-f0-9]{24})$/.exec(path);
-    if (source && method === 'get' && query.download === 'true' && (args.rid === undefined || String(args.rid) === source[1])) {
+    if (
+        source
+        && method === 'get'
+        && query.download === 'true'
+        && (args.rid === undefined || String(args.rid) === source[1])
+    ) {
         const rdoc = await record.get(mode.tdoc.domainId, new ObjectId(source[1]));
         const team = await contest.getStatus(mode.tdoc.domainId, mode.tdoc.docId, mode.binding.participantUid);
-        return String(rdoc?.contest) === String(mode.tdoc.docId)
-            && (rdoc.uid === mode.binding._id || team?.members?.includes(rdoc.uid));
+        return (
+            String(rdoc?.contest) === String(mode.tdoc.docId)
+            && (rdoc.uid === mode.binding._id || team?.members?.includes(rdoc.uid))
+        );
     }
     if (!['get', 'head'].includes(method) || Date.now() < +mode.tdoc.beginAt) return false;
     const attachment = /^\/p\/([0-9]+)\/file\//.exec(path);
-    if (attachment && query.tid === String(mode.tdoc.docId) && String(args.tid) === String(mode.tdoc.docId)
-        && (args.pid === undefined || String(args.pid) === attachment[1]) && mode.tdoc.pids.includes(+attachment[1])) return true;
+    if (
+        attachment
+        && query.tid === String(mode.tdoc.docId)
+        && String(args.tid) === String(mode.tdoc.docId)
+        && (args.pid === undefined || String(args.pid) === attachment[1])
+        && mode.tdoc.pids.includes(+attachment[1])
+    ) { return true; }
     if (path.startsWith('/file/')) {
         for (const pid of mode.tdoc.pids) {
             const pdoc = await problem.get(mode.tdoc.domainId, pid);
@@ -46,7 +74,12 @@ export function installMode(ctx: Context, assetVersion: string) {
             const mode = await modeFor(this.user._id);
             this.response.addHeader('Cache-Control', 'private, no-store');
             this.response.addHeader('Vary', 'Cookie');
-            this.response.body = { active: !!mode?.active, redirect: mode?.active ? mode.redirect : '', startsAt: mode?.startsAt || null, now: Date.now() };
+            this.response.body = {
+                active: !!mode?.active,
+                redirect: mode?.active ? mode.redirect : '',
+                startsAt: mode?.startsAt || null,
+                now: Date.now(),
+            };
         }
     }
     ctx.Route('arena_mode_status', '/arena-mode/status', ArenaModeStatusHandler);
@@ -58,11 +91,13 @@ export function installMode(ctx: Context, assetVersion: string) {
                 context.set('Cache-Control', 'private, no-store');
                 context.vary('Cookie');
                 context.HydroContext.arenaAccountMode = mode;
-                if (mode.active && !await permitted(context, mode)) {
+                if (mode.active && !(await permitted(context, mode))) {
                     // The outer framework renderer requires a handler and owns the response.
                     context.handler = new Handler(context, c);
                     Object.assign(context.HydroContext.response, {
-                        status: 303, type: 'application/json', template: null,
+                        status: 303,
+                        type: 'application/json',
+                        template: null,
                         body: JSON.stringify({ url: mode.redirect }),
                     });
                     context.set('Location', mode.redirect);
@@ -95,8 +130,13 @@ export function installMode(ctx: Context, assetVersion: string) {
         h.ctx.interval(async () => {
             try {
                 const mode = await modeFor(uid);
-                if (mode?.active) { h.send({ arenaRedirect: mode.redirect }); h.close(4003, 'Contest mode'); }
-            } catch { h.close(4003, 'Contest mode check failed'); }
+                if (mode?.active) {
+                    h.send({ arenaRedirect: mode.redirect });
+                    h.close(4003, 'Contest mode');
+                }
+            } catch {
+                h.close(4003, 'Contest mode check failed');
+            }
         }, 5000);
     });
     ctx.on('handler/after', (handler) => {

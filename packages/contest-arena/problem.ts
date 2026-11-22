@@ -2,8 +2,14 @@
 export function allowedLanguageIds(languages: Record<string, any>, ...restrictions: (string[] | undefined)[]) {
     const limits = restrictions.filter((value): value is string[] => Array.isArray(value));
     const explicit = limits.some((value) => value.length);
-    return Object.keys(languages).filter((key) => key !== '_' && !languages[key].disabled && !languages[key].remote
-        && (explicit || !languages[key].hidden) && limits.every((value) => value.includes(key)));
+    return Object.keys(languages).filter(
+        (key) =>
+            key !== '_'
+            && !languages[key].disabled
+            && !languages[key].remote
+            && (explicit || !languages[key].hidden)
+            && limits.every((value) => value.includes(key)),
+    );
 }
 
 export function problemLimits(config: any) {
@@ -12,5 +18,8 @@ export function problemLimits(config: any) {
         const format = (value: number) => String(Number((value / scale).toFixed(3)));
         return `${format(min)}${min === max ? '' : `–${format(max)}`}${unit}`;
     };
-    return { time: range(config.timeMin, config.timeMax, 1000, 's'), memory: range(config.memoryMin, config.memoryMax, 1, ' MiB') };
+    return {
+        time: range(config.timeMin, config.timeMax, 1000, 's'),
+        memory: range(config.memoryMin, config.memoryMax, 1, ' MiB'),
+    };
 }

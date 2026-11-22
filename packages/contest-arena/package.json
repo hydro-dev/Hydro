@@ -4,6 +4,11 @@
   "private": true,
   "main": "index.ts",
   "license": "AGPL-3.0-only",
-  "dependencies": { "exceljs": "4.4.0" },
-  "peerDependencies": { "hydrooj": "workspace:^", "@hydrooj/ui-default": "workspace:^" }
+  "dependencies": {
+    "exceljs": "4.4.0"
+  },
+  "peerDependencies": {
+    "@hydrooj/ui-default": "workspace:^",
+    "hydrooj": "workspace:^"
+  }
 }

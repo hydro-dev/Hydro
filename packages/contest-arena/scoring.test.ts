@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-const { ranked, score, ratingReady, finalizedSnapshot }: typeof import('./scoring') = await import(new URL('./scoring.ts', import.meta.url).href);
+const { ranked, score, ratingReady, finalizedSnapshot }: typeof import('./scoring') = await import(
+    new URL('./scoring.ts', import.meta.url).href
+);
 
 const start = new Date('2026-11-08T10:00:00Z');
 const contest = { beginAt: start, endAt: new Date(+start + 5 * 3600000), pids: [1, 2] };
 let serial = 0;
 function entry(seconds: number, status: number, pid = 1) {
-    const rid = { getTimestamp: () => new Date(+start + seconds * 1000), toHexString: () => id };
     const id = String(seconds).padStart(8, '0') + String(serial++).padStart(16, '0');
+    const rid = { getTimestamp: () => new Date(+start + seconds * 1000), toHexString: () => id };
     return { rid, status, pid, score: status === 1 ? 100 : 0 };
 }
 
@@ -58,11 +60,20 @@ test('last-AC tie break, shared rank and unofficial teams', () => {
         { uid: 3, accept: 2, time: 120, lastAccepted: 60 },
         { uid: 4, accept: 3, time: 0, unrank: true },
     ]);
-    assert.deepEqual(result.map((row) => [row.uid, row.rank]), [[2, 1], [3, 1], [1, 3], [4, '*']]);
+    assert.deepEqual(
+        result.map((row) => [row.uid, row.rank]),
+        [
+            [2, 1],
+            [3, 1],
+            [1, 3],
+            [4, '*'],
+        ],
+    );
 });
 
 test('onsite rating waits for the global end, unfreeze and complete judgements', () => {
-    const rows = [{ attend: 1, journal: [entry(120, 1)] }], end = +contest.endAt;
+    const rows = [{ attend: 1, journal: [entry(120, 1)] }];
+    const end = +contest.endAt;
     assert.equal(ratingReady(contest, rows, end - 1), false);
     assert.equal(ratingReady(contest, rows, end), true);
     const frozen = { ...contest, lockAt: new Date(+start + 60000) };
@@ -78,12 +89,16 @@ test('empty, cancelled and unofficial-only contests do not consume personal rati
     assert.equal(ratingReady(contest, [], end), false);
     assert.equal(ratingReady(contest, [{ attend: 0, journal: [entry(120, 1)] }], end), false);
     assert.equal(ratingReady(contest, [{ attend: 1, unrank: true, journal: [entry(120, 1)] }], end), false);
-    assert.equal(ratingReady(contest, [{ attend: 1, journal: [entry(-1, 1), entry(18000, 1), entry(120, 1, 999)] }], end), false);
+    assert.equal(
+        ratingReady(contest, [{ attend: 1, journal: [entry(-1, 1), entry(18000, 1), entry(120, 1, 999)] }], end),
+        false,
+    );
     assert.equal(ratingReady(contest, [{ attend: 1, journal: [entry(120, 7)] }], end), true);
 });
 
 test('snapshot validation blocks rejudging and final verdicts not yet reflected in the journal', () => {
-    const accepted = entry(120, 1), row = { uid: 1, attend: 1, journal: [accepted] };
+    const accepted = entry(120, 1);
+    const row = { uid: 1, attend: 1, journal: [accepted] };
     const record = { _id: accepted.rid, uid: 1, pid: 1, status: 1 };
     assert.equal(finalizedSnapshot(contest, [row], [record]), true);
     for (const status of [0, 20, 21, 22, 2, 999]) {
@@ -94,17 +109,24 @@ test('snapshot validation blocks rejudging and final verdicts not yet reflected 
 });
 
 test('a newly inserted submission must have its initial journal entry before snapshot finalization', () => {
-    const submitted = entry(120, 1), record = { _id: submitted.rid, uid: 1, pid: 1, status: 0 };
+    const submitted = entry(120, 1);
+    const record = { _id: submitted.rid, uid: 1, pid: 1, status: 0 };
     assert.equal(finalizedSnapshot(contest, [{ uid: 1, attend: 1, journal: [] }], [record]), false);
     assert.equal(finalizedSnapshot(contest, [{ uid: -1, members: [1, 2], attend: 1, journal: [] }], [record]), false);
     assert.equal(finalizedSnapshot(contest, [{ uid: 2, attend: 1, journal: [] }], [record]), true);
 });
 
 test('cancelled-entry history remains archived when its user joins a different entry', () => {
-    const old = entry(60, 1), current = entry(120, 1);
-    const rows = [{ uid: 1, attend: 0, registrationCancelled: true, journal: [old] },
-        { uid: -2, members: [1, 3], attend: 1, journal: [current] }];
-    const records = [{ _id: old.rid, uid: 1, pid: 1, status: 0 }, { _id: current.rid, uid: 3, pid: 1, status: 1 }];
+    const old = entry(60, 1);
+    const current = entry(120, 1);
+    const rows = [
+        { uid: 1, attend: 0, registrationCancelled: true, journal: [old] },
+        { uid: -2, members: [1, 3], attend: 1, journal: [current] },
+    ];
+    const records = [
+        { _id: old.rid, uid: 1, pid: 1, status: 0 },
+        { _id: current.rid, uid: 3, pid: 1, status: 1 },
+    ];
     assert.equal(finalizedSnapshot(contest, rows, records), true);
     assert.equal(finalizedSnapshot(contest, rows.slice(1), records), false);
     assert.equal(finalizedSnapshot(contest, [rows[1], { ...rows[1], uid: -3 }], records), false);

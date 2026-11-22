@@ -296,7 +296,7 @@ export interface Tdoc extends Document {
     score?: Record<number, number>;
     langs?: string[];
     allowTeam?: boolean;
-    medals?: { gold: number; silver: number; bronze: number };
+    medals?: { gold: number, silver: number, bronze: number };
 
     /**
      * In hours
