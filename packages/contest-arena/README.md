@@ -149,3 +149,9 @@ Resolver display names use `class-name`. The exported Windows launcher sets
 `ICPC_FONT=Microsoft YaHei` only for its own process, because the tool's bundled
 Helvetica font lacks Chinese glyphs. The launch guide also documents suitable
 Linux/macOS font overrides; the installed font must support the contest's text.
+The Windows package includes a PowerShell helper that reads the Resolver's Java
+requirement, skips incompatible runtimes, and searches packaged runtimes,
+environment variables, PATH and common JDK installation directories. A portable
+JDK/JRE can be placed in `runtime/`, or selected with `-JavaHome`. No machine-wide
+Java or font settings are changed. `-Check` verifies the selected runtime without
+opening the presentation.

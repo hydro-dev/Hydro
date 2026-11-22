@@ -1,4 +1,6 @@
 import { createHash } from 'crypto';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { medalCounts, medalFor, problemColors } from './scoreboard';
 import { excludedStatuses, pendingStatuses, ranked, score } from './scoring';
 
@@ -18,23 +20,9 @@ const hex = (id: any) => id.toHexString?.() || String(id);
 const classId = (name: string) => `class-${createHash('sha256').update(name).digest('hex').slice(0, 16)}`;
 export const resolverTeamId = (uid: number) => `team-${uid < 0 ? `g${-uid}` : uid}`;
 
-export const resolverWindowsLauncher = [
-    '@echo off',
-    'setlocal',
-    'set "ICPC_FONT=Microsoft YaHei"',
-    'set "HGNU_RESOLVER_DIR=%~1"',
-    'if not defined HGNU_RESOLVER_DIR if exist "%~dp0..\\resolver\\lib\\resolver.jar" set "HGNU_RESOLVER_DIR=%~dp0..\\resolver"',
-    'if not defined HGNU_RESOLVER_DIR set /p "HGNU_RESOLVER_DIR=ICPC Resolver directory (contains lib): "',
-    'set "HGNU_RESOLVER_DIR=%HGNU_RESOLVER_DIR:"=%"',
-    'if not exist "%HGNU_RESOLVER_DIR%\\lib\\resolver.jar" (',
-    '  echo Resolver not found. Please enter the extracted ICPC Tools Resolver directory.',
-    '  pause',
-    '  exit /b 1',
-    ')',
-    'java -Xmx1024m -cp "%HGNU_RESOLVER_DIR%\\lib\\*" org.icpc.tools.resolver.Resolver "%~dp0."',
-    'if errorlevel 1 pause',
-    '',
-].join('\r\n');
+export const resolverWindowsLauncher = readFileSync(join(__dirname, 'launcher/start-resolver.cmd'), 'utf8').replace(/\r?\n/g, '\r\n');
+// Windows PowerShell 5.1 needs a BOM to read Chinese text and paths correctly.
+export const resolverWindowsBootstrap = `\uFEFF${readFileSync(join(__dirname, 'launcher/start-resolver.ps1'), 'utf8')}`;
 
 export function relativeTime(ms: number) {
     if (!Number.isSafeInteger(ms) || ms < 0) throw new Error('无效的比赛时间');

@@ -5,7 +5,7 @@ import { get } from 'https';
 import { BlockList } from 'net';
 import { join } from 'path';
 import { avatar, ContestModel, ProblemModel, RecordModel, SettingModel, UserModel, Zip } from 'hydrooj';
-import { buildResolverData, resolverTeamId, resolverWindowsLauncher } from './resolver';
+import { buildResolverData, resolverTeamId, resolverWindowsBootstrap, resolverWindowsLauncher } from './resolver';
 import { avatarImage } from './scoreboard';
 import { finalizedSnapshot } from './scoring';
 
@@ -182,6 +182,7 @@ export async function createResolverPackage(tdoc: any, freezeMinutes?: string | 
     for (const [key, value] of Object.entries(data.collections)) json(`${key}.json`, value);
     files.set('event-feed.ndjson', Buffer.from(`${data.events.map((event) => JSON.stringify(event)).join('\n')}\n`));
     files.set('start-resolver.cmd', Buffer.from(resolverWindowsLauncher));
+    files.set('start-resolver.ps1', Buffer.from(resolverWindowsBootstrap));
     json('hgnuoj-export.json', {
         ...data.manifest,
         account_images: images.size - fallbackCount,
@@ -193,11 +194,15 @@ export async function createResolverPackage(tdoc: any, freezeMinutes?: string | 
             [
                 `${tdoc.title} — ICPC Tools Resolver 滚榜包`,
                 '',
-                '1. 下载 ICPC Tools Resolver 稳定版，展示电脑需要 Java 17 或更新版本。',
+                '1. 下载 ICPC Tools Resolver 稳定版。Resolver 2.7 需要 64 位 Java 17 或更新版本；其他版本以工具实际要求为准。',
                 '   官方下载：https://tools.icpc.global/resolver',
+                '   Java 可以安装，也可以使用解压版；启动脚本会检查工具要求并选择兼容的版本。',
                 '2. 将本 ZIP 完整解压到同一目录，例如 C:\\contest-data\\hgnu。',
-                '3. Windows：双击本包的 start-resolver.cmd，输入官方 Resolver 的解压目录（其中包含 lib 文件夹）。',
+                '3. Windows：将 Resolver 解压目录放在本包内（如 resolver-2.7.1470），然后双击 start-resolver.cmd。',
+                '   不在本包内时，按提示输入 Resolver 解压目录（其中包含 lib 文件夹）。请保留 start-resolver.ps1。',
                 '   也可运行：start-resolver.cmd "C:\\tools\\resolver"。脚本已为本次启动设置微软雅黑，支持中文。',
+                '   多个 Java 共存时会跳过不兼容的版本；可用 -JavaHome "C:\\tools\\jdk-17" 指定 Java 目录。',
+                '   解压版 JDK/JRE 可放在本包的 runtime 文件夹中（其中应包含 bin\\java.exe）。',
                 '   手动运行时先执行 set "ICPC_FONT=Microsoft YaHei"，再运行 resolver.bat "C:\\contest-data\\hgnu"。',
                 '   Linux：ICPC_FONT="Noto Sans CJK SC" ./resolver.sh "/path/to/contest-data/hgnu"（需安装该字体）。',
                 '   macOS：ICPC_FONT="PingFang SC" ./resolver.sh "/path/to/contest-data/hgnu"。',
