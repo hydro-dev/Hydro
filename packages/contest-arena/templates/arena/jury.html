@@ -1,0 +1,13 @@
+<div class="page-heading"><h1>Jury</h1><div>{% if arena.resolverExport %}<a class="btn btn-secondary btn-sm" href="{{ arena.resolverExport }}">导出 ICPC 滚榜包</a> {% endif %}<a class="btn btn-secondary btn-sm" href="{{ arena.links.scoreboard }}?realtime=1">Live scoreboard</a> <a class="btn btn-secondary btn-sm" href="{{ arena.manage }}">Contest management</a></div></div>
+<div class="overview-grid jury-grid">
+  <section>
+    <div data-arena-live="jury-requests">{% include "arena/jury-requests.html" %}</div>
+    <h2>Broadcast clarification</h2>
+    <form method="post" data-arena-form><input type="hidden" name="csrf" value="{{ arena.csrf }}"><input type="hidden" name="operation" value="reply"><label>Subject<select name="subject"><option value="0">General</option>{% for p in arena.problems %}<option value="{{ p.pid }}">{{ p.label }} — {{ p.title }}</option>{% endfor %}</select></label><label>Message<textarea name="content" rows="3" required maxlength="10000"></textarea></label><button class="btn btn-primary" type="submit">Send to all teams</button></form>
+  </section>
+  <section>
+    <div data-arena-live="jury-balloons">{% include "arena/jury-balloons.html" %}</div>
+    <div data-arena-live="jury-scoreboard">{% include "arena/jury-scoreboard.html" %}</div>
+    <div data-arena-live="jury-records">{% include "arena/jury-records.html" %}</div>
+  </section>
+</div>

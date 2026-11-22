@@ -1,0 +1,5 @@
+<div class="scoreboard-contest-card">
+  <strong>{{ arena.title }}</strong>
+  <span>{% if arena.ended %}contest over{% else %}{{ 'starts' if arena.before else 'started' }}: {{ arena.startText }} — ends: {{ arena.endText }}{% endif %}</span>
+</div>
+{% if arena.frozen %}<div class="scoreboard-freeze alert alert-warning" role="status">The scoreboard was frozen with {{ arena.freezeRemaining }} minutes remaining. {% if arena.realtime %}<strong>Jury view: showing actual results.</strong>{% else %}Submissions after the freeze are shown as pending.{% endif %}</div>{% endif %}

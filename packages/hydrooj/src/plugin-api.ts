@@ -48,7 +48,7 @@ export { buildContent, parseStatements, parseSubmittedStatements } from './lib/c
 export type { CompileCtx, RenderCtx, Renderer, StatementEntry } from './lib/content';
 export { default as mime } from './lib/mime';
 export { default as difficultyAlgorithm } from './lib/difficulty';
-export { default as rating } from './lib/rating';
+export { default as rating, selectRatingContests } from './lib/rating';
 export { default as avatar } from './lib/avatar';
 export { parseConfig as testdataConfig } from './lib/testdataConfig';
 export { sendMail } from './lib/mail';

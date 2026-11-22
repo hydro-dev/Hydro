@@ -119,3 +119,18 @@ function calculate(users: RatingInputUser[]): RatingOutputUser[] {
 }
 
 export default calculate;
+
+/** Apply optional per-rule readiness before taking the most recent rated contests. */
+export async function selectRatingContests<T extends { rule: string }>(
+    cursor: AsyncIterable<T>,
+    rules: Record<string, { ratingReady?: (tdoc: T, now: Date) => boolean | Promise<boolean> }>,
+    now = new Date(), limit = 10,
+) {
+    const result: T[] = [];
+    for await (const tdoc of cursor) {
+        if (rules[tdoc.rule]?.ratingReady && !await rules[tdoc.rule].ratingReady(tdoc, now)) continue;
+        result.push(tdoc);
+        if (result.length >= limit) break;
+    }
+    return result;
+}

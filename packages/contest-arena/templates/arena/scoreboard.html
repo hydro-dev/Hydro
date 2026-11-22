@@ -1,0 +1,13 @@
+{% set boardRows = arena.rows %}{% set ownTable = false %}{% include "arena/scoreboard-table.html" %}
+<div class="scoreboard-legends" aria-label="Scoreboard legend">
+  <table class="score-legend"><caption>Cell colours</caption><tbody>
+    <tr><td><span class="legend-cell correct first-to-solve">Solved first</span></td></tr>
+    <tr><td><span class="legend-cell correct">Solved</span></td></tr>
+    <tr><td><span class="legend-cell incorrect">Tried, incorrect</span></td></tr>
+    <tr><td><span class="legend-cell pending">Tried, pending</span></td></tr>
+    <tr><td><span class="legend-cell untried">Untried</span></td></tr>
+  </tbody></table>
+  {% if arena.hasMedals %}<table class="score-legend medal-legend"><caption>Medals</caption><tbody>
+    {% for kind, count in arena.medals %}{% if count %}<tr><td><svg class="score-medal {{ kind }}-medal" aria-hidden="true"><use href="#i-medal"/></svg> {{ kind|capitalize }}: {{ count }}</td></tr>{% endif %}{% endfor %}
+  </tbody></table>{% endif %}
+</div>

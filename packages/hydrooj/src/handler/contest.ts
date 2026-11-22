@@ -139,7 +139,8 @@ export class ContestDetailBaseHandler extends Handler {
             {
                 name: 'contest_print',
                 args: { tid, prefix: 'contest_print' },
-                checker: () => this.tdoc.allowPrint && (this.tsdoc?.attend || this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST)),
+                checker: () => this.tdoc.rule !== 'icpc_domjudge' && this.tdoc.allowPrint
+                    && (this.tsdoc?.attend || this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST)),
             },
             {
                 name: 'contest_scoreboard',
@@ -248,7 +249,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
 export class ContestPrintHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
     async prepare({ domainId }, tid: ObjectId) {
-        if (!this.tdoc?.allowPrint) throw new NotFoundError();
+        if (!this.tdoc?.allowPrint || this.tdoc.rule === 'icpc_domjudge') throw new NotFoundError();
         if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST) && !this.tsdoc?.attend) {
             throw new ContestNotAttendedError(domainId, tid);
         }
@@ -465,14 +466,25 @@ export class ContestEditHandler extends Handler {
     @param('keepScoreboardHidden', Types.Boolean)
     @param('allowTeam', Types.Boolean)
     @param('langs', Types.CommaSeperatedArray, true)
+    @param('gold', Types.UnsignedInt, true)
+    @param('silver', Types.UnsignedInt, true)
+    @param('bronze', Types.UnsignedInt, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
         contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, allowPrint = false,
         keepScoreboardHidden = false, allowTeam = false, langs: string[] = [],
+        gold?: number, silver?: number, bronze?: number,
     ) {
         if (!Object.keys(contest.RULES).includes(rule) || contest.RULES[rule].hidden) throw new ValidationError('rule');
+        const medalOptions = rule === 'icpc_domjudge' ? { medals: {
+            gold: gold ?? this.tdoc?.medals?.gold ?? 0,
+            silver: silver ?? this.tdoc?.medals?.silver ?? 0,
+            bronze: bronze ?? this.tdoc?.medals?.bronze ?? 0,
+        } } : {};
+        if ('medals' in medalOptions && Object.values(medalOptions.medals)
+            .some((count) => !Number.isSafeInteger(count) || count < 0 || count > 10000)) throw new ValidationError('奖牌数量');
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         allowTeam ||= !!this.tdoc?.allowTeam;
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -483,18 +495,25 @@ export class ContestEditHandler extends Handler {
         const beginAt = beginAtMoment.toDate();
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
         if (lockAt && contestDuration) throw new ValidationError('lockAt', 'duration');
+        const options = {
+            assign, _code, autoHide, lockAt, maintainer, allowViewCode, allowPrint: rule !== 'icpc_domjudge' && allowPrint,
+            keepScoreboardHidden, allowTeam, langs, ...medalOptions,
+            ...(rule === 'icpc_domjudge' && +lockAt !== +(this.tdoc?.lockAt || 0) ? { unlocked: false } : {}),
+        };
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
+                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration, ...options,
             });
-            if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
+            if (+this.tdoc.beginAt !== +beginAt || +this.tdoc.endAt !== +endAt
                 || diffArray(this.tdoc.pids, pids) || this.tdoc.rule !== rule
-                || lockAt !== this.tdoc.lockAt) {
+                || +lockAt !== +(this.tdoc.lockAt || 0)) {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, {
+                duration: contestDuration, ...options,
+            });
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,
@@ -512,9 +531,6 @@ export class ContestEditHandler extends Handler {
                 executeAfter: endAt,
             });
         }
-        await contest.edit(domainId, tid, {
-            assign, _code, autoHide, lockAt, maintainer, allowViewCode, allowPrint, keepScoreboardHidden, allowTeam, langs,
-        });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
     }
@@ -688,7 +704,7 @@ class ContestClarificationHandler extends ContestManagementBaseHandler {
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
             tcdocs,
             udict: await user.getListForRender(
-                domainId, tcdocs.map((i) => i.owner),
+                domainId, [...new Set(tcdocs.flatMap((i) => [i.owner, ...(i.reply || []).map((reply) => reply.owner)]))],
                 this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO),
             ),
         };
@@ -703,6 +719,7 @@ class ContestClarificationHandler extends ContestManagementBaseHandler {
     async postClarification(domainId: string, tid: ObjectId, content: string, did: ObjectId, subject = 0) {
         if (did) {
             const tcdoc = await contest.getClarification(domainId, did);
+            if (!tcdoc || String(tcdoc.parentId) !== String(tid)) throw new NotFoundError('Clarification');
             await Promise.all([
                 contest.addClarificationReply(domainId, did, 0, content, this.request.ip),
                 message.send(1, tcdoc.owner, JSON.stringify({

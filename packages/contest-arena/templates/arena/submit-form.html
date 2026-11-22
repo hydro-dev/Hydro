@@ -1,0 +1,13 @@
+<form method="post" enctype="multipart/form-data" action="{{ arena.problem.submitUrl if arena.problem else arena.problems[0].submitUrl }}" data-submit-solution data-can-submit="{{ 'true' if arena.canSubmit else 'false' }}">
+  <input type="hidden" name="csrf" value="{{ arena.csrf }}">
+  <div class="modal-body">
+  <label>Source file<input type="file" name="file" required data-source-file></label>
+  <label>Problem<select name="arena_problem" required data-submit-problem>{% for p in arena.problems %}<option value="{{ p.pid }}" data-submit-url="{{ p.submitUrl }}" data-label="{{ p.label }}" data-languages="{{ p.languages|join(',') }}" {{ 'selected' if arena.problem.pid == p.pid }}>{{ p.label }} — {{ p.title }}</option>{% endfor %}</select></label>
+  <label>Language<select name="lang" required data-submit-language>{% for lang in arena.languages %}<option value="{{ lang.id }}" data-extension="{{ lang.extension }}" {{ 'selected' if lang.id == arena.preferredLanguage }}>{{ lang.name }}</option>{% endfor %}</select></label>
+  <p class="text-muted submit-file-info" hidden></p>
+  <div class="form-error alert alert-danger" role="alert" hidden></div>
+  </div><div class="modal-footer">
+  <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+  <button type="submit" class="btn btn-success" {{ 'disabled' if not arena.canSubmit }}><svg><use href="#i-upload"/></svg> Submit</button>
+  </div>
+</form>

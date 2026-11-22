@@ -1,0 +1,32 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-8 columns">
+    <section class="section">
+      <div class="section__header"><h1 class="section__title">导出 ICPC 滚榜包</h1></div>
+      <div class="section__body typo">
+        <h2>{{ tdoc.title }}</h2>
+        <p>下载后将压缩包完整解压，在 ICPC Tools Resolver 中打开解压后的目录，即可进行赛后滚榜。</p>
+        <form method="get" action="{{ resolver.url }}">
+          <input type="hidden" name="download" value="1">
+          {% if not resolver.replay %}
+          <p><strong>封榜时间：</strong>{{ resolver.freezeText }}（Asia/Shanghai），距比赛结束 {{ resolver.minutes }} 分钟。</p>
+          {% endif %}
+          <p><strong>奖牌配置：</strong>金牌 {{ resolver.medals.gold }} 名，银牌 {{ resolver.medals.silver }} 名，铜牌 {{ resolver.medals.bronze }} 名。</p>
+          <p><button class="primary rounded button" type="submit"><span class="icon icon-download"></span> 下载滚榜包</button></p>
+        </form>
+      </div>
+    </section>
+  </div>
+  <div class="medium-4 columns">
+    <section class="section">
+      <div class="section__header"><h2 class="section__title">如何使用</h2></div>
+      <div class="section__body typo">
+        <ol><li>在展示电脑安装 Java 17 或更新版本。</li><li>下载并解压 <a href="https://tools.icpc.global/resolver" target="_blank" rel="noopener">ICPC Tools Resolver 稳定版</a>。</li><li>下载并完整解压本页的滚榜包。</li><li>双击包内的 <code>start-resolver.cmd</code>，输入 Resolver 的解压目录（含 <code>lib</code> 文件夹）。</li></ol>
+        <p>空格：向前一步；<code>b</code>：回退；<code>0</code>：重新开始。</p>
+      </div>
+      <div class="section__body"><a class="rounded button" href="{{ url('arena_view', tid=tdoc.docId, view='jury') }}">返回现场裁判页</a><a class="rounded button" href="{{ url('contest_scoreboard', tid=tdoc.docId) }}">OJ 成绩表</a></div>
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -77,7 +77,7 @@ export function isDone(tdoc: Tdoc, tsdoc?: ContestStatusDoc): boolean {
 
 export function isLocked(tdoc: Tdoc, time = new Date()) {
     if (!tdoc.lockAt) return false;
-    return tdoc.lockAt < time && !tdoc.unlocked;
+    return (tdoc.rule === 'icpc_domjudge' ? tdoc.lockAt <= time : tdoc.lockAt < time) && !tdoc.unlocked;
 }
 
 export function isExtended(tdoc: Tdoc) {
@@ -267,6 +267,7 @@ const acm = buildContestRule({
                     docType: document.TYPE_CONTEST,
                     docId: tdoc.docId,
                     accept: { $gte: 1 },
+                    registrationCancelled: { $ne: true },
                 },
             },
             { $project: { r: { $objectToArray: '$detail' } } },
@@ -914,12 +915,20 @@ export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
 }
 
 export function getMultiStatus(domainId: string, query: any) {
-    return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
+    return document.getMultiStatus(domainId, document.TYPE_CONTEST, { registrationCancelled: { $ne: true }, ...query });
 }
 
 export async function getTeamVid(domainId: string, tid: ObjectId, uid: number): Promise<number | null> {
     const s = await getMultiStatus(domainId, { docId: tid, members: uid }).project({ uid: 1 }).limit(1).next();
     return s?.uid ?? null;
+}
+
+export async function getRecordParticipant(domainId: string, tid: ObjectId, uid: number, rid: ObjectId): Promise<number> {
+    // The recorded entry remains authoritative after cancellation or roster changes.
+    const previous = await document.getMultiStatus(domainId, document.TYPE_CONTEST, {
+        docId: tid, 'journal.rid': rid,
+    }).project({ uid: 1 }).limit(1).next();
+    return previous?.uid ?? await getTeamVid(domainId, tid, uid) ?? uid;
 }
 
 export async function updateStatus(
@@ -932,7 +941,8 @@ export async function updateStatus(
     }: { status?: STATUS, score?: number, subtasks?: Record<number, SubtaskResult>, lang?: string } = {},
 ) {
     const tdoc = await get(domainId, tid);
-    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED && !isLocked(tdoc)) await addBalloon(domainId, tid, uid, rid, pid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED && !isLocked(tdoc)
+        && !(await getStatus(domainId, tid, uid))?.registrationCancelled) await addBalloon(domainId, tid, uid, rid, pid);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
         rid, pid, status, score, subtasks, lang,
     }, 'rid');
@@ -960,7 +970,7 @@ export async function getListStatus(domainId: string, uid: number, tids: ObjectI
 
 export async function attend(domainId: string, tid: ObjectId, uid: number, payload: any = {}) {
     try {
-        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1, payload);
+        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1, { ...payload, registrationCancelled: false });
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
@@ -995,7 +1005,7 @@ export function getMulti(
 export async function getAndListStatus(domainId: string, tid: ObjectId): Promise<[Tdoc, any[]]> {
     // TODO(iceboy): projection, pagination.
     const tdoc = await get(domainId, tid);
-    const tsdocs = await document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid })
+    const tsdocs = await getMultiStatus(domainId, { docId: tid })
         .sort(RULES[tdoc.rule].statusSort).toArray();
     return [tdoc, tsdocs];
 }
@@ -1195,6 +1205,7 @@ global.Hydro.model.contest = {
     getListStatus,
     getMultiStatus,
     getTeamVid,
+    getRecordParticipant,
     isSameTeam,
     isOwnOrTeammateRecord,
     attend,

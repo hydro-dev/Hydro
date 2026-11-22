@@ -43,7 +43,9 @@
     {% endif %}
     {% if not (tsdoc.attend) and not model.contest.isDone(tdoc) %}
       <li class="menu__item">
-    {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+    {% if tdoc.rule == 'icpc_domjudge' %}
+        <span class="menu__link disabled">现场赛由管理员添加参赛者</span>
+    {% elif handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       {% set team_vdocs = team_vdocs|default([]) %}
       <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST" data-contest-attend-form{% if tdoc.allowTeam or tdoc._code %} data-contest-needs-dialog{% endif %}>
         <input type="hidden" name="operation" value="attend">
@@ -128,6 +130,11 @@
       </li>
       {% endif %}
     {% endif %}{# not attend and not done #}
+    {% if tdoc.rule == 'icpc_domjudge' %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('arena_home', tid=tdoc.docId) }}" data-no-instant>
+        <span class="icon icon-award"></span> 进入现场比赛
+      </a></li>
+    {% endif %}
     {% if model.contest.canShowScoreboard.call(handler, tdoc, False) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_scoreboard', tid=tdoc.docId) }}">
         <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}
@@ -137,7 +144,7 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
-    {% if tdoc.allowPrint and (tsdoc.attend or handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST)) %}
+    {% if tdoc.rule != 'icpc_domjudge' and tdoc.allowPrint and (tsdoc.attend or handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST)) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_print', tid=tdoc.docId) }}">
         <span class="icon icon-print"></span> {{ _('Print') }}
       </a></li>

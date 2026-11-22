@@ -1,0 +1,5 @@
+<h1 class="teamoverview">Clarifications</h1>
+{% if arena.broadcasts|length %}{% set clarificationRows = arena.broadcasts %}{% set clarificationReplies = true %}{% include "arena/clarification-table.html" %}{% else %}<p class="nodata">No clarifications.</p>{% endif %}
+<h1 class="teamoverview">Clarification Requests</h1>
+{% if arena.requests|length %}{% set clarificationRows = arena.requests %}{% set clarificationReplies = false %}{% include "arena/clarification-table.html" %}{% else %}<p class="nodata">No clarification request.</p>{% endif %}
+{% if arena.canSubmit %}<button class="btn btn-secondary btn-sm" type="button" data-open-clarification>Request clarification</button>{% endif %}

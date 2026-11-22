@@ -1,0 +1,4 @@
+<h2>Clarification requests</h2>
+{% for item in arena.requests %}
+<div class="jury-request"><p><strong>{{ item.from }}</strong> · {{ item.subject }} <span class="badge {{ 'badge-success' if item.answered else 'badge-warning' }}">{{ 'Answered' if item.answered else 'Unanswered' }}</span></p><div>{{ item.content|markdown|safe }}</div>{% for reply in item.replies %}<div class="jury-reply">{{ reply.content|markdown|safe }}</div>{% endfor %}<form method="post" data-arena-form><input type="hidden" name="csrf" value="{{ arena.csrf }}"><input type="hidden" name="operation" value="reply"><input type="hidden" name="did" value="{{ item.id }}"><label>Reply to this team<textarea name="content" rows="2" required maxlength="10000"></textarea></label><button class="btn btn-primary btn-sm" type="submit">Send reply</button></form></div>
+{% else %}<p class="nodata">No clarification requests.</p>{% endfor %}

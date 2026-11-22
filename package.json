@@ -21,6 +21,7 @@
         "build:ui:production:webpack": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --production",
         "build:ui-next": "tsc -p tsconfig.ui-next.json --noEmit && yarn workspace @hydrooj/ui-next vite build",
         "test": "node -r @hydrooj/register packages/common/tests/subtask.spec.ts && node test/entry.js",
+        "test:arena": "node --test packages/contest-arena/*.test.ts",
         "benchmark": "cross-env BENCHMARK=true node test/entry.js",
         "oxlint": "cd framework/eslint-config && node -r @hydrooj/register build.ts && cd ../../ && oxlint --config framework/eslint-config/.oxlintrc.json",
         "lint": "eslint packages plugins modules framework --ext .ts,.tsx,.jsx,.vue,.yaml,.yml --fix",

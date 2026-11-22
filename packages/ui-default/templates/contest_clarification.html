@@ -45,7 +45,7 @@
                 <div class="media__body top">
                   <div class="clearfix">
                     <div class="supplementary dczcomments__supplementary">
-                      <b>{{ _('Jury') }}</b>
+                      {% if rdoc.owner == 0 %}<b>{{ _('Jury') }}</b>{% else %}{{ user.render_inline(udict[rdoc.owner], badge=false) }}{% endif %}
                     </div>
                   </div>
                   <div class="typo richmedia" data-emoji-enabled>

@@ -6,7 +6,7 @@ import Schema from 'schemastery';
 import { Counter } from '@hydrooj/utils';
 import { Tdoc, Udoc } from '../interface';
 import difficultyAlgorithm from '../lib/difficulty';
-import rating from '../lib/rating';
+import rating, { selectRatingContests } from '../lib/rating';
 import { PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
@@ -55,8 +55,9 @@ export const RpTypes: Record<string, RpDef> = {
     },
     contest: {
         async run(domainIds, udict, report) {
-            const contests: Tdoc[] = await contest.getMulti('', { domainId: { $in: domainIds }, rated: true })
-                .limit(10).toArray() as any;
+            const contests = await selectRatingContests<Tdoc>(
+                contest.getMulti('', { domainId: { $in: domainIds }, rated: true }), contest.RULES,
+            );
             if (contests.length) await report({ message: `Found ${contests.length} contests in ${domainIds[0]}` });
             for (const tdoc of contests.reverse()) {
                 const start = Date.now();

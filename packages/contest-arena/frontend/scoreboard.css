@@ -1,0 +1,63 @@
+/* Scoreboard geometry and colours follow DOMjudge 9, with native responsive views. */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.public-interface .navbar{background:#f8f9fa;color:#212529}
+.public-interface .navbar-brand,.public-interface .navbar-brand:hover{color:#111}
+.public-interface .nav-link{color:#62666a}.public-interface .nav-link.active,.public-interface .nav-link:hover{color:#111}
+.public-interface .navbar-nav{flex:1}.public-interface .navbar-actions{margin-left:auto}
+.public-interface .countdown{color:#62666a;font-size:16px}.public-interface .navbar-toggler{border-color:#bbb;color:#666}
+.public-interface.contest-ended .progress-track{display:none}
+.btn-login{background:#0dcaf0;color:#000;border-color:#0dcaf0}.btn-login:hover{background:#31d2f2;color:#000}
+.btn-outline-secondary{background:#fff;color:#6c757d;border-color:#6c757d}.btn-outline-secondary:hover{background:#6c757d;color:#fff}
+.scoreboard-contest-card{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#f7f7f7;border:1px solid #ddd;border-radius:4px;padding:9px 16px;margin:12px 0 8px;min-height:43px}
+.scoreboard-contest-card>span{color:#666;text-align:right}.scoreboard-freeze{font-size:13px;margin:12px 0}
+.scoreboard-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:7px 8px 10px;min-height:32px}
+.scoreboard-filters{position:relative;z-index:42}.scoreboard-filters>summary{list-style:none;white-space:nowrap}.scoreboard-filters>summary::-webkit-details-marker{display:none}
+.caret{display:inline-block;margin-left:8px;border-top:4px solid;border-left:4px solid transparent;border-right:4px solid transparent;vertical-align:3px}
+.scoreboard-filter-panel{position:absolute;top:calc(100% + 3px);left:0;width:310px;max-width:calc(100vw - 42px);padding:16px;background:#fff;border:1px solid #ddd;border-radius:4px;box-shadow:0 4px 14px #0002}
+.scoreboard-filter-panel label{font-size:14px;margin-bottom:12px}.scoreboard-filter-panel input,.scoreboard-filter-panel select{font-size:14px;margin-top:5px}
+.scoreboard-tools{display:flex;align-items:center;gap:8px}.team-count{font-size:12px;color:#6c757d;margin-right:8px;white-space:nowrap}
+.auto-refresh{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;margin:0 3px}.auto-refresh input[type=checkbox]{display:inline-block;width:14px;height:14px;margin:0;padding:0;box-shadow:none;accent-color:#0d6efd}
+.scoreboard-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scoreboard-table{width:auto;max-width:none;min-width:0;margin:0 auto 12px;border-collapse:collapse;border-spacing:0;table-layout:auto;font-size:13px;line-height:1.3;color:#000}
+.scoreboard-table .medal-column{width:28px}.scoreboard-table .rank-column{width:27px}.scoreboard-table .logo-column{width:36px}.scoreboard-table .heart-column{width:28px}.scoreboard-table .team-column{width:180px}.scoreboard-table .solved-column{width:34px}.scoreboard-table .time-column{width:43px}.scoreboard-table .problem-column{width:64px}
+.scoreboard-table tr{height:42px;border-bottom:1px solid #000}
+.scoreboard-table th,.scoreboard-table td{padding:0;vertical-align:middle;border-right:1px solid silver;background:transparent;text-align:center}
+.scoreboard-table thead th{font-size:13px;font-weight:700;font-variant:small-caps;white-space:nowrap;padding:4px 1px;border-top:1px solid #ddd;border-bottom:2px solid #000;background:#fff}
+.scoreboard-table tbody td,.scoreboard-table tbody tr:nth-child(even) td{height:auto;background:transparent}
+.scoreboard-table tbody td{padding:0}
+.scoreboard-table .rank{width:auto;min-width:27px;padding:0 4px;font-weight:400}
+.scoreboard-table .teamname{width:auto;min-width:150px;max-width:215px;text-align:right;white-space:nowrap;overflow:hidden;overflow-wrap:normal;padding:0 12px}
+.score-team-name{display:block;width:100%;max-width:205px;padding:2px 0;border:0;background:none;text-align:right;color:#000;font-size:13px;line-height:1.45;cursor:pointer}
+.score-team-name:hover .team-label{text-decoration:underline}.team-label{display:block;font-weight:700;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.score-team-name .univ{display:block;font-weight:400;color:#696969;font-size:10.5px;overflow:hidden;text-overflow:ellipsis}
+.scoreboard-table .solved,.scoreboard-table .penalty{width:auto;min-width:32px;text-align:center}.scoreboard-table .solved{font-weight:700;border-right:0;padding:0 6px}.scoreboard-table .penalty{min-width:43px;padding:0 5px;font-weight:400}
+.scoreboard-table .affiliation-cell,.scoreboard-table .heart-cell,.scoreboard-table .medal-cell{border-right:0;padding:0 2px}
+.affiliation-logo{display:block;margin:auto;object-fit:contain;max-height:32px;max-width:32px}
+.affiliation-logo.contestant-avatar{border-radius:50%;object-fit:cover}
+.favorite-team{width:25px;height:30px;border:0;padding:4px;background:none;color:#000;line-height:1}.favorite-team svg{stroke-width:1.7;width:15px;height:15px}.favorite-team[aria-pressed=true]{color:#dc3545}.favorite-team[aria-pressed=true] svg{fill:currentColor}
+.score-medal{display:inline-block;width:24px;height:28px;fill:currentColor;stroke:none;vertical-align:middle}.gold-medal{color:#eec710}.silver-medal{color:#aaa}.bronze-medal{color:#c08e55}
+.scoreboard-table .problem-head{padding:5px 4px}.problem-badge{display:inline-block;min-width:34px;padding:4px 7px;border:1px solid #0003;border-radius:6px;background:var(--problem-color);color:var(--problem-text);font-size:16px;line-height:1.2;text-align:center;font-weight:700}
+.scoreboard-table .score-cell{min-width:64px;padding:0;border-right:0;text-align:center;font-variant-numeric:tabular-nums}
+.scoreboard-table .score-cell-link,.scoreboard-table .score-cell a.score-cell-link{display:block;min-height:0;padding:2px 1px;color:#000;text-decoration:none}
+.scoreboard-table .score-box{display:inline-block;width:4em;min-height:38px;font-size:15.6px;font-weight:400;line-height:1.3;background:transparent}
+.scoreboard-table .score-box .cell-time{display:block;font-size:inherit;font-weight:400;min-height:20px}
+.scoreboard-table .score-box .cell-attempts{display:block;font-size:70%;font-weight:400;line-height:1.3;margin:0;white-space:nowrap}
+.score-box.correct,.legend-cell.correct,.mobile-problem.correct{background:#60e760}
+.score-box.first-to-solve,.legend-cell.first-to-solve,.mobile-problem.first-to-solve{background:#1daa1d;color:#000}
+.score-box.incorrect,.legend-cell.incorrect,.mobile-problem.incorrect{background:#e87272}
+.score-box.pending,.legend-cell.pending,.mobile-problem.pending{background:#6666ff;color:#000}
+.score-box.untried,.legend-cell.untried,.mobile-problem.untried{background:#fff}
+.scoreboard-table tr.own-team{background:#ffff99}.scoreboard-table tbody tr.own-team>td:not(.score-cell){background:#ffff99}
+.scoreboard-table tr.followed-team,.scoreboard-table tbody tr.followed-team>td:not(.score-cell){background:#ffffe0}
+.scoreboard-table [data-scoreboard-favorites]:not(:empty){border-top:2px solid #000;border-bottom:4px solid #000}
+.scoreboard-table tfoot tr{border-top:2px solid #000}.scoreboard-table tfoot td{padding:5px 3px;vertical-align:top;border-right:0}
+.scoreboard-table .scoresummary{font-variant:small-caps;font-size:14px;text-align:center;padding-top:12px}
+.scoreboard-table .score-summary{text-align:left;font-size:11.5px;color:#000}.score-summary>span{display:block;white-space:nowrap;line-height:1.5}.score-summary svg{width:12px;height:12px;margin-right:2px}
+.scoreboard-legends{display:flex;justify-content:center;align-items:flex-start;gap:28px;margin:30px auto 16px;flex-wrap:wrap}
+.score-legend{border-collapse:collapse;font-size:13px;min-width:175px;text-align:center;color:#000}.score-legend caption{caption-side:top;font-variant:small-caps;font-weight:700;padding:4px;border-bottom:2px solid #000;color:#000}.score-legend tr{border-bottom:1px solid #000}.score-legend td{padding:2px 0}.legend-cell{display:block;padding:3px 8px}.medal-legend td{padding:3px 12px;text-align:left}.medal-legend .score-medal{width:17px;height:20px;margin-right:5px}
+.scoreboard-lastmod{display:block;margin-top:24px;font-size:12px;color:#212529;border-top:0;padding:0 0 20px}.scoreboard-lastmod [data-updated]{display:block;margin:0}.scoreboard-lastmod>a{display:block}
+.mobile-scoreboard{display:none}.pinned-scoreheader{position:fixed;z-index:40;pointer-events:none;overflow:hidden;background:#fff}.pinned-scoreheader .scoreboard-table{margin:0;table-layout:fixed}.pinned-scoreheader .scoreheader th{position:static}
+#team-dialog h3{margin:0 0 5px;font-size:23px;overflow-wrap:anywhere}#team-dialog .submission-info{margin-bottom:0}
+@media(min-width:768px){.scoreboard-table .teamname{width:auto}.desktop-scoreboard{display:table}}
+@media(max-width:767px){.scoreboard-scroll{display:none}.mobile-scoreboard{display:table;width:100%;table-layout:auto}.mobile-scoreboard .teamname{width:auto;min-width:0;max-width:170px}.mobile-scoreboard .score-team-name{font-size:13px;max-width:none}.mobile-scoreboard .rank{width:32px;min-width:28px}.mobile-scoreboard .rank .score-medal{display:block;margin:0 auto;width:17px;height:19px}.mobile-scoreboard .solved{width:43px;min-width:40px;vertical-align:middle;font-size:16px;border-right:0}.mobile-scoreboard .solved small{display:block;font-size:12px;font-weight:400;margin-top:4px}.mobile-scoreboard .affiliation-cell{width:32px}.mobile-scoreboard .affiliation-logo{max-width:28px;max-height:28px}.mobile-scoreboard .heart-cell{width:27px}.mobile-team-row{height:38px!important;border-bottom:0!important}.mobile-problems-row{height:34px!important}.mobile-problems-row>td{padding:0 3px 5px!important;border:0}.mobile-problem-badges{display:flex;gap:3px;flex-wrap:wrap;align-items:center}.mobile-problem{display:flex;flex-direction:column;justify-content:center;min-width:21px;min-height:29px;padding:1px 3px;border:1px solid #ccc;border-radius:3px;font-size:10px;text-align:center}.mobile-problem b{font-size:11px;line-height:1.1}.mobile-problem small{font-size:9px;line-height:1.1;margin-top:2px}.scoreboard-table .teamname{width:auto}.scoreboard-contest-card{align-items:flex-start;gap:4px;flex-direction:column;font-size:14px;padding:9px 12px;margin-top:4px}.scoreboard-contest-card>span{text-align:left;font-size:12px}.scoreboard-toolbar{margin:8px 0;gap:6px}.scoreboard-tools{gap:5px;flex-wrap:wrap;justify-content:flex-end}.team-count{margin-right:0}.auto-refresh{font-size:11px}.scoreboard-tools .btn{font-size:11px;padding:4px 6px}.scoreboard-legends{margin-top:20px;gap:14px}.score-legend{font-size:11px;min-width:140px}.public-interface .navbar-actions{margin-left:0}.public-interface .navbar-collapse.open .navbar-nav{display:block}}
+@media print{@page{size:landscape;margin:12mm}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{padding-top:0!important}.navbar{position:static;min-height:44px;padding:5px 12px;margin-bottom:20px;background:#f8f9fa!important;color:#111!important}.navbar-brand,.navbar .nav-link,.navbar .countdown{color:#111!important}.navbar-toggler,.navbar .btn-success,.navbar .notify-button,.account-menu,.progress-track,.scoreboard-toolbar,.scoreboard-filters,.scoreboard-tools,.pinned-scoreheader,.mobile-scoreboard,.scoreboard-legends,dialog,footer:not(.scoreboard-lastmod){display:none!important}.navbar-collapse{display:flex!important}.container-fluid{padding:0!important}.scoreboard-scroll{display:block!important;overflow:visible}.desktop-scoreboard{display:table!important;width:auto!important;font-size:11px!important}.scoreboard-table .score-box{font-size:14px}.scoreboard-table .score-cell{min-width:58px}.scoreboard-table .teamname{min-width:130px}.scoreboard-table tr{break-inside:avoid;page-break-inside:avoid}.scoreboard-table thead{display:table-header-group}.scoreboard-table tfoot{display:table-row-group}.scoreboard-table [data-scoreboard-favorites]{display:none!important}.scoreboard-table tr.followed-team,.scoreboard-table tbody tr.followed-team>td:not(.score-cell){background:#fff!important}.favorite-team{color:#000!important}.favorite-team svg{fill:none!important}.scoreboard-lastmod{margin-top:12px}}
