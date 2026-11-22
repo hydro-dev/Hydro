@@ -1,0 +1,60 @@
+/* Layout reference: DOMjudge 9.0.0 team templates and style_domjudge.css.
+ * Data and actions remain native Hydro. Account exits follow onsite policy. */
+:root{font-family:Roboto,Arial,sans-serif;color:#000}
+body{padding-top:72px;padding-bottom:32px}
+.container-fluid{padding:0 12px}
+.navbar{gap:24px}.navbar-brand{font-size:20px}.navbar-actions{gap:16px}
+.arena-username{display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;color:#ddd}
+.btn-success{background:#0a8927;border-color:#0a8927}.btn-success:hover{background:#087322;border-color:#087322}
+.btn-primary{background:#0072ed;border-color:#0072ed}.badge-danger{color:#fff;background:#dc3545}
+.contest-page-title{font-size:40px;font-weight:500;text-align:center;line-height:1.2;margin:24px 0 16px}
+.contest-container{width:100%;margin:0 auto;padding:0 12px}
+.contest-card{border:1px solid #0000002d;border-radius:6px;background:#fff;overflow:hidden;min-width:0}
+.contest-card-body{padding:16px}.contest-card-header{padding:8px 16px;display:flex;justify-content:space-between;gap:16px;background:#00000008;border-bottom:1px solid #0000002d}
+.contest-card hr{border:0;border-top:1px solid #0000002d;margin:16px 0}
+.problem-grid,.language-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+.problem-card{text-align:center}.problem-card h2{font-size:1.17em;margin:0 0 8px;line-height:1.2}
+.problem-card h3{font-size:1.12em;font-weight:500;color:#6c757d;margin:0 0 8px;line-height:1.25}
+.problem-limits{font-size:.83em;color:#6c757d;margin:0 0 8px;line-height:1.3}
+.problem-badge{display:inline-block;border:1px solid #0003;border-radius:6px;font-weight:700;line-height:1;padding:.35em .65em;font-variant:normal;text-transform:none}
+.problem-card-submit{margin-top:18px}.problem-card-links{margin-top:10px}.problem-card-files{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:16px;padding-top:16px;border-top:1px solid #0000002d}
+.language-grid{gap:8px}.language-title{font-size:32px;font-weight:500;margin:0;line-height:1.2;overflow-wrap:anywhere}.language-title code{color:#d63384;font-family:Consolas,"Liberation Mono",monospace;font-size:.875em}.language-title small{font-size:50%;font-weight:400}
+.overview-grid{gap:24px;margin-top:24px}.teamoverview{border-top:1px solid darkgray;border-bottom:1px solid darkgray;background:#c4d8ff;margin:16px 0 8px;padding:0 8px;font-size:1.17em;text-align:center;line-height:1.2;font-weight:500}
+.team-welcome{text-align:center;padding-top:48px}.team-welcome h1{font-size:40px;font-weight:500;line-height:1.2;margin:0 0 8px}.team-welcome h1 strong{font-weight:700}.team-welcome h2{font-size:32px;color:silver;font-weight:400;margin:0;line-height:1.2}
+.table-sm th,.table-sm td{padding:4px!important}.table-sm thead th{background:#e9ecef;color:#212529;font-weight:700;border-bottom:1px solid #dee2e6}
+.submissions-table{font-size:16px}.submissions-table a,.clarification-table a{color:inherit;text-decoration:none}.submissions-table .langid{font-variant:small-caps}.submissions-table .verdict{font-variant:small-caps;font-size:16px;font-weight:700}.submissions-table .problem-badge{font-size:.875em;padding:.25em .5em}
+.correct-text{color:green}.incorrect-text{color:red}.pending-text{color:gray}.nodata{font-size:16px;color:inherit;font-style:italic;margin:0 0 16px}
+.clarification-table{font-size:14px}.clarification-table th:not(:last-child),.clarification-table td:not(:last-child){white-space:nowrap}.clarification-table td:last-child{min-width:120px;overflow-wrap:anywhere}.clarification-page{margin:0 auto;max-width:800px}
+.clarification-thread .contest-card{margin-bottom:16px}.clarification-address{display:flex;gap:24px}.clarification-address>span{flex:1}.clarification-content{padding:0;font-size:16px;line-height:1.5}.clarification-content>:last-child{margin-bottom:0}
+.clarification-followup{margin-top:16px}.clarification-followup>summary{list-style:none}.clarification-followup>summary::-webkit-details-marker{display:none}.clarification-followup>form{margin-top:16px;border:1px solid #0000002d;border-radius:6px;padding:16px}
+.clarification-preview{position:relative;min-height:80px;margin:22px 0 16px;border:1px solid #0000002d;border-radius:6px;padding:22px 16px 16px;overflow-wrap:anywhere}.clarification-preview>span{position:absolute;top:-10px;left:14px;background:#fff;padding:0 5px;color:#6c757d;font-size:12px}.clarification-preview p:last-child{margin-bottom:0}
+.submission-detail-meta{display:flex;flex-wrap:wrap;gap:0}.submission-detail-meta>span{padding:8px}.submission-verdict{font-size:16px;font-weight:400;margin:0;padding:8px}.compilation-section{border-top:1px solid #dee2e6;margin:16px 0;padding-top:16px}.compilation-section h3{font-size:16px;font-weight:500;line-height:1.2;text-align:center;margin:0 0 8px}.compilation-section .nodata{margin-bottom:0}
+.problem-statement h1{font-size:24px;text-align:left;font-weight:600}.problem-statement h2{font-size:22px;text-align:left}.problem-statement h3{font-size:19px;text-align:left}
+.compiler-output{font-size:14px;border:0;border-top:1px dotted silver;border-bottom:1px dotted silver;background:#fafafa;margin:0;padding:5px;max-height:300px;overflow:auto;white-space:pre}
+.submission-download{margin:16px 8px}.submission-source{margin-top:20px}.submission-source>summary{cursor:pointer;color:#6c757d}.submission-source .source-actions{text-align:right;margin:10px 0}.source-code{max-height:400px}.submission-detail-page{max-width:1000px}
+.submit-page,.print-page{max-width:450px;margin:48px auto 0}.submit-page h1,.print-page h1{font-size:40px;text-align:center;line-height:1.2;margin:0 0 16px}.print-form{margin:24px 0}.print-form input[type=file],input[data-source-file]{width:100%;font-size:16px;color:#495057;border:1px solid #ced4da;border-radius:6px;padding:0;background:#fff;line-height:1.5}.print-form input[type=file]::file-selector-button,input[data-source-file]::file-selector-button{border:0;border-right:1px solid #ced4da;background:#f8f9fa;color:#212529;padding:6px 12px;margin-right:12px}.submit-page .modal-body{padding:0}.submit-page .modal-footer{padding:16px 0}
+.modal-dialog{width:800px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 56px);margin:28px auto auto;overflow:hidden;border-radius:8px;border:1px solid #0000002d;box-shadow:none}
+.modal-dialog[open]{display:flex;flex-direction:column}.modal-dialog>.modal-header,.modal-dialog>.modal-footer{flex:none}.modal-dialog>form{display:flex;flex-direction:column;min-height:0;overflow:hidden}.modal-dialog .modal-body{overflow-y:auto;min-height:0;padding:16px}.modal-dialog .modal-header{padding:16px}.modal-dialog .modal-header h2{font-size:20px;line-height:1.5;font-weight:500}.modal-header>button{font-size:26px;font-weight:400;line-height:24px}.modal-footer{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:12px;border-top:1px solid #dee2e6}.modal-dialog label{margin:0 0 16px}.modal-dialog form label:last-of-type{margin-bottom:0}.modal-body>.alert:last-child{margin-bottom:0}.modal-dialog input:disabled{background:#e9ecef;cursor:default}.modal-dialog .form-error{margin-bottom:0}.modal-dialog[aria-busy=true] [data-detail-body]{min-height:100px}.modal-dialog .contest-container{padding:0}.modal-load-error{white-space:pre-wrap;color:#721c24}
+footer:not(.scoreboard-lastmod){border:0;margin-top:48px;padding:16px 0;color:#6c757d}
+@media(min-width:576px){.contest-container{max-width:540px}}
+@media(min-width:768px){.contest-container{max-width:720px}.problem-grid,.language-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:992px){.contest-container{max-width:960px}.problem-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1200px){.contest-container{max-width:1140px}}
+@media(min-width:1400px){.contest-container{max-width:1320px}}
+@media(max-width:767px){.team-welcome h1,.contest-page-title,.submit-page h1,.print-page h1{font-size:30px}.team-welcome h2{font-size:24px}.team-welcome{padding-top:32px}.overview-grid{gap:8px}.contest-container{padding:0}.language-title{font-size:26px}.clarification-address{flex-direction:column;gap:4px}.contest-card-header{flex-wrap:wrap;gap:4px}.submit-page,.print-page{margin-top:32px}.modal-dialog{max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);margin-top:8px}.modal-dialog .modal-body{padding:16px}.submissions-table{font-size:14px}.submissions-table .verdict{font-size:14px}}
+
+/* Keep contest actions visible while the navigation links collapse on small screens. */
+body{padding-top:calc(var(--arena-nav-height,56px) + 20px)}
+.progress-track{top:var(--arena-nav-height,56px)}
+.navbar-actions{flex-wrap:wrap;justify-content:flex-end}
+.contest-page-title,.page-heading h1,.team-welcome h1{overflow-wrap:anywhere}
+@media(max-width:767px){
+  .navbar-collapse,.navbar-collapse.open{display:contents}
+  .navbar-nav{display:none;order:3;flex-basis:100%;width:100%}
+  .navbar-collapse.open .navbar-nav{display:flex}
+  .navbar-toggler{align-self:flex-start}
+  .navbar-actions{display:flex;order:2;flex:1;max-width:calc(100% - 54px);padding:0;gap:6px}
+  .navbar-actions .arena-username{display:none}
+  .navbar-actions .btn{font-size:12px;padding:4px 6px}
+  .navbar-actions .countdown{font-size:12px;min-width:86px}
+}

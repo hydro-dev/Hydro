@@ -1,0 +1,68 @@
+{% set withHearts = not ownTable and arena.publicInterface %}
+{% set teamColumns = 1 + (1 if arena.hasLogos else 0) + (1 if withHearts else 0) %}
+{% set leadColumns = 1 + (1 if arena.hasMedals else 0) + teamColumns %}
+{% macro medal(row) %}{% if row.medal %}<svg class="score-medal {{ row.medal }}-medal" role="img" aria-label="{{ row.medal|capitalize }} medal"><use href="#i-medal"/></svg>{% endif %}{% endmacro %}
+{% macro heart(row) %}<button class="favorite-team" type="button" data-favorite="{{ row.uid }}" aria-label="Follow {{ row.name }}" aria-pressed="false" title="Follow this team"><svg><use href="#i-heart"/></svg></button>{% endmacro %}
+{% macro teamName(row) %}<button class="score-team-name" type="button" data-team-dialog title="{{ row.name }}"><span class="team-label">{{ row.name }}</span>{% if row.organization %}<span class="univ">{{ row.organization }}</span>{% endif %}</button>{% endmacro %}
+{% macro rowData(row) %}data-scoreboard-row data-team-id="{{ row.uid }}" data-team-name="{{ row.name|lower }}" data-team-label="{{ row.name }}" data-affiliation="{{ row.organization }}" data-category="{{ row.category }}" data-members="{{ row.members|join(' / ') }}" data-rank="{{ row.rank }}" data-solved="{{ row.solved }}" data-penalty="{{ row.penalty }}"{% endmacro %}
+{% macro cellContent(cell) %}
+  {% if cell.submissions or cell.pending %}
+  {% if cell.url %}<a class="score-cell-link" href="{{ cell.url }}" data-arena-modal="submission">{% else %}<span class="score-cell-link">{% endif %}
+    <span class="score-box {{ cell.state }} {{ 'first-to-solve' if cell.first }}" title="{% if cell.first %}First to solve. {% endif %}{% if cell.correct %}Solved after {{ cell.time }} minutes. {% endif %}{{ cell.submissions }} judged, {{ cell.pending }} pending; {{ cell.attempts }} rejected before solving.">
+      <span class="cell-time">{% if cell.correct %}{{ cell.time }}{% else %}&nbsp;{% endif %}</span>
+      <span class="cell-attempts">{{ cell.submissions }}{% if cell.pending %} + {{ cell.pending }} tries{% else %} {{ 'try' if cell.submissions == 1 else 'tries' }}{% endif %}</span>
+    </span>
+  {% if cell.url %}</a>{% else %}</span>{% endif %}
+  {% endif %}
+{% endmacro %}
+<div class="scoreboard-scroll">
+<table class="scoreboard-table desktop-scoreboard" id="{{ 'team-score' if ownTable else 'scoreboard' }}">
+  <caption class="sr-only">{{ 'Your team' if ownTable else arena.title }} scoreboard</caption>
+  <colgroup>{% if arena.hasMedals %}<col class="medal-column">{% endif %}<col class="rank-column">{% if arena.hasLogos %}<col class="logo-column">{% endif %}{% if withHearts %}<col class="heart-column">{% endif %}<col class="team-column"></colgroup>
+  <colgroup><col class="solved-column"><col class="time-column"></colgroup>
+  <colgroup>{% for p in arena.problems %}<col class="problem-column">{% endfor %}</colgroup>
+  <thead><tr class="scoreheader">
+    <th scope="col" colspan="{{ 2 if arena.hasMedals else 1 }}">rank</th><th scope="col" colspan="{{ teamColumns }}">team</th><th scope="col" colspan="2" title="Number solved / penalty time in minutes">score</th>
+    {% for p in arena.problems %}<th scope="col" class="problem-head" title="Problem {{ p.label }} — {{ p.title }}"><span class="problem-badge" style="--problem-color:{{ p.color }};--problem-text:{{ p.textColor }}">{{ p.label }}</span></th>{% endfor %}
+  </tr></thead>
+  {% if not ownTable %}<tbody data-scoreboard-favorites></tbody>{% endif %}
+  <tbody {% if not ownTable %}data-scoreboard-main{% endif %}>
+  {% for row in boardRows %}<tr class="{{ 'own-team' if row.mine }}" {{ rowData(row) }}>
+    {% if arena.hasMedals %}<td class="medal-cell">{{ medal(row) }}</td>{% endif %}
+    <td class="rank">{{ row.rank if ownTable else row.rankLabel }}</td>
+    {% if arena.hasLogos %}<td class="affiliation-cell">{% if row.logo %}<img class="affiliation-logo {{ 'contestant-avatar' if row.avatar }}" src="{{ row.logo }}" {% if row.avatar %}data-user-avatar{% endif %} referrerpolicy="no-referrer" alt="{{ row.name ~ ' avatar' if row.avatar else row.organization }}" loading="lazy" width="32" height="32">{% endif %}</td>{% endif %}
+    {% if withHearts %}<td class="heart-cell">{{ heart(row) }}</td>{% endif %}
+    <td class="teamname">{{ teamName(row) }}</td><td class="solved">{{ row.solved }}</td><td class="penalty">{{ row.penalty }}</td>
+    {% for cell in row.cells %}<td class="score-cell" data-problem-label="{{ arena.problems[loop.index0].label }}">{{ cellContent(cell) }}</td>{% endfor %}
+  </tr>{% else %}<tr><td colspan="{{ leadColumns + 2 + arena.problems.length }}" class="nodata">No teams on the scoreboard.</td></tr>{% endfor %}
+  {% if not ownTable %}<tr class="score-no-matches" hidden><td colspan="{{ leadColumns + 2 + arena.problems.length }}" class="nodata">No teams match the selected filters.</td></tr>{% endif %}
+  </tbody>
+  {% if not ownTable %}<tfoot><tr class="score-summary-row"><td colspan="{{ leadColumns }}" class="scoresummary">Summary</td><td class="solved" title="Total solved">{{ arena.totalSolved }}</td><td></td>
+    {% for item in arena.summary %}<td class="score-summary">
+      <span title="Number of accepted submissions"><svg><use href="#i-thumbs-up"/></svg> {{ item.solved }}</span>
+      <span title="Number of rejected submissions"><svg><use href="#i-thumbs-down"/></svg> {{ item.rejected }}</span>
+      <span title="Number of pending submissions"><svg><use href="#i-question"/></svg> {{ item.pending }}</span>
+      <span title="First solved"><svg><use href="#i-clock"/></svg> {{ (item.first ~ 'min') if item.first != null else 'n/a' }}</span>
+    </td>{% endfor %}
+  </tr></tfoot>{% endif %}
+</table>
+</div>
+<table class="scoreboard-table mobile-scoreboard" id="{{ 'team-score-mobile' if ownTable else 'scoreboard-mobile' }}">
+  <caption class="sr-only">{{ arena.title }} scoreboard, mobile view</caption>
+  <thead><tr class="scoreheader"><th scope="col">rank</th><th scope="col" colspan="{{ teamColumns }}">team</th><th scope="col">score</th></tr></thead>
+  {% if not ownTable %}<tbody data-scoreboard-favorites></tbody>{% endif %}
+  <tbody {% if not ownTable %}data-scoreboard-main{% endif %}>
+  {% for row in boardRows %}
+    <tr class="mobile-team-row {{ 'own-team' if row.mine }}" {{ rowData(row) }}>
+      <td class="rank" rowspan="2">{{ medal(row) }}<span data-rank-label>{{ row.rank if ownTable else row.rankLabel }}</span></td>
+      {% if arena.hasLogos %}<td class="affiliation-cell">{% if row.logo %}<img class="affiliation-logo {{ 'contestant-avatar' if row.avatar }}" src="{{ row.logo }}" {% if row.avatar %}data-user-avatar{% endif %} referrerpolicy="no-referrer" alt="{{ row.name ~ ' avatar' if row.avatar else row.organization }}" loading="lazy" width="28" height="28">{% endif %}</td>{% endif %}
+      {% if withHearts %}<td class="heart-cell">{{ heart(row) }}</td>{% endif %}
+      <td class="teamname">{{ teamName(row) }}</td><td class="solved" rowspan="2">{{ row.solved }}<small>{{ row.penalty }}</small></td>
+    </tr>
+    <tr class="mobile-problems-row {{ 'own-team' if row.mine }}" data-team-problems="{{ row.uid }}"><td colspan="{{ teamColumns }}"><div class="mobile-problem-badges">
+      {% for cell in row.cells %}{% set p = arena.problems[loop.index0] %}<span class="mobile-problem {{ cell.state }} {{ 'first-to-solve' if cell.first }}" title="{{ p.label }} — {% if cell.correct %}{{ cell.time }} minutes; {% endif %}{{ cell.submissions }}{% if cell.pending %} + {{ cell.pending }}{% endif %} submissions"><b>{{ p.label }}</b>{% if cell.correct %}<small>{{ cell.time }}</small>{% elif cell.pending %}<small>?</small>{% elif cell.submissions %}<small>{{ cell.submissions }}</small>{% endif %}</span>{% endfor %}
+      </div></td></tr>
+  {% else %}<tr><td colspan="{{ teamColumns + 2 }}" class="nodata">No teams on the scoreboard.</td></tr>{% endfor %}
+  <tr class="score-no-matches" hidden><td colspan="{{ teamColumns + 2 }}" class="nodata">No teams match the selected filters.</td></tr>
+  </tbody>
+</table>

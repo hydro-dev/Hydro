@@ -24,6 +24,10 @@ import { buildProjection, Time } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
 
+function onsiteJury(udoc: ContestDetailBaseHandler['user'], tdoc?: Tdoc) {
+    return tdoc?.rule === 'icpc_domjudge' && (udoc.own(tdoc) || udoc.hasPerm(PERM.PERM_EDIT_CONTEST));
+}
+
 export class RecordListHandler extends ContestDetailBaseHandler {
     @param('page', Types.PositiveInt, true)
     @param('pid', Types.ProblemId, true)
@@ -178,14 +182,15 @@ export class RecordDetailHandler extends ContestDetailBaseHandler {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
             this.tdoc = await contest.get(domainId, rdoc.contest);
-            let canView = this.user.own(this.tdoc);
+            let canView = this.user.own(this.tdoc) || onsiteJury(this.user, this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && isOwnOrTeammate;
             if (!canView && !isOwnOrTeammate) throw new PermissionError(rid);
             canViewDetail = canView;
             this.args.tid = this.tdoc.docId;
             if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
-                this.rdoc = contest.applyProjection(this.tdoc, this.rdoc, this.user);
+                rdoc = contest.applyProjection(this.tdoc, rdoc, this.user);
+                this.rdoc = rdoc;
             }
         }
 
@@ -203,11 +208,11 @@ export class RecordDetailHandler extends ContestDetailBaseHandler {
         if (this.tdoc) {
             const teamVid = this.tdoc.allowTeam ? await contest.getTeamVid(domainId, this.tdoc.docId, this.user._id) : null;
             this.tsdoc = await contest.getStatus(domainId, this.tdoc.docId, teamVid ?? this.user._id);
-            canViewCode ||= this.user.own(this.tdoc);
+            canViewCode ||= this.user.own(this.tdoc) || onsiteJury(this.user, this.tdoc);
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
                 canViewCode ||= !!this.tsdoc?.attend;
             }
-            if (!this.tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            if (!this.tsdoc?.attend && !onsiteJury(this.user, this.tdoc) && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         } else if (pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!canViewCode) {
             rdoc.code = '';
@@ -423,7 +428,7 @@ export class RecordDetailConnectionHandler extends ConnectionHandler {
         const isOwnOrTeammate = await contest.isOwnOrTeammateRecord(domainId, rdoc, this.user._id);
         if (rdoc.contest && ![record.RECORD_GENERATE, record.RECORD_PRETEST].some((i) => i.toHexString() === rdoc.contest.toHexString())) {
             this.tdoc = await contest.get(domainId, rdoc.contest);
-            let canView = this.user.own(this.tdoc);
+            let canView = this.user.own(this.tdoc) || onsiteJury(this.user, this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= isOwnOrTeammate && contest.canShowSelfRecord.call(this, this.tdoc);
             if (!canView) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
@@ -442,8 +447,9 @@ export class RecordDetailConnectionHandler extends ConnectionHandler {
         this.canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         this.canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         this.canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
+        this.canViewCode ||= onsiteJury(this.user, this.tdoc);
 
-        if (!this.tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        if (!this.tsdoc?.attend && !onsiteJury(this.user, this.tdoc) && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
 
         this.pdoc = pdoc;
         this.noTemplate = noTemplate;

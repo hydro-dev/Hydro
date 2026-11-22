@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-arena-view="{{ arena.view }}" data-arena-state="{{ arena.links.state }}" data-arena-now="{{ arena.now }}" data-arena-start="{{ arena.start }}" data-arena-end="{{ arena.end }}" data-arena-ended="{{ 'true' if arena.ended else 'false' }}" data-arena-participant-ended="{{ 'true' if arena.participantEnded else 'false' }}" data-arena-participant="{{ 'true' if arena.participant else 'false' }}" data-arena-restricted="{{ 'true' if arena.restrictExit else 'false' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{{ arena.title }} — {{ arena.view }} — HGNUOJ</title>
+  <link rel="stylesheet" href="{{ arena.css }}">
+  <link rel="stylesheet" href="{{ arena.katex }}">
+  <script src="{{ arena.js }}" defer></script>
+  {% if arenaModeWatch %}<script src="{{ arenaModeWatch }}" defer></script>{% endif %}
+</head>
+<body class="{{ 'public-interface' if arena.publicInterface }} {{ 'contest-ended' if arena.ended }}">
+<svg class="svg-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H15v-7H9v7H3Z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5C8 2 4 3 2 4v15c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1Zm0 0v15"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 5h13M8 12h13M8 19h13M3 5h1M3 12h1M3 19h1"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M8 18H5a4 4 0 0 1-1-8 7 7 0 0 1 13-2 5 5 0 0 1 2 10h-3M12 21V10m-4 4 4-4 4 4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 22v-4a8 8 0 0 1 16 0v4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-language" viewBox="0 0 24 24"><path d="M2 5h12M8 2v3m-4 4c1 4 5 7 9 9M12 5c0 6-4 11-10 14m12 3 4-12 4 12m-7-4h6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M5 9a7 7 0 0 1 14 0v7l2 3H3l2-3Zm5 13h4"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+  <symbol id="i-medal" viewBox="0 0 28 32"><path d="M2 1h8l7 11-7 4ZM26 1h-8l-7 11 7 4Z"/><circle cx="14" cy="21" r="10"/><path fill="#fff" d="m14 14 2 4.2 4.6.7-3.3 3.2.8 4.6-4.1-2.2-4.1 2.2.8-4.6-3.3-3.2 4.6-.7Z"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7a9 9 0 1 0 1 8M20 2v6h-6"/></symbol>
+  <symbol id="i-question" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 4 3c-1 .5-1 1-1 2m0 3h.01"/></symbol>
+  <symbol id="i-thumbs-up" viewBox="0 0 24 24"><path d="M7 10v11H3V10Zm0 10h11a2 2 0 0 0 2-1.5l2-7A2 2 0 0 0 20 9h-6l1-5a2 2 0 0 0-3-2L7 10"/></symbol>
+  <symbol id="i-thumbs-down" viewBox="0 0 24 24"><path d="M7 14V3H3v11Zm0-10h11a2 2 0 0 1 2 1.5l2 7A2 2 0 0 1 20 15h-6l1 5a2 2 0 0 1-3 2l-5-8"/></symbol>
+  <symbol id="i-login" viewBox="0 0 24 24"><path d="M15 3h6v18h-6M2 12h14m-5-5 5 5-5 5"/></symbol>
+</defs></svg>
+<nav class="navbar" aria-label="Contest navigation">
+  <button class="navbar-toggler" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  <div class="navbar-collapse">
+    <div class="navbar-nav">
+      {% if arena.publicInterface and not arena.jury %}
+      <a class="nav-link {{ 'active' if arena.view == 'scoreboard' }}" href="{{ arena.links.scoreboard }}"><svg><use href="#i-list"/></svg> Scoreboard</a>
+      <a class="nav-link {{ 'active' if arena.view in ['problems','problem'] }} {{ 'disabled' if arena.before }}" href="{{ arena.links.problems }}"><svg><use href="#i-book"/></svg> Problemset</a>
+      {% else %}
+      <a class="nav-link {{ 'active' if arena.view in ['home','submission','clarifications','clarification'] }}" href="{{ arena.links.home }}"><svg><use href="#i-home"/></svg> Home</a>
+      <a class="nav-link {{ 'active' if arena.view in ['problems','problem'] }} {{ 'disabled' if arena.before }}" href="{{ arena.links.problems }}"><svg><use href="#i-book"/></svg> Problemset</a>
+      <a class="nav-link {{ 'active' if arena.view == 'languages' }}" href="{{ arena.links.languages }}"><svg><use href="#i-language"/></svg> Languages</a>
+      <a class="nav-link {{ 'active' if arena.view == 'scoreboard' }} {{ 'disabled' if arena.before and not arena.jury }}" href="{{ arena.links.scoreboard }}"><svg><use href="#i-list"/></svg> Scoreboard</a>
+      {% if arena.jury %}<a class="nav-link {{ 'active' if arena.view == 'jury' }}" href="{{ arena.links.jury }}"><svg><use href="#i-arrow"/></svg> Jury</a>{% endif %}
+      {% endif %}
+    </div>
+    <div class="navbar-actions">
+      {% if arena.jury %}
+      <a class="btn btn-success btn-sm {{ 'disabled' if not arena.canSubmit }}" href="{{ arena.links.submit }}" data-open-submit><svg><use href="#i-upload"/></svg> Submit</a>
+      <a class="btn btn-secondary btn-sm" href="{{ arena.oj }}">回到HGNUOJ</a>
+      <a class="btn btn-secondary btn-sm" href="{{ arena.edit }}">编辑比赛</a>
+      <span class="arena-username" title="{{ arena.username }}"><svg><use href="#i-user"/></svg> {{ arena.username }}</span>
+      {% elif arena.publicInterface %}
+      {% if handler.user._id %}<a class="btn btn-light btn-sm" href="{{ arena.oj }}"><svg><use href="#i-user"/></svg> {{ arena.username }}</a>{% else %}<a class="btn btn-login btn-sm" href="{{ arena.login }}"><svg><use href="#i-login"/></svg> Login</a>{% endif %}
+      {% else %}
+      {% if arena.participant %}<button class="btn btn-warning btn-sm notify-button" type="button" hidden><svg><use href="#i-bell"/></svg> Enable Notifications</button>{% endif %}
+      <a class="btn btn-success btn-sm {{ 'disabled' if not arena.canSubmit }}" href="{{ arena.links.submit }}" data-open-submit><svg><use href="#i-upload"/></svg> Submit</a>
+      <span class="arena-username" title="{{ arena.username }}"><svg><use href="#i-user"/></svg> {{ arena.username }}</span>
+      {% endif %}
+      <span class="countdown" aria-label="Contest time"><svg><use href="#i-clock"/></svg> <span data-countdown>--:--:--</span></span>
+    </div>
+  </div>
+</nav>
+<div class="progress-track" role="progressbar" aria-label="Contest progress" {{ 'hidden' if arena.before or arena.ended }}><div class="progress-value"></div></div>
+<main class="container-fluid" id="main-content">
+  <div class="alert alert-danger" id="arena-error" role="alert" hidden></div>
+  {% if arena.submitted %}<div class="alert alert-success" role="status">Submission received. <a href="{{ arena.submitted }}" data-arena-modal="submission">View submission</a></div>{% endif %}
+  {% if arena.view != 'scoreboard' and arena.view != 'home' %}{% if arena.before %}<div class="alert alert-info">Contest starts at {{ arena.startText }}.</div>
+  {% elif arena.ended %}<div class="alert alert-info">Contest has ended. {% if arena.frozen %}The scoreboard remains frozen.{% else %}Results are available.{% endif %}</div>{% endif %}{% endif %}
+  {% if arena.view == 'home' %}
+    {% if arena.participant and arena.before %}
+      <div class="team-welcome"><h1>Welcome team <strong>{{ arena.participantName }}</strong>!</h1><h2>Contest starts at {{ arena.startText }}.</h2></div>
+    {% elif arena.participant %}
+      <div data-arena-live="own">{% include "arena/own.html" %}</div>
+      <div class="overview-grid">
+        <section><h1 class="teamoverview">Submissions</h1><div data-arena-live="records">{% include "arena/records.html" %}</div></section>
+        <section><div data-arena-live="clarifications">{% include "arena/clarifications.html" %}</div></section>
+      </div>
+    {% else %}
+      <div class="welcome"><h1>Welcome to {{ arena.title }}</h1><p>{{ 'Contest has not started yet.' if arena.before else 'Enter the contest with your HGNUOJ account.' }}</p>
+        <a class="btn btn-primary" href="{{ arena.oj if handler.user._id else arena.login }}">{{ 'Register / join on HGNUOJ' if handler.user._id else 'Log in to HGNUOJ' }}</a>
+        {% if not arena.before %}<a class="btn btn-secondary" href="{{ arena.links.scoreboard }}">View scoreboard</a>{% endif %}
+      </div>
+    {% endif %}
+  {% elif arena.view == 'scoreboard' %}
+    <h1 class="sr-only">Scoreboard</h1>
+    <div data-arena-live="scoreboard-status">{% include "arena/scoreboard-status.html" %}</div>
+    <div class="scoreboard-toolbar">
+      <details class="scoreboard-filters"><summary class="btn btn-outline-secondary btn-sm"><svg><use href="#i-filter"/></svg> <span data-filter-label>Filter</span><span class="caret"></span></summary>
+        <div class="scoreboard-filter-panel">
+          <label for="team-filter">Team name<input type="search" id="team-filter" placeholder="Search teams…" autocomplete="off"></label>
+          <label for="affiliation-filter">Classes<select id="affiliation-filter"><option value="">All classes</option>{% for item in arena.affiliations %}<option value="{{ item }}">{{ item }}</option>{% endfor %}</select></label>
+          {% if arena.categories|length > 1 %}<label for="category-filter">Categories<select id="category-filter"><option value="">All categories</option>{% for item in arena.categories %}<option value="{{ item }}">{{ item }}</option>{% endfor %}</select></label>{% endif %}
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-clear-filters>Clear</button>
+        </div>
+      </details>
+      <div class="scoreboard-tools"><span class="team-count" data-team-count>{{ arena.rows|length }} teams</span><label class="auto-refresh"><input type="checkbox" data-auto-refresh checked> Auto refresh</label><button type="button" class="btn btn-outline-secondary btn-sm" data-refresh title="Refresh scoreboard"><svg><use href="#i-refresh"/></svg><span class="sr-only">Refresh</span></button>{% if arena.jury %}<a class="btn btn-outline-secondary btn-sm" href="{{ arena.links.scoreboard }}{{ '' if arena.realtime else '?realtime=1' }}">{{ 'Public scoreboard' if arena.realtime else 'Jury scoreboard' }}</a>{% endif %}</div>
+    </div>
+    <div data-arena-live="scoreboard">{% include "arena/scoreboard.html" %}</div>
+  {% elif arena.view == 'problems' %}
+    <h1 class="contest-page-title">{{ arena.title }} problems</h1><div class="contest-container"><div class="problem-grid">
+      {% for p in arena.problems %}<section class="contest-card problem-card"><div class="contest-card-body"><h2><span class="problem-badge" style="background:{{ p.color }};color:{{ p.textColor }}">{{ p.label }}</span></h2><h3>{{ p.title }}</h3><p class="problem-limits">Limits: {{ p.time }} / {{ p.memory }}</p><p class="problem-limits">Type: {{ p.type }}</p><div class="problem-card-submit">{% if arena.participant %}<a class="btn btn-success {{ 'disabled' if not arena.canSubmit }}" href="{{ p.submit }}" data-open-submit data-problem="{{ p.pid }}"><svg><use href="#i-upload"/></svg> Submit</a>{% endif %}</div><div class="problem-card-links"><a class="btn btn-secondary" href="{{ p.url }}"><svg><use href="#i-book"/></svg> statement</a></div>{% if p.attachments|length %}<div class="problem-card-files">{% for file in p.attachments %}<a class="btn btn-outline-secondary btn-sm" href="{{ file.url }}">{{ file.label or file.name }}</a>{% endfor %}</div>{% endif %}</div></section>{% endfor %}
+    </div></div>
+  {% elif arena.view == 'problem' %}
+    <div class="page-heading"><h1>{{ arena.problem.label }}. {{ arena.problem.title }}</h1><a class="btn btn-success {{ 'disabled' if not arena.canSubmit }}" href="{{ arena.problem.submit }}" data-open-submit data-problem="{{ arena.problem.pid }}"><svg><use href="#i-upload"/></svg> Submit</a></div>
+    <p class="text-muted">Time limit: {{ arena.problem.time }} &nbsp; Memory limit: {{ arena.problem.memory }}</p>
+    {% if arena.problem.files|length %}<div class="problem-files">{% for file in arena.problem.files %}<a class="btn btn-light btn-sm" href="{{ file.url }}">↓ {{ file.label or file.name }}</a> {% endfor %}</div>{% endif %}
+    <article class="problem-statement">{{ arena.statementHtml|safe }}</article>
+  {% elif arena.view == 'submit' %}
+    <div class="submit-page"><h1>Submit</h1>{% include "arena/submit-form.html" %}</div>
+  {% elif arena.view == 'submission' %}
+    <h1 class="contest-page-title">Submission details</h1><div class="contest-container submission-detail-page">{% include "arena/submission-details.html" %}</div>
+  {% elif arena.view == 'clarifications' %}
+    <div class="clarification-page"><div data-arena-live="clarifications">{% include "arena/clarifications.html" %}</div></div>
+  {% elif arena.view == 'clarification' %}
+    <h1 class="contest-page-title">Clarification{{ '' if arena.clarification.broadcast else ' Request' }}</h1><div class="contest-container clarification-page" data-arena-live="clarification-details">{% include "arena/clarification-details.html" %}</div>
+  {% elif arena.view == 'languages' %}
+    <h1 class="contest-page-title">Allowed Languages</h1><div class="contest-container"><div class="language-grid">{% for lang in arena.languages %}<section class="contest-card"><div class="contest-card-body"><h2 class="language-title"><code>{{ lang.name }}</code> <small>with extension: <code>.{{ lang.extension }}</code></small></h2></div></section>{% endfor %}</div></div>
+  {% elif arena.view == 'jury' %}
+    {% include "arena/jury.html" %}
+  {% endif %}
+  {% if arena.before and arena.view == 'home' %}<span class="sr-only" data-updated role="status"></span>{% elif arena.view == 'scoreboard' %}<footer class="scoreboard-lastmod"><span data-updated>Last Update: {{ arena.updatedText }}</span>{% if not arena.restrictExit %}<a href="{{ arena.oj }}">HGNUOJ</a>{% endif %}</footer>{% else %}<footer>{% if not arena.restrictExit %}<a href="{{ arena.oj }}">HGNUOJ</a> · {% endif %}{{ arena.title }} <span data-updated>Updated just now</span></footer>{% endif %}
+</main>
+<dialog id="team-dialog" class="modal-dialog" aria-labelledby="team-dialog-title"><div class="modal-header"><h2 id="team-dialog-title">Team details</h2><button type="button" data-close-dialog aria-label="Close">×</button></div><div class="modal-body"><h3 data-team-dialog-name></h3><p class="text-muted" data-team-dialog-affiliation></p><dl class="submission-info"><dt>Rank</dt><dd data-team-dialog-rank></dd><dt>Solved</dt><dd data-team-dialog-solved></dd><dt>Penalty time</dt><dd data-team-dialog-penalty></dd><dt>Category</dt><dd data-team-dialog-category></dd></dl><p data-team-dialog-members></p></div></dialog>
+{% if arena.participant and arena.problems|length %}
+<dialog id="submit-modal" class="modal-dialog" aria-labelledby="submit-title"><div class="modal-header"><h2 id="submit-title">Submit</h2><button type="button" data-close-dialog aria-label="Close">×</button></div>{% include "arena/submit-form.html" %}</dialog>
+<dialog id="clarification-modal" class="modal-dialog" aria-labelledby="clarification-title"><div class="modal-header"><h2 id="clarification-title">Send clarification request</h2><button type="button" data-close-dialog aria-label="Close">×</button></div><form method="post" action="{{ arena.links.clarifications }}" data-arena-form><div class="modal-body"><input type="hidden" name="csrf" value="{{ arena.csrf }}"><input type="hidden" name="operation" value="clarification"><label>Recipient<input value="Jury" disabled></label><label>Subject<select name="subject"><option value="0">General issue</option>{% for p in arena.problems %}<option value="{{ p.pid }}">{{ p.label }} — {{ p.title }}</option>{% endfor %}</select></label><label>Message<textarea name="content" rows="6" maxlength="10000" required data-clarification-input></textarea></label>{% include "arena/clarification-preview.html" %}<div class="form-error alert alert-danger" role="alert" hidden></div></div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-close-dialog>Cancel</button><button class="btn btn-primary" type="submit">Send</button></div></form></dialog>
+{% endif %}
+<dialog id="detail-modal" class="modal-dialog" aria-labelledby="detail-title"><div class="modal-header"><h2 id="detail-title">Details</h2><button type="button" data-close-dialog aria-label="Close">×</button></div><div class="modal-body" data-detail-body></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-close-dialog>Close</button></div></dialog>
+</body></html>

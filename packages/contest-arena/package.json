@@ -1,0 +1,9 @@
+{
+  "name": "@hgnuoj/contest-arena",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "license": "AGPL-3.0-only",
+  "dependencies": { "exceljs": "4.4.0" },
+  "peerDependencies": { "hydrooj": "workspace:^", "@hydrooj/ui-default": "workspace:^" }
+}

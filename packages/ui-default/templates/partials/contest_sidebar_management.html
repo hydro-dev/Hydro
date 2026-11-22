@@ -17,7 +17,7 @@
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_edit', tid=tdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit Contest') }}
       </a></li>
-      <li class="menu__item"><a class="menu__link" href="{{ url('contest_user', tid=tdoc.docId) }}">
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_user', tid=tdoc.docId) }}" data-no-instant>
         <span class="icon icon-user"></span> {{ _('Attendee Manage') }}
       </a></li>
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_code', tid=tdoc.docId) }}" data-no-instant>

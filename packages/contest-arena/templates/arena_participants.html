@@ -1,0 +1,44 @@
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% block content %}
+<link rel="stylesheet" href="{{ participantCss }}">
+{{ set(UiContext, 'tdoc', tdoc) }}
+<div class="row" id="arena-participants" data-api="{{ participantApi }}" data-csrf="{{ csrf }}">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">参赛者管理</h1><span class="participant-total">已报名 {{ rows.length }} 项</span></div>
+      <div class="section__body participant-tools">
+        <div class="participant-tool-row"><button type="button" class="primary rounded button" data-add-users>添加用户</button><a class="rounded button" href="{{ participantTemplate }}" data-no-instant download>下载 Excel 模板</a><button type="button" class="rounded button" data-import-users>批量导入</button><input type="file" accept=".xlsx" data-roster-file hidden></div>
+        <div class="participant-tool-row"><input class="textbox participant-filter" type="search" placeholder="筛选已报名者的班级、姓名或用户名" aria-label="筛选参赛者" data-roster-filter><span data-selection-count>已选择 0 项</span><button type="button" class="rounded button" data-bulk-action="cancel" disabled>批量取消报名</button>{% if onsite and not onsiteEnded %}<button type="button" class="rounded button" data-bulk-action="release" disabled>批量解除参赛模式</button>{% endif %}</div>
+        <div role="status" class="participant-notice" data-notice hidden></div>
+        <div role="alert" class="participant-error" data-error hidden></div>
+      </div>
+      <div class="section__body no-padding participant-table-scroll"><table class="data-table participant-table">
+        <thead><tr><th><input type="checkbox" aria-label="全选参赛者" data-select-all></th><th>参赛者</th><th>班级</th><th>排名</th>{% if onsite %}<th>参赛模式</th>{% endif %}<th class="participant-action-head">排名操作</th>{% if onsite %}<th class="participant-action-head">模式操作</th>{% endif %}{% if hasResumable %}<th class="participant-action-head">恢复比赛</th>{% endif %}<th class="participant-action-head">报名操作</th></tr></thead>
+        <tbody>{% for row in rows %}<tr data-participant-row data-uid="{{ row.uid }}" data-search="{{ row.className }} {{ row.name }} {{ row.uname }} {{ row.uid }}">
+          <td><input type="checkbox" aria-label="选择 {{ row.name }}" data-participant-check value="{{ row.uid }}"></td>
+          <td><strong>{{ row.name }}</strong></td>
+          <td>{{ row.className }}</td><td>{{ '不排名' if row.unrank else '排名' }}</td>
+          {% if onsite %}<td><span class="participant-mode {{ 'active' if row.restricted }}">{{ row.modeLabel }}</span></td>{% endif %}
+          <td class="participant-actions"><button type="button" data-row-action="rank" data-uid="{{ row.uid }}">{{ '参与排名' if row.unrank else '设为不排名' }}</button></td>
+          {% if onsite %}<td class="participant-actions">{% if row.canToggleMode %}<button type="button" data-row-action="{{ 'release' if row.restricted else 'enable' }}" data-uid="{{ row.uid }}">{{ '解除参赛模式' if row.restricted else '开启参赛模式' }}</button>{% else %}—{% endif %}</td>{% endif %}
+          {% if hasResumable %}<td class="participant-actions">{% if row.canResume %}<button type="button" data-row-action="resume" data-uid="{{ row.uid }}">恢复比赛</button>{% else %}—{% endif %}</td>{% endif %}
+          <td class="participant-actions"><button type="button" data-row-action="cancel" data-uid="{{ row.uid }}">取消报名</button></td>
+        </tr>{% else %}<tr><td colspan="{{ (8 if onsite else 6) + (1 if hasResumable else 0) }}" class="participant-empty">尚未添加参赛者</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="medium-3 columns">{% set owner_udoc = udict[tdoc.owner] %}{% include "partials/contest_sidebar_management.html" %}</div>
+  <dialog class="participant-dialog" data-add-dialog aria-labelledby="participant-add-title"><div class="participant-dialog-head"><h2 id="participant-add-title">添加参赛用户</h2><button type="button" data-close-dialog aria-label="关闭">×</button></div><div class="participant-dialog-body">
+    <label>搜索班级、姓名、用户名或 UID<input class="textbox" type="search" data-user-query autocomplete="off" placeholder="例如：软工2601、张三或用户名"></label><div class="participant-search-results" data-user-results hidden></div><div class="participant-chosen" data-chosen-users></div>
+    <label class="checkbox"><input type="checkbox" data-unrank> 不参与排名</label><div role="alert" class="participant-error" data-add-error hidden></div><div class="participant-dialog-actions"><button type="button" class="primary rounded button" data-submit-add>添加所选用户</button><button type="button" class="rounded button" data-close-dialog>取消</button></div>
+  </div></dialog>
+  <dialog class="participant-dialog" data-confirm-dialog aria-labelledby="participant-confirm-title"><div class="participant-dialog-head"><h2 id="participant-confirm-title">确认操作</h2></div><div class="participant-dialog-body"><p data-confirm-text></p><div class="participant-dialog-actions"><button type="button" class="primary rounded button" data-confirm-submit>确认</button><button type="button" class="rounded button" data-close-dialog>取消</button></div></div></dialog>
+  <dialog class="participant-dialog participant-import-dialog" data-result-dialog aria-labelledby="participant-result-title">
+    <div class="participant-dialog-head"><h2 id="participant-result-title">导入结果</h2><button type="button" data-finish-result aria-label="关闭并刷新">×</button></div>
+    <div class="participant-dialog-body"><div data-import-summary role="status"></div><div data-import-issues></div><div data-duplicate-groups></div><div role="alert" class="participant-error" data-result-error hidden></div></div>
+    <div class="participant-dialog-actions participant-result-footer"><button type="button" class="primary rounded button" data-resolve-import hidden>导入所选账号</button><button type="button" class="rounded button" data-finish-result data-finish-result-label>完成</button></div>
+  </dialog>
+</div>
+<script src="{{ participantJs }}" defer></script>
+{% endblock %}

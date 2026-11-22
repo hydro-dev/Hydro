@@ -1,0 +1,1 @@
+{% if arena.ended and arena.frozen %}<h2>Scoreboard</h2><form method="post" data-arena-form><input type="hidden" name="csrf" value="{{ arena.csrf }}"><input type="hidden" name="operation" value="unlock"><button class="btn btn-warning" type="submit" data-confirm="Release the final scoreboard to all teams?">Unfreeze scoreboard</button></form>{% endif %}

@@ -66,6 +66,8 @@
     a.innerHTML = `.section{border-radius:10px}`;
     document.head.append(a);
   </script>
+  {% if arenaContestStyle %}<link rel="stylesheet" href="{{ arenaContestStyle }}">{% endif %}
+  {% if arenaModeWatch %}<script src="{{ arenaModeWatch }}" defer></script>{% endif %}
 </head>
 <body>
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}

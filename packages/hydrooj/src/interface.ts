@@ -296,6 +296,7 @@ export interface Tdoc extends Document {
     score?: Record<number, number>;
     langs?: string[];
     allowTeam?: boolean;
+    medals?: { gold: number; silver: number; bronze: number };
 
     /**
      * In hours
@@ -486,6 +487,12 @@ export interface ContestStatusDoc extends StatusDocBase, ContestStat {
     rev?: number;
     displayName?: string;
     members?: number[];
+    registrationCancelled?: boolean;
+    registrationCancelledAt?: Date;
+    registrationCancelledBy?: number;
+    arenaMode?: 'active' | 'released';
+    arenaReleasedAt?: Date;
+    arenaReleasedBy?: number;
 }
 
 export interface TrainingStatusDoc extends StatusDocBase, Record<string, any> {
@@ -532,6 +539,7 @@ export interface ContestRule<T = any> {
         tdoc: Tdoc, pdict: ProblemDict, cursor: FindCursor<ContestStatusDoc & T>,
     ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
     ranked: (tdoc: Tdoc, cursor: FindCursor<ContestStatusDoc & T>) => Promise<[number, ContestStatusDoc & T][]>;
+    ratingReady?: (tdoc: Tdoc, now: Date) => boolean | Promise<boolean>;
     applyProjection: (tdoc: Tdoc, rdoc: RecordDoc, user: User) => RecordDoc;
 }
 
