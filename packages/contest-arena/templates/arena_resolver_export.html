@@ -22,7 +22,7 @@
     <section class="section">
       <div class="section__header"><h2 class="section__title">如何使用</h2></div>
       <div class="section__body typo">
-        <ol><li>在展示电脑安装 Java 17 或更新版本。</li><li>下载并解压 <a href="https://tools.icpc.global/resolver" target="_blank" rel="noopener">ICPC Tools Resolver 稳定版</a>。</li><li>下载并完整解压本页的滚榜包。</li><li>双击包内的 <code>start-resolver.cmd</code>，输入 Resolver 的解压目录（含 <code>lib</code> 文件夹）。</li></ol>
+        <ol><li>准备兼容的 64 位 Java，安装版或解压版均可。Resolver 2.7 需要 Java 17 或更新版本。</li><li>下载并解压 <a href="https://tools.icpc.global/resolver" target="_blank" rel="noopener">ICPC Tools Resolver 稳定版</a>。</li><li>下载并完整解压本页的滚榜包，将 Resolver 解压目录放入包内。</li><li>双击 <code>start-resolver.cmd</code>。脚本会检查 Java 并自动寻找 Resolver；找不到目录时会提示输入。</li></ol>
         <p>空格：向前一步；<code>b</code>：回退；<code>0</code>：重新开始。</p>
       </div>
       <div class="section__body"><a class="rounded button" href="{{ url('arena_view', tid=tdoc.docId, view='jury') }}">返回现场裁判页</a><a class="rounded button" href="{{ url('contest_scoreboard', tid=tdoc.docId) }}">OJ 成绩表</a></div>

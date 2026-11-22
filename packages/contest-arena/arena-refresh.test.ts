@@ -171,3 +171,90 @@ test('jury refresh preserves a reply draft and applies queued updates after it i
     await flush();
     assert.equal(h.panel.innerHTML, 'updated request with a new follow-up');
 });
+
+test('submission modal keeps polling completed results and updates only the live fragment during rejudge', async () => {
+    const callbacks: Record<string, ((event?: any) => void)[]> = {};
+    const intervals: { callback: () => void, delay: number }[] = [];
+    const requests: string[] = [];
+    const now = Date.now();
+    const opened = { dataset: { detailKey: 'case-1-2' }, open: true };
+    const closed = { dataset: { detailKey: 'case-1-3' }, open: false };
+    const fragment = {
+        innerHTML: 'CORRECT',
+        scrollTop: 50,
+        querySelectorAll: (selector: string) => selector.includes('[open]') ? [opened] : [opened, closed],
+    };
+    let bodyWrites = 0;
+    let bodyHtml = '';
+    const body = {
+        textContent: '',
+        get innerHTML() { return bodyHtml; },
+        set innerHTML(html: string) { bodyWrites++; bodyHtml = html; },
+    };
+    const title = { textContent: '' };
+    const dialog = {
+        open: false,
+        showModal() { this.open = true; },
+        setAttribute: () => {},
+        removeAttribute: () => {},
+        querySelectorAll: () => [],
+        querySelector: (selector: string) => selector === '#detail-title'
+            ? title : selector === '[data-detail-body]' ? body : fragment,
+    };
+    let nextResult = 'JUDGING';
+    let hidden = false;
+    runInNewContext(source, {
+        document: {
+            documentElement: { dataset: {
+                arenaView: 'jury', arenaState: '/contest/test/arena/state', arenaNow: now,
+                arenaStart: now - 3600000, arenaEnd: now + 3600000,
+            } },
+            get hidden() { return hidden; },
+            querySelector: () => null,
+            querySelectorAll: () => [],
+            getElementById: (id: string) => id === 'detail-modal' ? dialog : null,
+            addEventListener: (name: string, callback: (event: any) => void) => { (callbacks[name] ||= []).push(callback); },
+        },
+        window: { addEventListener: () => {} },
+        location: { origin: 'http://localhost:8888', href: 'http://localhost:8888/contest/test/arena/jury', search: '' },
+        fetch: async (url: URL) => {
+            requests.push(url.href);
+            return { ok: true, json: async () => url.pathname.endsWith('/state')
+                ? { fragments: { 'submission-status': nextResult } }
+                : { title: 'Submission details', html: 'detail with expanded source code' } };
+        },
+        setInterval: (callback: () => void, delay: number) => { intervals.push({ callback, delay }); },
+        URL,
+        AbortSignal,
+    });
+    const link = { href: 'http://localhost:8888/contest/test/arena/submission?rid=record' };
+    callbacks.click[0]({ target: { closest: () => link },
+        button: 0, preventDefault: () => {} });
+    await flush();
+    assert.equal(requests.length, 1);
+    assert(requests[0].includes('modal=1'));
+    assert.equal(bodyWrites, 1);
+    const poll = intervals.find((item) => item.delay === 4000).callback;
+    poll();
+    await flush();
+    assert.equal(fragment.innerHTML, 'JUDGING');
+    assert.equal(bodyWrites, 1, 'Source code and action buttons must not be replaced by status polling');
+    assert(requests[1].includes('/state?rid=record&view=submission'));
+    assert.equal(opened.open, true);
+    assert.equal(closed.open, false);
+    assert.equal(fragment.scrollTop, 50);
+    nextResult = 'CORRECT with new testcases';
+    poll();
+    await flush();
+    assert.equal(fragment.innerHTML, nextResult);
+    assert.equal(bodyWrites, 1);
+    hidden = true;
+    poll();
+    await flush();
+    assert.equal(requests.length, 3, 'Background tabs must not poll details');
+    hidden = false;
+    dialog.open = false;
+    poll();
+    await flush();
+    assert.equal(requests.length, 3, 'Closed modals must not poll details');
+});

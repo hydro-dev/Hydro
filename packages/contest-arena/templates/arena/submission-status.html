@@ -1,2 +1,45 @@
-<p class="submission-verdict" data-verdict="{{ arena.submission.status }}">Result: <strong class="{% if arena.submission.status == 1 %}correct-text{% elif arena.submission.pending %}pending-text{% else %}incorrect-text{% endif %}">{{ arena.submission.verdict }}</strong></p>
-{% if not arena.submission.pending %}<section class="compilation-section"><h3>Compilation <span class="badge {{ 'badge-danger' if arena.submission.status == 7 else 'badge-success' }}">{{ 'failed' if arena.submission.status == 7 else 'successful' }}</span> with the following output</h3>{% if arena.submission.compiler %}<pre class="compiler-output">{{ arena.submission.compiler }}</pre>{% else %}<p class="nodata">There were no compiler errors or warnings.</p>{% endif %}</section>{% endif %}
+{% set submission = arena.submission %}
+<p class="submission-verdict" data-verdict="{{ submission.status }}">Result: <strong class="{% if submission.status == 1 %}correct-text{% elif submission.pending %}pending-text{% else %}incorrect-text{% endif %}">{{ submission.verdict }}</strong></p>
+<section class="compilation-section">
+  <h3>Compilation <span class="badge badge-{{ submission.compilation.style }}">{{ submission.compilation.text }}</span></h3>
+  {% if submission.compiler %}<pre class="compiler-output">{{ submission.compiler }}</pre>{% endif %}
+</section>
+{% if submission.details %}
+{% set details = submission.details %}
+<section class="judging-section" aria-label="Judging summary">
+  <h3>Judging summary</h3>
+  <dl class="judging-summary">
+    <div><dt>Score</dt><dd>{{ details.score if details.score != null else '—' }}</dd></div>
+    <div><dt>Total time</dt><dd>{{ details.totalTime }}</dd></div>
+    <div><dt>Peak time</dt><dd>{{ details.peakTime }}</dd></div>
+    <div><dt>Peak memory</dt><dd>{{ details.peakMemory }}</dd></div>
+    {% if submission.judgedAt %}<div><dt>Judged at</dt><dd>{{ submission.judgedAt }}</dd></div>{% endif %}
+    {% if submission.judger %}<div><dt>Judge</dt><dd>{{ submission.judger }}</dd></div>{% endif %}
+    {% if submission.pending and details.progress != null %}<div><dt>Progress</dt><dd>{{ details.progress }}%</dd></div>{% endif %}
+  </dl>
+</section>
+{% if details.subtasks.length %}
+<section class="judging-section">
+  <h3>Subtasks</h3>
+  <div class="table-responsive"><table class="table table-sm judging-table"><thead><tr><th>Subtask</th><th>Result</th><th>Score</th><th>Type</th></tr></thead><tbody>
+    {% for item in details.subtasks %}<tr><td>#{{ item.id }}</td><td class="{% if item.status == 1 %}correct-text{% elif item.pending %}pending-text{% else %}incorrect-text{% endif %}">{{ item.verdict }}</td><td>{{ item.score if item.score != null else '—' }}</td><td>{{ item.type }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endif %}
+<section class="judging-section" aria-label="Test cases">
+  <h3>Test cases <span class="text-muted">({{ details.cases.length }})</span></h3>
+  {% if details.cases.length %}
+  <div class="table-responsive"><table class="table table-sm judging-table testcase-table"><thead><tr><th>Case</th><th>Result</th><th>Time</th><th>Memory</th><th>Score</th><th>Details</th></tr></thead><tbody>
+    {% for item in details.cases %}<tr>
+      <td>#{% if details.hasSubtasks and item.subtask != null %}{{ item.subtask }}-{% endif %}{{ item.id }}</td>
+      <td class="{% if item.status == 1 %}correct-text{% elif item.pending %}pending-text{% else %}incorrect-text{% endif %}">{{ item.verdict }}</td>
+      <td>{% if item.atLeast %}≥ {% endif %}{{ item.time }}</td>
+      <td>{% if item.atLeast %}≥ {% endif %}{{ item.memory }}</td>
+      <td>{{ item.score if item.score != null else '—' }}</td>
+      <td>{% if item.message %}<details data-detail-key="case-{{ item.subtask }}-{{ item.id }}"><summary>Message</summary><pre class="judge-message">{{ item.message }}</pre></details>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+    </tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="nodata">{{ 'Waiting for test case results.' if submission.pending else 'No test case results are available.' }}</p>{% endif %}
+</section>
+{% if details.messages %}<section class="judging-section"><h3>Judge messages</h3><pre class="judge-message judge-output">{{ details.messages }}</pre></section>{% endif %}
+{% endif %}
