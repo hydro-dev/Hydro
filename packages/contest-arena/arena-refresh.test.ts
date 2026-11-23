@@ -228,7 +228,7 @@ test('submission modal keeps polling completed results and updates only the live
         AbortSignal,
     });
     const link = { href: 'http://localhost:8888/contest/test/arena/submission?rid=record' };
-    callbacks.click[0]({ target: { closest: () => link },
+    callbacks.click[0]({ target: { closest: (selector: string) => selector === '[data-arena-modal]' ? link : null },
         button: 0, preventDefault: () => {} });
     await flush();
     assert.equal(requests.length, 1);

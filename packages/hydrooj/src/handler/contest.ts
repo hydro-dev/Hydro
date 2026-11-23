@@ -451,7 +451,7 @@ export class ContestEditHandler extends Handler {
     @param('beginAtTime', Types.Time)
     @param('duration', Types.Float)
     @param('title', Types.Title)
-    @param('content', Types.Content)
+    @param('content', Types.String, true, (value) => typeof value === 'string' && value.trim().length < 65536)
     @param('rule', Types.String)
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
@@ -477,6 +477,7 @@ export class ContestEditHandler extends Handler {
         keepScoreboardHidden = false, allowTeam = false, langs: string[] = [],
         gold?: number, silver?: number, bronze?: number,
     ) {
+        content = content?.trim() || ' ';
         if (!Object.keys(contest.RULES).includes(rule) || contest.RULES[rule].hidden) throw new ValidationError('rule');
         const medalOptions = rule === 'icpc_domjudge' ? { medals: {
             gold: gold ?? this.tdoc?.medals?.gold ?? 0,

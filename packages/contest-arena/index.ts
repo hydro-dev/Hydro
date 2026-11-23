@@ -22,7 +22,9 @@ import {
 } from 'hydrooj';
 import { ContestDetailBaseHandler } from 'hydrooj/src/handler/contest';
 import { administrator } from './enrollment';
+import { submissionChecks, submissionFilterQuery, submissionFilters } from './jury-submissions';
 import { installMode } from './mode';
+import { clarificationNotices, readNotices } from './notifications';
 import { installParticipantManagement } from './participants';
 import { contestTime, juryAnswered } from './presentation';
 import { allowedLanguageIds, problemLimits } from './problem';
@@ -63,6 +65,7 @@ const views = new Set([
     'problem',
     'submit',
     'submission',
+    'submissions',
     'scoreboard',
     'clarifications',
     'clarification',
@@ -72,7 +75,6 @@ const views = new Set([
 const alphabet = (index: number) => String.fromCharCode(65 + index);
 const hex = (id: any) => id?.toHexString?.() || String(id || '');
 const enabled = (tdoc: any) => tdoc.rule === RULE;
-const sha = (value: any) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
 function buildRows(tdoc: any, tsdocs: any[], frozen: boolean) {
     return ranked(
@@ -283,7 +285,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
         const frozen = contest.isLocked(this.tdoc);
         const realtime = view === 'jury' || this.request.query.realtime === '1';
         if (realtime) this.requireJury();
-        if (view === 'jury') this.requireJury();
+        if (view === 'jury' || view === 'submissions') this.requireJury();
         if (view === 'submit' || (view === 'submission' && !this.jury) || (view === 'problem' && !ended && !this.jury)) { this.requireParticipant(); }
         if (before && !this.jury && ['problem', 'problems', 'submit', 'submission', 'scoreboard'].includes(view)) {
             throw new ValidationError('比赛尚未开始');
@@ -482,7 +484,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                     time: correct ? Math.floor(cell.real / 60) : null,
                     first: correct && +cell.rid.getTimestamp() === first[p.pid],
                     state: correct ? 'correct' : pending ? 'pending' : cell.naccept ? 'incorrect' : 'untried',
-                    url: row.uid === this.mine && cell.rid ? this.link('submission', { rid: hex(cell.rid) }) : '',
+                    url: (row.uid === this.mine || this.jury) && cell.rid ? this.link('submission', { rid: hex(cell.rid) }) : '',
                 };
             }),
         });
@@ -510,7 +512,6 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             pending: pendingStatuses.has(rdoc.status),
             url: this.link('submission', { rid: hex(rdoc._id) }),
         }));
-        const digest = sha(clarifications.map((item) => [hex(item.docId), item.content, item.reply]));
         const participantNames = new Map<number, string>();
         for (const row of tsdocs) {
             const participantName =
@@ -523,8 +524,11 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
         }
         const senderName = (uid: number) =>
             uid === 0 ? 'Jury' : participantNames.get(uid) || udict[uid]?.name || udict[uid]?.uname || `Team ${uid}`;
-        const seen = this.session.arenaSeen || {};
-        const unread = clarifications.length && seen[hex(this.tid)] !== digest ? clarifications.length : 0;
+        const read = new Set<string>(this.session.arenaRead?.[hex(this.tid)] || []);
+        const notices = this.tsdoc?.attend
+            ? clarificationNotices(clarifications, (did) => this.link('clarification', { did })).filter((item) => !read.has(item.id))
+            : [];
+        const unread = notices.length;
         const clars = clarifications.map((item) => ({
             id: hex(item.docId),
             broadcast: item.owner === 0,
@@ -592,6 +596,8 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             own: self ? mapped({ ...self, rank: publicSelf?.rank ?? '-' }, true) : null,
             records: visibleRecords,
             unread,
+            notices,
+            notificationKey: `hgnu-arena-notifications:${this.user._id}:${hex(this.tid)}`,
             clars,
             recordPage,
             recordPages,
@@ -689,6 +695,60 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                 rejudge: this.url('record_detail', { rid: rdoc._id }),
             };
         }
+        if (view === 'submissions') {
+            let filters: ReturnType<typeof submissionFilters>;
+            try {
+                filters = submissionFilters(this.request.query, this.tdoc.pids);
+            } catch (error) {
+                throw new ValidationError(error.message);
+            }
+            const teamStatus = tsdocs.find((row) => String(row.uid) === filters.team);
+            const scope = { contest: this.tid };
+            const query = { ...scope, ...submissionFilterQuery(filters, teamStatus?.members) };
+            const [total, correct, unjudged, judging, matched] = await Promise.all([
+                record.count(this.domainId, scope),
+                record.count(this.domainId, { ...scope, status: 1 }),
+                record.count(this.domainId, { ...scope, status: { $in: [0, 22] } }),
+                record.count(this.domainId, { ...scope, status: { $in: [20, 21] } }),
+                record.count(this.domainId, query),
+            ]);
+            const pages = Math.max(1, Math.ceil(matched / 50));
+            const page = Math.min(filters.page, pages);
+            const records = await record.getMulti(this.domainId, query)
+                .project({ _id: 1, uid: 1, pid: 1, lang: 1, status: 1, 'migration.submissionId': 1,
+                    'testCases.id': 1, 'testCases.subtaskId': 1, 'testCases.status': 1 })
+                .sort({ _id: -1 }).skip((page - 1) * 50).limit(50).toArray();
+            const missing = [...new Set(records.map((rdoc) => rdoc.uid).filter((uid) => !udict[uid]))];
+            Object.assign(udict, await user.getListForRender(this.domainId, missing, false));
+            const href = (changes: Record<string, string | number>) => this.link('submissions', { ...filters, ...changes });
+            arena.submissions = {
+                filters, total, correct, unjudged, judging, matched, page, pages,
+                previous: page > 1 ? href({ page: page - 1 }) : '',
+                next: page < pages ? href({ page: page + 1 }) : '',
+                tabs: ['all', 'unjudged', 'judging'].map((key) => ({ key, url: href({ show: key, page: 1 }) })),
+                teams: tsdocs.filter((row) => row.attend).map((row) => ({
+                    id: String(row.uid),
+                    name: participantNames.get(row.uid) || String(row.uid),
+                    class: (row.members?.length ? row.members : [row.uid])
+                        .map((uid) => udict[uid]?.class).filter(Boolean).join(' / '),
+                })),
+                languages: Object.entries(SettingModel.langs).map(([id, lang]) => ({ id, name: lang.display || id })),
+                results: Object.entries(verdicts).map(([id, text]) => ({ id, text })),
+                rows: records.map((rdoc) => {
+                    const item = problems.find((p) => p.pid === rdoc.pid);
+                    return {
+                        id: hex(rdoc._id), number: rdoc.migration?.submissionId || hex(rdoc._id).slice(-6),
+                        time: contestTime(rdoc._id.getTimestamp(), this.tdoc.beginAt),
+                        team: participantNames.get(rdoc.uid) || udict[rdoc.uid]?.name || udict[rdoc.uid]?.uname || String(rdoc.uid),
+                        username: udict[rdoc.uid]?.uname || String(rdoc.uid), class: udict[rdoc.uid]?.class || '',
+                        label: item?.label || `P${rdoc.pid}`, color: item?.color, textColor: item?.textColor,
+                        problem: item?.url || '', language: rdoc.lang, status: rdoc.status,
+                        verdict: verdicts[rdoc.status] || 'JUDGE-ERROR', pending: pendingStatuses.has(rdoc.status),
+                        checks: submissionChecks(rdoc.testCases), url: this.link('submission', { rid: hex(rdoc._id) }),
+                    };
+                }),
+            };
+        }
         if (view === 'jury') {
             arena.allRecords = (
                 await record.getMulti(this.domainId, { contest: this.tid }).sort({ _id: -1 }).limit(100).toArray()
@@ -728,7 +788,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                 arena.records = [];
             }
         }
-        return { arena, clarificationDigest: digest };
+        return { arena };
     }
 
     formatTime(date: Date) {
@@ -749,15 +809,18 @@ class ArenaPageHandler extends ArenaBaseHandler {
     async get() {
         const view = this.request.params.view || 'home';
         if (!views.has(view)) throw new NotFoundError();
-        const { arena, clarificationDigest } = await this.data(view);
+        const { arena } = await this.data(view);
         if (view === 'problem') {
             arena.statementHtml = String(await this.renderHTML('arena/problem-statement.html', { arena }));
             delete arena.pdoc;
             delete arena.statements;
         }
-        if (['home', 'clarifications', 'clarification'].includes(view) && this.tsdoc?.attend) {
-            this.session.arenaSeen = { ...(this.session.arenaSeen || {}), [hex(this.tid)]: clarificationDigest };
-            arena.unread = 0;
+        if (view === 'clarification' && this.tsdoc?.attend) {
+            const ids = arena.notices.filter((item) => item.did === this.request.query.did).map((item) => item.id);
+            this.session.arenaRead = { ...(this.session.arenaRead || {}),
+                [hex(this.tid)]: readNotices(this.session.arenaRead?.[hex(this.tid)], ids) };
+            arena.notices = arena.notices.filter((item) => !ids.includes(item.id));
+            arena.unread = arena.notices.length;
         }
         if (this.request.query.modal === '1' && ['submission', 'clarification'].includes(view)) {
             this.response.body = {
@@ -810,6 +873,19 @@ class ArenaPageHandler extends ArenaBaseHandler {
         const content = String(this.request.body.content || '');
         if (content.length > 10000) throw new ValidationError('答疑内容');
         this.response.body = { html: String(await this.renderHTML('arena/markdown-preview.html', { content })) };
+    }
+
+    async postReadNotifications() {
+        this.requireParticipant();
+        const items = await contest.getMultiClarification(this.domainId, this.tid,
+            this.tsdoc?.members?.length ? this.tsdoc.members : this.user._id);
+        const notices = clarificationNotices(items, () => '');
+        const did = String(this.request.body.did || '');
+        if (did && !ObjectId.isValid(did)) throw new ValidationError('did');
+        const ids = notices.filter((item) => !did || item.did === did).map((item) => item.id);
+        this.session.arenaRead = { ...(this.session.arenaRead || {}),
+            [hex(this.tid)]: readNotices(this.session.arenaRead?.[hex(this.tid)], ids) };
+        this.response.body = { ok: true };
     }
 
     async postReply() {
@@ -894,15 +970,17 @@ class ArenaStateHandler extends ArenaBaseHandler {
                 ? ['own', 'records', 'clarifications']
                 : view === 'scoreboard'
                     ? ['scoreboard', 'scoreboard-status']
-                    : view === 'submission'
-                        ? ['submission-status']
-                        : view === 'clarifications'
-                            ? ['clarifications']
-                            : view === 'clarification'
-                                ? ['clarification-details']
-                                : view === 'jury'
-                                    ? ['jury-requests', 'jury-balloons', 'jury-scoreboard', 'jury-records']
-                                    : [];
+                    : view === 'submissions'
+                        ? ['submissions-results']
+                        : view === 'submission'
+                            ? ['submission-status']
+                            : view === 'clarifications'
+                                ? ['clarifications']
+                                : view === 'clarification'
+                                    ? ['clarification-details']
+                                    : view === 'jury'
+                                        ? ['jury-requests', 'jury-balloons', 'jury-scoreboard', 'jury-records']
+                                        : [];
         for (const key of names) fragments[key] = String(await this.renderHTML(`arena/${key}.html`, { arena }));
         this.response.body = {
             fragments,
@@ -914,6 +992,7 @@ class ArenaStateHandler extends ArenaBaseHandler {
             participantEnded: arena.participantEnded,
             frozen: arena.frozen,
             unread: arena.unread,
+            notices: arena.notices,
             restrictExit: arena.restrictExit,
         };
     }

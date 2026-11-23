@@ -24,6 +24,19 @@ the former arena print route and native onsite printing APIs reject requests,
 including contests with a legacy `allowPrint` flag. Scoreboard print controls
 are omitted too.
 
+The jury Submissions page has contest-scoped team/problem/language/verdict
+filters, queued/running views, testcase verdict badges, pagination and live
+updates. Jury and participant scoreboards link problem headings to statements;
+jury cells also open authorized submission details. Submission confirmation uses
+a nonblocking dialog, so the contest clock and progress continue while it is open.
+Contest descriptions may be left blank in the ordinary contest editor.
+
+Jury broadcasts and private jury replies produce unread alerts across the team
+interface, independently of desktop notification permission. Opening a message
+or marking messages read acknowledges them in the session. Desktop notification
+opt-in is retained per account/contest, with explicit permission errors and
+deduplicated message notifications, including polling while the tab is hidden.
+
 Server-side scope checks bind all pages to domain/contest/participant identity.
 Public and jury scoreboards use separate projections. In-contest submission
 details do not expose testcase feedback. New state-changing arena forms require

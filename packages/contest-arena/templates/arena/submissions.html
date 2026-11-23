@@ -1,0 +1,10 @@
+<div class="page-heading"><h1>Submissions</h1><a class="btn btn-outline-secondary btn-sm" href="{{ arena.links.jury }}">Jury overview</a></div>
+<form method="get" action="{{ arena.links.submissions }}" class="submission-filters">
+  <input type="hidden" name="show" value="{{ arena.submissions.filters.show }}">
+  <label>Team<select name="team"><option value="">All teams</option>{% for team in arena.submissions.teams %}<option value="{{ team.id }}" {{ 'selected' if arena.submissions.filters.team == team.id }}>{{ team.class ~ ' · ' if team.class }}{{ team.name }}</option>{% endfor %}</select></label>
+  <label>Problem<select name="problem"><option value="">All problems</option>{% for p in arena.problems %}<option value="{{ p.pid }}" {{ 'selected' if arena.submissions.filters.problem == p.pid|string }}>{{ p.label }} — {{ p.title }}</option>{% endfor %}</select></label>
+  <label>Language<select name="language"><option value="">All languages</option>{% for lang in arena.submissions.languages %}<option value="{{ lang.id }}" {{ 'selected' if arena.submissions.filters.language == lang.id }}>{{ lang.name }}</option>{% endfor %}</select></label>
+  <label>Result<select name="result"><option value="">All results</option>{% for item in arena.submissions.results %}<option value="{{ item.id }}" {{ 'selected' if arena.submissions.filters.result == item.id }}>{{ item.text }}</option>{% endfor %}</select></label>
+  <button class="btn btn-primary btn-sm" type="submit"><svg><use href="#i-filter"/></svg> Filter</button><a class="btn btn-outline-secondary btn-sm" href="{{ arena.links.submissions }}">Reset</a>
+</form>
+<div data-arena-live="submissions-results">{% include "arena/submissions-results.html" %}</div>
