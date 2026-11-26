@@ -1,14 +1,21 @@
 import { exec } from 'child_process';
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
-import { omit } from 'lodash';
+import { omit, pick } from 'lodash';
+import moment from 'moment';
+import { Filter, ObjectId } from 'mongodb';
 import Schema from 'schemastery';
+import { Time } from '@hydrooj/utils';
 import {
-    CannotEditSuperAdminError, NotLaunchedByPM2Error, UserNotFoundError, ValidationError,
+    CannotEditSuperAdminError, ContestNotFoundError, NotLaunchedByPM2Error, ProblemNotFoundError,
+    RecordNotFoundError, UserNotFoundError, ValidationError,
 } from '../error';
+import { RecordDoc } from '../interface';
 import { Logger } from '../logger';
-import { PRIV, STATUS } from '../model/builtin';
+import { NORMAL_STATUS, PRIV, STATUS } from '../model/builtin';
+import * as contest from '../model/contest';
 import domain from '../model/domain';
+import problem from '../model/problem';
 import record from '../model/record';
 import * as setting from '../model/setting';
 import system from '../model/system';
@@ -351,6 +358,130 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
+class SystemRejudgeHandler extends SystemHandler {
+    async get() {
+        const tasks = await record.getMultiRejudgeTask(undefined, {}).limit(20).toArray();
+        const udict = await user.getListForRender(undefined, Array.from(new Set(tasks.map((i) => i.owner))), true);
+        this.response.body = {
+            tasks,
+            udict,
+            apply: true,
+            status: NORMAL_STATUS.filter((i: STATUS) => ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_ACCEPTED].includes(i)).join(','),
+        };
+        this.response.template = 'manage_rejudge.html';
+    }
+
+    @param('uidOrName', Types.UidOrName, true)
+    @param('pid', Types.ProblemId, true)
+    @param('tid', Types.ObjectId, true)
+    @param('langs', Types.CommaSeperatedArray, true)
+    @param('beginAtDate', Types.Date, true)
+    @param('beginAtTime', Types.Time, true)
+    @param('endAtDate', Types.Date, true)
+    @param('endAtTime', Types.Time, true)
+    @param('status', Types.CommaSeperatedArray, true)
+    @param('type', Types.Range(['preview', 'rejudge']))
+    @param('high_priority', Types.Boolean)
+    @param('apply', Types.Boolean)
+    async post(
+        domainId: string, uidOrName?: string, pid?: string | number, tid?: ObjectId,
+        langs: string[] = [], beginAtDate?: string, beginAtTime?: string, endAtDate?: string,
+        endAtTime?: string, status: string[] = [], _type = 'rejudge', highPriority = false, _apply = false,
+    ) {
+        const q: Filter<RecordDoc> = {};
+        if (uidOrName) {
+            const udoc = await user.getById(domainId, +uidOrName)
+                || await user.getByUname(domainId, uidOrName)
+                || await user.getByEmail(domainId, uidOrName);
+            if (udoc) q.uid = udoc._id;
+            else throw new UserNotFoundError(uidOrName);
+        }
+        if (tid) {
+            const tdoc = await contest.get(domainId, tid);
+            if (!tdoc) throw new ContestNotFoundError(domainId, tid);
+            q.contest = tdoc._id;
+        }
+        if (pid) {
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc) q.pid = pdoc.docId;
+            else throw new ProblemNotFoundError(domainId, pid);
+        }
+        if (langs.length) q.lang = { $in: langs.filter((i) => setting.langs[i]) };
+        let beginAt = null;
+        let endAt = null;
+        if (beginAtDate) {
+            beginAt = moment(`${beginAtDate} ${beginAtTime || '00:00'}`);
+            if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
+            q._id ||= {};
+            q._id = { ...q._id, $gte: Time.getObjectID(beginAt) };
+        }
+        if (endAtDate) {
+            endAt = moment(`${endAtDate} ${endAtTime || '23:59'}`);
+            if (!endAt.isValid()) throw new ValidationError('endAtDate', 'endAtTime');
+            q._id ||= {};
+            q._id = { ...q._id, $lte: Time.getObjectID(endAt) };
+        }
+        if (beginAt && endAt && beginAt.isSameOrAfter(endAt)) throw new ValidationError('duration');
+        const rdocs = await record.getMulti(domainId, q).project({ _id: 1, contest: 1 }).toArray();
+        if (_type === 'preview') {
+            this.response.body = {
+                uidOrName,
+                pid,
+                tid,
+                langs: langs.join(','),
+                beginAtDate,
+                beginAtTime,
+                endAtDate,
+                endAtTime,
+                status: status.join(','),
+                highPriority,
+                apply: _apply,
+                recordLength: rdocs.length,
+                tasks: await record.getMultiRejudgeTask(undefined, {}).limit(20).toArray(),
+                udict: await user.getListForRender(undefined, [], true),
+            };
+            this.response.template = 'manage_rejudge.html';
+            return;
+        }
+        const rid = await record.addRejudgeTask(domainId, {
+            owner: this.user._id,
+            apply: _apply,
+            beginAt: new Date(),
+            rids: rdocs.map((i) => i._id),
+        });
+        const priority = await record.submissionPriority(this.user._id, (highPriority ? 0 : -10000) - rdocs.length * 5 - 50);
+        if (_apply) await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
+        else {
+            await record.collHistory.insertMany(rdocs.map((rdoc) => ({
+                ...pick(rdoc, [
+                    'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
+                    'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
+                ]),
+                rid: rdoc._id,
+                _id: new ObjectId(),
+            })));
+        }
+        await Promise.all([
+            record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false },
+                { rejudge: _apply ? true : 'controlled' }),
+            record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {},
+                { rejudge: _apply ? true : 'controlled' }),
+        ]);
+        this.response.redirect = this.url('manage_rejudge_detail', { rid });
+    }
+}
+
+class SystemRejudgeDetailHandler extends SystemHandler {
+    @param('rid', Types.ObjectId)
+    async get(domainId: string, rid: ObjectId) {
+        const rrdoc = await record.getRejudgeTask(domainId, rid);
+        if (!rrdoc) throw new RecordNotFoundError(domainId, rid);
+        const rdocs = await record.getMulti(domainId, { _id: { $in: rrdoc.rids || [] } }).toArray();
+        this.response.body = { rrdoc, rdocs };
+        this.response.template = 'manage_rejudge_detail.html';
+    }
+}
+
 export const inject = ['setting', 'check'];
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
@@ -360,5 +491,7 @@ export async function apply(ctx) {
     ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
     ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
+    ctx.Route('manage_rejudge', '/manage/rejudge', SystemRejudgeHandler);
+    ctx.Route('manage_rejudge_detail', '/manage/rejudge/:rid', SystemRejudgeDetailHandler);
     ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
