@@ -703,6 +703,7 @@ Please select at least one user to perform this operation.: 请选择至少一�
 Please set the balloon color for each problem first.: 请先为每道题设置气球颜色。
 Please wait until contest host unfreeze the scoreboard.: 请等待比赛主办方解除封榜。
 Polyhedron supports managing problem version history, testing solutions, checking time limits, composing contest statements, cooperation and much more.: Polyhedron 支持题目版本管理，代码测试，时限检验，制作比赛题面，多人协作等等功能。
+Positive-score dependencies: 正分依赖
 Preference Settings: 偏好设置
 preferredPrefix_hint: 此选项用于重排题号。例如，若题目包中所给的题号分别是 P1001, P1002, P1003，而此选项填写了 T，则导入后三道题的题号分别为 T1001, T1002 和 T1003。
 Preparing Upload...: 准备上传...
@@ -953,6 +954,7 @@ Text: 文本
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用于<b>所有已注册用户</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本场比赛采用灵活时间模式，你需要在参加后的指定时间内完成比赛。
 The contest is ended. New submissions will be treated as correction submissions and will not be counted in the contest.: 比赛已经结束。新提交将被视为补题提交，不计入比赛成绩。
+The current subtask is judged only when all selected subtasks have a score greater than 0.: 仅当所有选中的子任务得分均大于 0 时，才评测当前子任务。
 The group to join when user joining the domain.: 加入域时自动加入的小组。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
