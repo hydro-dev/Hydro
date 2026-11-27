@@ -30,6 +30,7 @@ const compilerOptionsBase = {
     experimentalDecorators: true,
     // emitDecoratorMetadata: true,
     incremental: true,
+    skipLibCheck: true,
 };
 const baseOutDir = path.resolve(__dirname, '../.cache/ts-out');
 const config = {
