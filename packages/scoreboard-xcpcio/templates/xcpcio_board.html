@@ -29,6 +29,10 @@
     th { text-align: center; }
     td.unattempted, td.empty { background-color: transparent !important; }
     #app main { overflow-y: auto; overflow-x: hidden; }
+    #app img[alt="badge"], #app img[alt="team badge"] {
+        aspect-ratio: 1;
+        object-fit: cover;
+    }
 </style>
 <script type="module" crossorigin src="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ js }}.js"></script>
 <link rel="stylesheet" crossorigin href="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ css }}.css">
