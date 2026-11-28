@@ -17,27 +17,34 @@ import {
     ProblemModel as problem,
     RecordModel as record,
     SettingModel,
+    StorageModel as storage,
     UserModel as user,
     ValidationError,
 } from 'hydrooj';
 import { ContestDetailBaseHandler } from 'hydrooj/src/handler/contest';
+import { balloonConfig } from './balloon-data';
+import { installBalloonPush } from './balloon-push';
+import { balloonPageData, installBalloons } from './balloons';
 import { administrator } from './enrollment';
 import { submissionChecks, submissionFilterQuery, submissionFilters } from './jury-submissions';
+import { installPresentation } from './live';
 import { installMode } from './mode';
 import { clarificationNotices, readNotices } from './notifications';
 import { installParticipantManagement } from './participants';
+import { inlinePdfDisposition } from './pdf';
 import { contestTime, juryAnswered } from './presentation';
-import { allowedLanguageIds, problemLimits } from './problem';
+import { allowedLanguageIds, problemLimits, statementPdf } from './problem';
 import { resolverFreeze } from './resolver';
 import { createResolverPackage } from './resolver-package';
-import { avatarImage, badgeTextColor, medalCounts, medalFor, problemColors, summarize } from './scoreboard';
-import { finalizedSnapshot, pendingStatuses, ranked, ratingReady, score, stats, verdicts } from './scoring';
+import { avatarImage, badgeTextColor, medalCounts, medalFor, summarize } from './scoreboard';
+import { excludedStatuses, finalizedSnapshot, pendingStatuses, ranked, ratingReady, score, stats, verdicts } from './scoring';
 import { submissionResult } from './submission';
 
 export const name = 'contest-arena';
 const RULE = 'icpc_domjudge';
 const files = Object.fromEntries(
-    ['arena.css', 'arena.js', 'participants.css', 'participants.js', 'mode-guard.js', 'contest.css'].map((file) => [
+    ['arena.css', 'arena.js', 'participants.css', 'participants.js', 'mode-guard.js', 'contest.css', 'presentation-manage.js',
+        'balloons.css', 'balloons.js', 'balloon-push.js', 'balloon-delivery.css', 'balloon-delivery.js'].map((file) => [
         file,
         readFileSync(join(__dirname, 'frontend', file)),
     ]),
@@ -146,7 +153,8 @@ function installRule(ctx: Context) {
                     // Keep its journal on the same inclusive freeze boundary as the cells.
                     const journal = (row.journal || []).filter((entry) => {
                         const stamp = +entry.rid.getTimestamp();
-                        return stamp >= +tdoc.beginAt && stamp < +tdoc.endAt && (!config.lockAt || stamp < +config.lockAt);
+                        return stamp >= +tdoc.beginAt && stamp < +tdoc.endAt && (!config.lockAt || stamp < +config.lockAt)
+                            && entry.status !== 7 && !excludedStatuses.has(entry.status);
                     });
                     body.push(
                         await base.scoreboardRow(
@@ -208,7 +216,7 @@ class ArenaAssetHandler extends Handler {
     }
 }
 
-class ArenaBaseHandler extends ContestDetailBaseHandler {
+export class ArenaBaseHandler extends ContestDetailBaseHandler {
     get domainId() {
         return this.domain._id;
     }
@@ -278,7 +286,22 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
         if (!this.running) throw new ValidationError('比赛未开始或已结束');
     }
 
-    async data(view: string) {
+    async sendPdf(target: string, filename: string) {
+        if (!await storage.getMeta(target)) throw new NotFoundError('题面文件');
+        this.response.body = await storage.get(target);
+        this.response.type = 'application/pdf';
+        this.response.disposition = inlinePdfDisposition(filename);
+        this.response.template = null;
+    }
+
+    async sendProblemPdf(pid: number, filename: string) {
+        let pdoc = await problem.get(this.domainId, pid);
+        if (pdoc?.reference) pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
+        if (!pdoc || !pdoc.additional_file?.some((file) => file.name === filename)) throw new NotFoundError('题面文件');
+        await this.sendPdf(`problem/${pdoc.domainId}/${pdoc.docId}/additional_file/${filename}`, filename);
+    }
+
+    async data(view: string, problemId?: number) {
         const before = contest.isNotStarted(this.tdoc);
         const ended = contest.isDone(this.tdoc);
         const participantEnded = contest.isDone(this.tdoc, this.tsdoc);
@@ -303,17 +326,16 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             await contest.setStatus(this.domainId, this.tid, this.mine, { startAt: new Date() });
         }
         const canProblems = (!before || this.jury) && (!!this.tsdoc?.attend || ended || this.jury);
-        const ownFilter = {
-            contest: this.tid,
-            uid: this.tsdoc?.members?.length ? { $in: this.tsdoc.members } : this.user._id,
-        };
+        const ownFilter = view === 'home' && this.tsdoc?.attend
+            ? await contest.getParticipantRecordQuery(this.tdoc, this.mine, this.team ? this.tsdoc?.members : undefined)
+            : { contest: this.tid, uid: this.user._id };
         const requestedPage = Number(this.request.query.page || 1);
         if (!Number.isSafeInteger(requestedPage) || requestedPage < 1 || requestedPage > 1000000) { throw new ValidationError('page'); }
         const recordTotal = this.tsdoc?.attend && view === 'home' ? await record.count(this.domainId, ownFilter) : 0;
         const recordPages = Math.max(1, Math.ceil(recordTotal / 50));
         const recordPage = Math.min(requestedPage, recordPages);
-        const [tsdocs, pdict, ownRecords, clarifications] = await Promise.all([
-            contest.getMultiStatus(this.domainId, { docId: this.tid }).toArray(),
+        const [allStatuses, pdict, ownRecords, clarifications] = await Promise.all([
+            contest.getMultiStatus(this.domainId, { docId: this.tid, registrationCancelled: { $in: [true, false, null] } }).toArray(),
             canProblems ? problem.getList(this.domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_DETAIL) : {},
             this.tsdoc?.attend && view === 'home'
                 ? record
@@ -329,19 +351,21 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                     this.domainId,
                     this.tid,
                     view === 'jury' ? undefined : this.tsdoc?.members?.length ? this.tsdoc.members : this.user._id,
+                    view === 'jury' ? undefined : { participant: this.mine, viewer: this.user._id },
                 )
                 : [],
         ]);
+        const tsdocs = allStatuses.filter((row) => !row.registrationCancelled);
         const ids = [
             ...new Set([
-                ...tsdocs.flatMap((row) => [row.uid, ...(row.members || [])]),
+                ...allStatuses.flatMap((row) => [row.uid, ...(row.members || [])]),
                 ...clarifications
                     .flatMap((item) => [item.owner, ...(item.reply || []).map((reply) => reply.owner)])
                     .filter((uid) => uid > 0),
             ]),
         ];
         const udict = await user.getListForRender(this.domainId, ids, false);
-        const colors = problemColors;
+        const balloonColors = balloonConfig(this.tdoc);
         const medals = medalCounts(this.tdoc.medals);
         const splitLangs = (value?: string) =>
             value?.trim()
@@ -372,17 +396,15 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             ? this.tdoc.pids.map((pid, index) => {
                 const pdoc = pdict[pid];
                 const filePdoc = pdoc.reference ? referenceProblems[pid] : pdoc;
+                const pdf = statementPdf(filePdoc?.additional_file || [], filePdoc?.onsiteStatement)?.name || '';
                 const config = typeof pdoc.config === 'object' ? pdoc.config : {};
-                const configured = this.tdoc.balloon?.[pid];
-                const color = typeof configured === 'string' ? configured : configured?.color;
+                const color = balloonColors[pid].color;
                 return {
                     pid,
                     label: alphabet(index),
                     title: pdoc.title,
-                    color: /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(color || '') ? color : colors[index % colors.length],
-                    textColor: badgeTextColor(
-                        /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(color || '') ? color : colors[index % colors.length],
-                    ),
+                    color,
+                    textColor: badgeTextColor(color),
                     ...problemLimits(config),
                     type:
                           config.type === 'interactive' || config.interactor
@@ -397,7 +419,8 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                         splitLangs(this.domain.langs),
                         pdoc.reference ? splitLangs(referenceDomains[pdoc.reference.domainId]?.langs) : undefined,
                     ),
-                    url: this.link('problem', { pid }),
+                    url: pdf ? this.url('arena_problem_statement', { tid: this.tid, pid }) : this.link('problem', { pid }),
+                    pdf,
                     submit: this.link('submit', { pid }),
                     files: (filePdoc?.additional_file || []).map((file, fileIndex) => ({
                         name: file.name,
@@ -419,11 +442,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             : !before && view === 'scoreboard'
                 ? this.tdoc.pids.map((pid, index) => {
                     // Public standings need columns, without granting access to statements or files.
-                    const configured = this.tdoc.balloon?.[pid];
-                    const rawColor = typeof configured === 'string' ? configured : configured?.color;
-                    const color = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(rawColor || '')
-                        ? rawColor
-                        : colors[index % colors.length];
+                    const color = balloonColors[pid].color;
                     return {
                         pid,
                         label: alphabet(index),
@@ -433,6 +452,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                         languages: [],
                         files: [],
                         url: '',
+                        pdf: '',
                         submit: '',
                         submitUrl: '',
                         type: 'Pass-fail',
@@ -489,7 +509,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             }),
         });
         for (const p of problems) {
-            (p as any).attachments = p.files.filter((file) => !/\.(?:png|jpe?g|gif|webp|svg)$/i.test(file.name));
+            (p as any).attachments = p.files.filter((file) => file.name !== p.pdf && !/\.(?:png|jpe?g|gif|webp|svg)$/i.test(file.name));
         }
         const self = buildRows(
             this.tdoc,
@@ -513,17 +533,25 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             url: this.link('submission', { rid: hex(rdoc._id) }),
         }));
         const participantNames = new Map<number, string>();
-        for (const row of tsdocs) {
+        const memberParticipants = new Map<number, number>();
+        const recordParticipants = new Map<string, number>();
+        for (const row of allStatuses) {
             const participantName =
                 row.displayName
                 || udict[row.uid]?.name
                 || udict[row.uid]?.displayName
                 || udict[row.uid]?.uname
                 || `Team ${row.uid}`;
-            for (const uid of [row.uid, ...(row.members || [])]) participantNames.set(uid, participantName);
+            participantNames.set(row.uid, participantName);
+            for (const entry of row.journal || []) recordParticipants.set(hex(entry.rid), row.uid);
+            if (row.attend && !row.registrationCancelled) {
+                for (const uid of [row.uid, ...(row.members || [])]) memberParticipants.set(uid, row.uid);
+            }
         }
-        const senderName = (uid: number) =>
-            uid === 0 ? 'Jury' : participantNames.get(uid) || udict[uid]?.name || udict[uid]?.uname || `Team ${uid}`;
+        const recordParticipant = (rdoc: any) =>
+            recordParticipants.get(hex(rdoc._id)) ?? memberParticipants.get(rdoc.uid) ?? rdoc.uid;
+        const senderName = (uid: number, participant?: number) => uid === 0 ? 'Jury'
+            : (participant !== undefined && participantNames.get(participant)) || udict[uid]?.name || udict[uid]?.uname || `Team ${uid}`;
         const read = new Set<string>(this.session.arenaRead?.[hex(this.tid)] || []);
         const notices = this.tsdoc?.attend
             ? clarificationNotices(clarifications, (did) => this.link('clarification', { did })).filter((item) => !read.has(item.id))
@@ -532,7 +560,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
         const clars = clarifications.map((item) => ({
             id: hex(item.docId),
             broadcast: item.owner === 0,
-            from: senderName(item.owner),
+            from: senderName(item.owner, item.arenaParticipant),
             subject: item.subject
                 ? `${alphabet(this.tdoc.pids.indexOf(item.subject))} - ${pdict[item.subject]?.title || 'Problem'}`
                 : 'General',
@@ -542,7 +570,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             replies: (item.reply || []).map((reply) => ({
                 content: reply.content,
                 owner: reply.owner,
-                from: senderName(reply.owner),
+                from: senderName(reply.owner, item.arenaParticipant),
                 time: contestTime(reply._id.getTimestamp(), this.tdoc.beginAt),
             })),
             answered: juryAnswered(item.reply),
@@ -590,6 +618,10 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             ojScoreboard: this.url('contest_scoreboard', { tid: this.tid }),
             edit: this.url('contest_edit', { tid: this.tid }),
             manage: this.url('contest_manage', { tid: this.tid }),
+            presentation: this.jury ? this.url('arena_presentation_manage', { tid: this.tid }) : '',
+            statement: canProblems && (this.jury || this.tsdoc?.attend)
+                && statementPdf(this.tdoc.privateFiles || [], this.tdoc.onsiteStatement || '')
+                ? this.url('arena_contest_statement', { tid: this.tid }) : '',
             login: this.url('user_login', { query: { redirect: this.link() } }),
             problems,
             rows: rankRows.map((row) => mapped(row)),
@@ -646,10 +678,10 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             : 0;
         arena.resolverExport = ended && this.jury ? this.url('arena_resolver_export', { tid: this.tid }) : '';
         if (['problem', 'submit'].includes(view)) {
-            const pid = Number(this.request.query.pid || problems[0]?.pid);
+            const pid = problemId ?? Number(this.request.query.pid || problems[0]?.pid);
             if (!Number.isSafeInteger(pid) || !this.tdoc.pids.includes(pid) || !pdict[pid]) throw new NotFoundError('题目');
             arena.problem = problems.find((p) => p.pid === pid);
-            if (view === 'problem') {
+            if (view === 'problem' && !arena.problem.pdf) {
                 arena.pdoc = pdict[pid];
                 arena.statements = (await problem.getStatements(pdict[pid])).map((statement) => ({
                     ...statement,
@@ -671,7 +703,8 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             if (!ObjectId.isValid(rawId)) throw new NotFoundError('提交');
             const rdoc = await record.get(this.domainId, new ObjectId(rawId));
             if (!rdoc || hex(rdoc.contest) !== hex(this.tid)) throw new NotFoundError('提交');
-            const canView = rdoc.uid === this.user._id || this.tsdoc?.members?.includes(rdoc.uid);
+            const owner = await contest.getRecordParticipant(this.domainId, this.tid, rdoc.uid, rdoc._id);
+            const canView = owner === this.mine && (rdoc.uid === this.user._id || this.tsdoc?.members?.includes(rdoc.uid));
             if (!canView && !this.jury) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
             const language = SettingModel.langs[rdoc.lang];
             const result = submissionResult(rdoc, this.jury || ended, language ? !!language.compile : undefined);
@@ -683,7 +716,8 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                 id: rawId,
                 label: position >= 0 ? alphabet(position) : `P${rdoc.pid}`,
                 title: pdict[rdoc.pid]?.title,
-                submitter: submitter?.name || submitter?.displayName || submitter?.uname || String(rdoc.uid),
+                submitter: participantNames.get(owner)
+                    || submitter?.name || submitter?.displayName || submitter?.uname || String(rdoc.uid),
                 class: submitter?.class || '',
                 code: rdoc.code || '',
                 language: language?.display || rdoc.lang,
@@ -702,9 +736,10 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
             } catch (error) {
                 throw new ValidationError(error.message);
             }
-            const teamStatus = tsdocs.find((row) => String(row.uid) === filters.team);
+            const teamStatus = allStatuses.find((row) => String(row.uid) === filters.team);
             const scope = { contest: this.tid };
-            const query = { ...scope, ...submissionFilterQuery(filters, teamStatus?.members) };
+            const ownership = teamStatus ? await contest.getParticipantRecordQuery(this.tdoc, teamStatus.uid, teamStatus.members) : {};
+            const query = { ...scope, ...submissionFilterQuery(filters, teamStatus?.members), ...ownership };
             const [total, correct, unjudged, judging, matched] = await Promise.all([
                 record.count(this.domainId, scope),
                 record.count(this.domainId, { ...scope, status: 1 }),
@@ -726,9 +761,9 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                 previous: page > 1 ? href({ page: page - 1 }) : '',
                 next: page < pages ? href({ page: page + 1 }) : '',
                 tabs: ['all', 'unjudged', 'judging'].map((key) => ({ key, url: href({ show: key, page: 1 }) })),
-                teams: tsdocs.filter((row) => row.attend).map((row) => ({
+                teams: allStatuses.filter((row) => row.attend || (row.registrationCancelled && row.journal?.length)).map((row) => ({
                     id: String(row.uid),
-                    name: participantNames.get(row.uid) || String(row.uid),
+                    name: (participantNames.get(row.uid) || String(row.uid)) + (row.registrationCancelled ? '（已取消报名）' : ''),
                     class: (row.members?.length ? row.members : [row.uid])
                         .map((uid) => udict[uid]?.class).filter(Boolean).join(' / '),
                 })),
@@ -739,7 +774,7 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                     return {
                         id: hex(rdoc._id), number: rdoc.migration?.submissionId || hex(rdoc._id).slice(-6),
                         time: contestTime(rdoc._id.getTimestamp(), this.tdoc.beginAt),
-                        team: participantNames.get(rdoc.uid) || udict[rdoc.uid]?.name || udict[rdoc.uid]?.uname || String(rdoc.uid),
+                        team: participantNames.get(recordParticipant(rdoc)) || udict[rdoc.uid]?.name || udict[rdoc.uid]?.uname || String(rdoc.uid),
                         username: udict[rdoc.uid]?.uname || String(rdoc.uid), class: udict[rdoc.uid]?.class || '',
                         label: item?.label || `P${rdoc.pid}`, color: item?.color, textColor: item?.textColor,
                         problem: item?.url || '', language: rdoc.lang, status: rdoc.status,
@@ -754,20 +789,16 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
                 await record.getMulti(this.domainId, { contest: this.tid }).sort({ _id: -1 }).limit(100).toArray()
             ).map((rdoc) => ({
                 id: hex(rdoc._id),
-                team: udict[rdoc.uid]?.uname || String(rdoc.uid),
+                team: participantNames.get(recordParticipant(rdoc)) || udict[rdoc.uid]?.uname || String(rdoc.uid),
                 label: alphabet(this.tdoc.pids.indexOf(rdoc.pid)),
                 verdict: verdicts[rdoc.status] || 'JUDGE-ERROR',
                 status: rdoc.status,
                 url: this.link('submission', { rid: hex(rdoc._id) }),
             }));
-            arena.balloons = (await contest.getMultiBalloon(this.domainId, this.tid).sort({ _id: 1 }).toArray()).map(
-                (item) => ({
-                    id: hex(item._id),
-                    team: udict[item.uid]?.displayName || udict[item.uid]?.uname || String(item.uid),
-                    label: alphabet(this.tdoc.pids.indexOf(item.pid)),
-                    sent: !!item.sent,
-                }),
-            );
+            const balloons = await balloonPageData(this.domainId, this.tdoc);
+            arena.balloons = balloons.rows.filter((item) => item.status === 'pending').slice(0, 10);
+            arena.balloonCounts = balloons.counts;
+            arena.balloonManage = this.url('contest_balloon', { tid: this.tid });
         }
         if (
             (before
@@ -805,12 +836,44 @@ class ArenaBaseHandler extends ContestDetailBaseHandler {
     }
 }
 
+class ArenaContestStatementHandler extends ArenaBaseHandler {
+    async head() {
+        await this.get();
+    }
+
+    async get() {
+        if (!this.jury) this.requireParticipant();
+        await this.data('problems');
+        const file = statementPdf(this.tdoc.privateFiles || [], this.tdoc.onsiteStatement || '');
+        if (!file) throw new NotFoundError('比赛总题面');
+        await this.sendPdf(`contest/${this.domainId}/${this.tid}/private/${file.name}`, file.name);
+    }
+}
+
+class ArenaProblemStatementHandler extends ArenaBaseHandler {
+    async head() {
+        await this.get();
+    }
+
+    async get() {
+        const raw = String(this.request.params.pid || '');
+        if (!/^[1-9][0-9]*$/.test(raw)) throw new NotFoundError('题目');
+        const { arena } = await this.data('problem', Number(raw));
+        if (!arena.problem.pdf) throw new NotFoundError('PDF 题面');
+        await this.sendProblemPdf(arena.problem.pid, arena.problem.pdf);
+    }
+}
+
 class ArenaPageHandler extends ArenaBaseHandler {
     async get() {
         const view = this.request.params.view || 'home';
         if (!views.has(view)) throw new NotFoundError();
         const { arena } = await this.data(view);
         if (view === 'problem') {
+            if (arena.problem.pdf) {
+                await this.sendProblemPdf(arena.problem.pid, arena.problem.pdf);
+                return;
+            }
             arena.statementHtml = String(await this.renderHTML('arena/problem-statement.html', { arena }));
             delete arena.pdoc;
             delete arena.statements;
@@ -860,8 +923,9 @@ class ArenaPageHandler extends ArenaBaseHandler {
         const content = String(this.request.body.content || '').trim();
         if (!ObjectId.isValid(did) || !content || content.length > 10000) throw new ValidationError('答疑内容');
         const item = await contest.getClarification(this.domainId, new ObjectId(did));
-        const owners = this.tsdoc?.members?.length ? this.tsdoc.members : [this.user._id];
-        if (!item || hex(item.parentId) !== hex(this.tid) || !owners.includes(item.owner)) { throw new PermissionError(PERM.PERM_ATTEND_CONTEST); }
+        if (!item || hex(item.parentId) !== hex(this.tid) || !contest.isOwnClarification(item, this.mine, this.user._id)) {
+            throw new PermissionError(PERM.PERM_ATTEND_CONTEST);
+        }
         await this.limitRate('arena_clarification', 3600, 30);
         await contest.addClarificationReply(this.domainId, item.docId, this.user._id, content, this.request.ip);
         const redirect = this.link('clarification', { did });
@@ -878,7 +942,7 @@ class ArenaPageHandler extends ArenaBaseHandler {
     async postReadNotifications() {
         this.requireParticipant();
         const items = await contest.getMultiClarification(this.domainId, this.tid,
-            this.tsdoc?.members?.length ? this.tsdoc.members : this.user._id);
+            this.tsdoc?.members?.length ? this.tsdoc.members : this.user._id, { participant: this.mine, viewer: this.user._id });
         const notices = clarificationNotices(items, () => '');
         const did = String(this.request.body.did || '');
         if (did && !ObjectId.isValid(did)) throw new ValidationError('did');
@@ -911,7 +975,9 @@ class ArenaPageHandler extends ArenaBaseHandler {
         this.requireJury();
         const id = String(this.request.body.id || '');
         if (!ObjectId.isValid(id) || !(await contest.getBalloon(this.domainId, this.tid, new ObjectId(id)))) { throw new NotFoundError(); }
-        await contest.updateBalloon(this.domainId, this.tid, new ObjectId(id), { sent: true });
+        const view = await balloonPageData(this.domainId, this.tdoc);
+        if (view.rows.find((row) => row.id === id)?.withdrawn) throw new ValidationError('此气球已不满足发放条件，请刷新');
+        await contest.setBalloonDelivery(this.domainId, this.tid, new ObjectId(id), this.user._id);
         this.response.redirect = this.link('jury');
         this.response.body = { ok: true, redirect: this.link('jury') };
     }
@@ -1002,10 +1068,15 @@ export function apply(ctx: Context) {
     installRule(ctx);
     installMode(ctx, assetVersion);
     installParticipantManagement(ctx, assetVersion);
+    installBalloons(ctx, assetVersion);
+    installBalloonPush(ctx, assetVersion, balloonPageData);
+    installPresentation(ctx, ArenaBaseHandler, assetVersion);
     ctx.Route('arena_asset', '/arena-assets/:version/:file', ArenaAssetHandler);
     ctx.Route('arena_font', '/arena-assets/:version/fonts/:file', ArenaAssetHandler);
     ctx.Route('arena_state', '/contest/:tid/arena/state', ArenaStateHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('arena_resolver_export', '/contest/:tid/arena/resolver', ArenaResolverExportHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('arena_contest_statement', '/contest/:tid/arena/statement', ArenaContestStatementHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('arena_problem_statement', '/contest/:tid/arena/problems/:pid/statement', ArenaProblemStatementHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('arena_home', '/contest/:tid/arena', ArenaPageHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('arena_view', '/contest/:tid/arena/:view', ArenaPageHandler, PERM.PERM_VIEW_CONTEST);
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
@@ -1036,6 +1107,12 @@ export function apply(ctx: Context) {
         arena_home: '现场比赛',
         arena_view: '现场比赛',
         arena_resolver_export: '导出 ICPC 滚榜包',
+        arena_contest_statement: '比赛总题面',
+        arena_problem_statement: '题目题面',
+        arena_presentation_manage: '实时展示',
+        arena_presentation: '实时展示',
+        arena_balloons: '气球管理',
+        arena_balloon_delivery: '气球发放',
         [RULE]: '现场赛',
     });
     ctx.on('app/started', async () => {

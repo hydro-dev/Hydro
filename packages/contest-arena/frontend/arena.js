@@ -529,7 +529,8 @@
             throw new Error('The server did not confirm this action. Check your submissions before trying again.');
         }
         if (!response.ok || data.error) {
-            throw new Error(data.error?.message || data.error || data.message || `Request failed (${response.status}).`);
+            throw new Error(data.error?.name === 'ValidationError' ? data.error.params?.[0] || data.error.message
+                : data.error?.message || data.message || `Request failed (${response.status}).`);
         }
         return data;
     };
@@ -587,6 +588,7 @@
                     credentials: 'same-origin',
                     headers: { Accept: 'application/json' },
                     body: new FormData(form),
+                    signal: AbortSignal.timeout(30000),
                 }),
             );
             if (solution) {
@@ -599,7 +601,9 @@
                 location.reload();
             } else location.href = data.redirect || location.href;
         } catch (error) {
-            showError(error.message || 'Connection interrupted. Check your submissions before trying again.', target);
+            showError(error.name === 'AbortError' || error.name === 'TimeoutError' || error.name === 'TypeError'
+                ? 'Connection interrupted. Check Home for the result before trying again.'
+                : error.message || 'Connection interrupted. Check your submissions before trying again.', target);
         } finally {
             busy = false;
             if (button) {

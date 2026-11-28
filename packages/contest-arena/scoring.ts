@@ -43,6 +43,9 @@ export function score(tdoc: any, journal: Entry[], cutoff?: Date) {
         if (seen.has(id) || !tdoc.pids.includes(entry.pid) || stamp < start || stamp >= end) continue;
         seen.add(id);
         if (excludedStatuses.has(entry.status)) continue;
+        // CE is absent from visible scoreboard cells. Behind the freeze it remains
+        // an undisclosed pending submission, just like the public event feed.
+        if (entry.status === 7 && (!cutoff || stamp < +cutoff)) continue;
         const cell = (details[entry.pid] ||= { naccept: 0, npending: 0, attempts: 0, penalty: 0, real: 0 });
         if (cell.status === 1) continue;
         if (cutoff && stamp >= +cutoff) {

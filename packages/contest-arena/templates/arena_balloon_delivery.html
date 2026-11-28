@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow"><title>气球发放 · HGNUOJ</title><link rel="stylesheet" href="{{ delivery.css }}"><script src="{{ delivery.js }}" defer></script></head>
+<body><main class="delivery-shell" data-delivery-id="{{ delivery.id }}">
+  <header><span class="delivery-brand-icon" aria-hidden="true"></span><span>HGNUOJ <small>气球发放</small></span></header>
+  <section class="delivery-card" aria-busy="true"><div class="delivery-loading" data-loading>正在读取气球任务…</div>
+    <div class="delivery-error" role="alert" data-error hidden></div><button type="button" class="delivery-retry" data-retry hidden>重新加载任务</button>
+    <div data-task hidden><p class="delivery-contest" data-contest></p><h1><span data-label class="delivery-problem"></span><span data-color-name></span><small>气球</small></h1>
+      <dl><div class="delivery-location"><dt>教室</dt><dd data-classroom></dd></div><div class="delivery-location"><dt>座位号</dt><dd data-seat></dd></div><div><dt>参赛者</dt><dd data-team></dd></div><div><dt>班级</dt><dd data-class></dd></div><div><dt>发放员</dt><dd data-receiver></dd></div></dl>
+      <p class="delivery-status" role="status" data-status></p><button type="button" id="delivery-confirm" disabled>确认已发放</button><p class="delivery-receipt" data-receipt hidden></p>
+    </div>
+  </section><footer>仅处理此条气球任务</footer>
+</main></body></html>

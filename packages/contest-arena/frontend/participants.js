@@ -8,12 +8,14 @@
     const addDialog = root.querySelector('[data-add-dialog]');
     const confirmDialog = root.querySelector('[data-confirm-dialog]');
     const resultDialog = root.querySelector('[data-result-dialog]');
+    const locationDialog = root.querySelector('[data-location-dialog]');
     const query = root.querySelector('[data-user-query]');
     const chosen = new Map();
     let busy = false;
     let searchTimer;
     let searchRequest;
     let confirmation;
+    let locationUid;
     let importResult;
     let importToken = '';
     const noticeKey = `hgnu-participants:${location.pathname}`;
@@ -108,7 +110,8 @@
         const unmatched = (data.unmatched || []).reduce((sum, item) => sum + (item.lines?.length || 1), 0);
         const issuesCount = data.issues?.length || 0;
         const duplicates = data.duplicates?.length || 0;
-        return `新增报名 ${data.added?.length || 0} 项，已报名 ${data.existing?.length || 0} 项，失败 ${data.failed?.length || 0} 项。${
+        const seating = data.locationsUpdated?.length ? ` 已更新 ${data.locationsUpdated.length} 项座位。` : '';
+        return `新增报名 ${data.added?.length || 0} 项，已报名 ${data.existing?.length || 0} 项，失败 ${data.failed?.length || 0} 项。${seating}${
             data.rows !== undefined
                 ? ` 未匹配 ${unmatched} 行，格式问题 ${issuesCount} 行，待确认重名 ${duplicates} 组。`
                 : ''
@@ -148,6 +151,7 @@
                 ['已报名', data.existing?.length || 0, '人', 'neutral'],
             ];
         values.push(
+            ['座位已更新', data.locationsUpdated?.length || 0, '项', 'success'],
             ['待确认重名', data.duplicates?.length || 0, '组', 'pending'],
             ['未匹配', unmatched, '人', 'warning'],
             ['格式问题', data.issues?.length || 0, '行', 'warning'],
@@ -191,6 +195,10 @@
                 identity.append(node('strong', group.name), node('span', group.className));
                 head.append(identity, node('small', `第 ${group.lines.join('、')} 行`));
                 box.append(head);
+                if (group.location) {
+                    box.append(node('p', `教室：${group.location.classroom || '未填写'} · 座位号：${group.location.seat || '未填写'}`,
+                        'participant-duplicate-location'));
+                }
                 const buttons = node('div', undefined, 'participant-duplicate-tools');
                 for (const [label, checked] of [
                     ['全选本组', true],
@@ -233,13 +241,26 @@
         const container = root.querySelector('[data-chosen-users]');
         container.replaceChildren();
         for (const item of chosen.values()) {
-            const button = node('button', `${item.className} · ${item.name} (${item.uname}) ×`);
+            const card = node('div', undefined, 'participant-chosen-card');
+            const heading = node('div', undefined, 'participant-chosen-heading');
+            const button = node('button', '移除', 'participant-remove');
             button.type = 'button';
+            button.setAttribute('aria-label', `移除 ${item.uname}`);
             button.addEventListener('click', () => {
                 chosen.delete(item.uid);
                 drawChosen();
             });
-            container.append(button);
+            heading.append(node('strong', `${item.className} · ${item.name} (${item.uname})`), button);
+            const fields = node('div', undefined, 'participant-location-fields');
+            for (const [key, label, maxLength] of [['classroom', '教室', 100], ['seat', '座位号', 40]]) {
+                const field = node('label', label); const input = node('input', undefined, 'textbox');
+                input.type = 'text';
+                input.value = item[key] || ''; input.maxLength = maxLength;
+                input.setAttribute('aria-label', `${item.uname} ${label}`);
+                input.addEventListener('input', () => { item[key] = input.value; });
+                field.append(input); fields.append(field);
+            }
+            card.append(heading, fields); container.append(card);
         }
     }
     async function search() {
@@ -276,7 +297,7 @@
                 );
                 button.disabled = item.enrolled;
                 button.addEventListener('click', () => {
-                    chosen.set(item.uid, item);
+                    if (!chosen.has(item.uid)) chosen.set(item.uid, { ...item, classroom: '', seat: '' });
                     drawChosen();
                 });
                 results.append(button);
@@ -310,6 +331,7 @@
             const data = await request('add', {
                 uids: [...chosen.keys()],
                 unrank: root.querySelector('[data-unrank]').checked,
+                locations: Object.fromEntries([...chosen.values()].map((item) => [item.uid, { classroom: item.classroom, seat: item.seat }])),
             });
             addDialog.close();
             if (data.failed?.length) showResult(data);
@@ -341,6 +363,7 @@
                 added: [...(importResult.added || []), ...(data.added || [])],
                 existing: [...(importResult.existing || []), ...(data.existing || [])],
                 failed: [...(importResult.failed || []), ...(data.failed || [])],
+                locationsUpdated: [...new Set([...(importResult.locationsUpdated || []), ...(data.locationsUpdated || [])])],
                 duplicates: [],
                 token: '',
             });
@@ -406,9 +429,33 @@
         confirmDialog.close();
         if (item) execute(item.action, item.uids);
     });
-    for (const button of root.querySelectorAll('[data-row-action]')) {
-        button.addEventListener('click', () => confirmAction(button.dataset.rowAction, [+button.dataset.uid]));
+    function openLocation(button) {
+        const row = button.closest('[data-participant-row]'); locationUid = +row.dataset.uid;
+        root.querySelector('[data-location-person]').textContent = `${row.dataset.class} · ${row.dataset.name}`;
+        root.querySelector('[data-location-classroom]').value = row.dataset.classroom;
+        root.querySelector('[data-location-seat]').value = row.dataset.seat;
+        root.querySelector('[data-location-error]').hidden = true;
+        locationDialog.showModal(); root.querySelector('[data-location-classroom]').focus();
     }
+    for (const button of root.querySelectorAll('[data-row-action]')) {
+        button.addEventListener('click', () => {
+            if (button.dataset.rowAction === 'location') openLocation(button);
+            else confirmAction(button.dataset.rowAction, [+button.dataset.uid]);
+        });
+    }
+    root.querySelector('[data-location-save]').addEventListener('click', () => working(async () => {
+        const data = await request('location', { uids: [locationUid], location: {
+            classroom: root.querySelector('[data-location-classroom]').value,
+            seat: root.querySelector('[data-location-seat]').value,
+        } });
+        if (data.failed?.length) throw new Error(data.failed[0].reason);
+        locationDialog.close(); reload('座位已保存。');
+    }, root.querySelector('[data-location-error]')));
+    locationDialog.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && event.target.matches('input') && !busy) {
+            event.preventDefault(); root.querySelector('[data-location-save]').click();
+        }
+    });
     for (const button of root.querySelectorAll('[data-bulk-action]')) {
         button.addEventListener('click', () => confirmAction(button.dataset.bulkAction, selection()));
     }

@@ -1,0 +1,64 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row arena-presentation" data-presentation-page>
+  <div class="columns">
+    <div class="presentation-heading">
+      <div class="presentation-heading__title"><span class="presentation-heading__icon">{% include "arena/presentation-icon.html" %}</span><div><h1>实时展示</h1><p>{{ tdoc.title }}</p></div></div>
+      <span class="presentation-status {{ 'is-enabled' if presentation.enabled }}">{{ '连接已启用' if presentation.enabled else '连接已停用' }}</span>
+    </div>
+  </div>
+  <div class="medium-8 columns">
+    <section class="section presentation-connection">
+      <div class="section__header presentation-card-heading"><h2 class="section__title">连接信息</h2><span>ICPC Presentation Client</span></div>
+      <div class="section__body">
+        <div class="presentation-field">
+          <label for="presentation-url">比赛数据地址</label>
+          <div class="presentation-field__control"><input id="presentation-url" class="textbox" type="text" readonly value="{{ presentation.apiUrl }}" autocomplete="off" spellcheck="false"><button type="button" class="presentation-copy" data-copy-target="presentation-url" data-copy-label="比赛数据地址" aria-label="复制比赛数据地址">复制</button></div>
+        </div>
+        <div class="presentation-field">
+          <label for="presentation-username">展示用户名</label>
+          <div class="presentation-field__control"><input id="presentation-username" class="textbox" type="text" readonly value="{{ presentation.username }}" autocomplete="off" spellcheck="false"><button type="button" class="presentation-copy" data-copy-target="presentation-username" data-copy-label="展示用户名" aria-label="复制展示用户名">复制</button></div>
+        </div>
+        <div class="presentation-field">
+          <label for="presentation-password">连接密码</label>
+          <div class="presentation-field__control"><input id="presentation-password" class="textbox" type="password" readonly value="{{ presentation.password }}" autocomplete="off" spellcheck="false"><button type="button" class="presentation-copy" data-toggle-presentation-password aria-label="显示连接密码" aria-pressed="false">显示</button><button type="button" class="presentation-copy" data-copy-target="presentation-password" data-copy-label="连接密码" aria-label="复制连接密码">复制</button></div>
+        </div>
+        <p class="presentation-copy-status" data-presentation-copy-status role="status" aria-live="polite"></p>
+        <div class="presentation-downloads">
+          <h3>下载启动包</h3>
+          <div class="presentation-download-grid">
+            {% for mode in [
+              {id:'scoreboard', name:'实时榜单', description:'展示排名、过题数和罚时'},
+              {id:'queue', name:'提交与评测', description:'展示提交和评测结果'},
+              {id:'clock', name:'比赛时钟', description:'展示比赛时间和倒计时'},
+              {id:'rotation', name:'轮播展示', description:'轮换榜单、评测和比赛时钟'}
+            ] %}
+            {% if presentation.enabled %}<a class="presentation-download" href="{{ presentation.url }}?download=1&amp;mode={{ mode.id }}" data-presentation-mode="{{ mode.id }}">{% else %}<span class="presentation-download is-disabled" aria-disabled="true">{% endif %}
+              <span><strong>{{ mode.name }}</strong><small>{{ mode.description }}</small></span><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg>
+            {% if presentation.enabled %}</a>{% else %}</span>{% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        <details class="presentation-access-settings"><summary>连接管理</summary>
+          <form method="post" action="{{ presentation.url }}" data-presentation-actions>
+            <input type="hidden" name="csrf" value="{{ presentation.csrf }}">
+            <button class="rounded button" type="submit" name="operation" value="{{ 'disable' if presentation.enabled else 'enable' }}">{{ '停用连接' if presentation.enabled else '启用连接' }}</button>
+            <button class="rounded button" type="submit" name="operation" value="reset">重置连接</button>
+          </form>
+        </details>
+      </div>
+    </section>
+  </div>
+  <div class="medium-4 columns">
+    <section class="section presentation-start">
+      <div class="section__header"><h2 class="section__title">开始展示</h2></div>
+      <div class="section__body">
+        <ol class="presentation-steps"><li><span>1</span><div><strong>准备运行环境</strong><p>64 位 Java 17 或更新版本。</p></div></li><li><span>2</span><div><strong>下载官方客户端</strong><p><a href="https://tools.icpc.global/pres-client" target="_blank" rel="noopener">ICPC Presentation Client ↗</a><br>下载后完整解压。</p></div></li><li><span>3</span><div><strong>下载并运行启动包</strong><p>选择左侧展示内容，解压启动包后双击 <code>start-presentation.cmd</code>，选择客户端目录。</p></div></li></ol>
+        <div class="presentation-shortcut">退出大屏 <kbd>Ctrl</kbd> + <kbd>Q</kbd></div>
+      </div>
+    </section>
+    <div class="presentation-page-links"><a href="{{ url('arena_view', tid=tdoc.docId, view='jury') }}">← 返回现场裁判页</a><a href="{{ url('contest_manage', tid=tdoc.docId) }}">比赛管理</a></div>
+  </div>
+</div>
+<script src="{{ presentation.script }}" defer></script>
+{% endblock %}

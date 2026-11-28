@@ -6,7 +6,7 @@
         {% if not sidebar %}<col class="col--checkbox">{% endif %}
         <col class="col--name">
         <col class="col--size">
-        <col class="col--operation">
+        <col class="col--operation{% if filetype == 'private' and not sidebar and onsiteStatementColumn %} onsite-statement-column{% endif %}">
       </colgroup>
       <thead>
         <tr>
@@ -33,11 +33,20 @@
           </td>
           {% endif %}
           <td class="col--name" data-preview>
-            <a href="{{ urlForFile(file.name, filetype) }}">{{ file.name }}</a>
+            <a href="{{ urlForFile(file.name, filetype) }}" title="{{ file.name }}">{{ file.name }}</a>
           </td>
           <td class="col--size">{{ size(file.size) }}</td>
-          <td class="col--operation">
+          <td class="col--operation{% if filetype == 'private' and not sidebar and onsiteStatementCsrf and tdoc.rule == 'icpc_domjudge' and file.name.toLowerCase().endsWith('.pdf') %} onsite-statement-controls{% endif %}">
             <a href="{{ urlForFile(file.name, filetype) }}" class="icon icon-download"></a>
+            {% if filetype == 'private' and not sidebar and onsiteStatementCsrf and tdoc.rule == 'icpc_domjudge' and file.name.toLowerCase().endsWith('.pdf') %}
+            <form method="post" action="{{ url('contest_manage', tid=tdoc.docId) }}" class="onsite-statement-action">
+              <input type="hidden" name="operation" value="set_onsite_statement">
+              <input type="hidden" name="csrf" value="{{ onsiteStatementCsrf }}">
+              <input type="hidden" name="filename" value="{{ '' if tdoc.onsiteStatement == file.name else file.name }}">
+              {% if tdoc.onsiteStatement == file.name %}<span class="onsite-statement-badge">当前总题面</span>{% endif %}
+              <button type="submit" class="typo-a">{{ '取消指定' if tdoc.onsiteStatement == file.name else '设为比赛总题面' }}</button>
+            </form>
+            {% endif %}
           </td>
         </tr>
         {%- endfor -%}

@@ -1,0 +1,33 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ balloon.css }}">
+<div class="row" id="balloon-manager" data-api="{{ balloon.api }}" data-push-api="{{ balloon.pushApi }}" data-push-enabled="{{ 'true' if balloon.pushEnabled else 'false' }}" data-csrf="{{ balloon.csrf }}" data-enabled="{{ 'true' if balloon.enabled else 'false' }}" data-problems="{{ balloon.problems|json }}" data-palette="{{ balloon.palette|json }}" data-initial="{{ balloon.rows|json }}">
+  <div class="medium-9 columns">
+    <section class="section balloon-section">
+      <div class="section__header balloon-heading"><div><h1 class="section__title"><span class="balloon-glyph" aria-hidden="true"></span>气球管理</h1><span class="balloon-enabled" data-balloon-enabled>{{ '自动生成已开启' if balloon.enabled else '自动生成未开启' }}</span></div><div class="balloon-heading-actions"><button type="button" class="rounded button" data-open-push>通知设置</button><button type="button" class="primary rounded button" data-balloon-configure>气球配色</button></div></div>
+      <div class="section__body balloon-body">
+        <noscript><p>请启用 JavaScript 后管理气球。</p></noscript>
+        <div class="balloon-problem-strip" data-problem-strip></div>
+        <div class="balloon-status-tabs" role="group" aria-label="筛选发放状态">
+          <button type="button" data-status="pending" aria-pressed="true">待发放 <b data-count="pending">{{ balloon.counts.pending }}</b></button><button type="button" data-status="delivered" aria-pressed="false">已发放 <b data-count="delivered">{{ balloon.counts.delivered }}</b></button><button type="button" data-status="all" aria-pressed="false">全部 <b data-count="total">{{ balloon.counts.total }}</b></button><button type="button" data-status="withdrawn" aria-pressed="false">已撤销 <b data-count="withdrawn">{{ balloon.counts.withdrawn }}</b></button>
+        </div>
+        <div class="balloon-filters"><input type="search" class="textbox" placeholder="搜索班级、姓名、教室或座位号" aria-label="搜索气球" data-balloon-search><select class="select" aria-label="按题目筛选" data-problem-filter><option value="">全部题目</option>{% for p in balloon.problems %}<option value="{{ p.pid }}">{{ p.label }} · {{ p.title }}</option>{% endfor %}</select><button type="button" class="rounded button" data-balloon-refresh>刷新</button></div>
+        <div class="balloon-selection"><span data-selected-count>已选择 0 项</span><button type="button" class="balloon-text-button balloon-mobile-select" data-balloon-select-page>全选本页</button><button type="button" class="primary rounded button" data-balloon-bulk="deliver" disabled>批量确认发放</button><button type="button" class="rounded button" data-balloon-bulk="undo" disabled>批量撤销确认</button><button type="button" class="balloon-text-button" data-clear-selection hidden>清空选择</button><span class="balloon-update-time" data-update-time></span></div>
+        <div class="balloon-notice" role="status" data-balloon-notice hidden></div><div class="balloon-error" role="alert" data-balloon-error hidden></div>
+      </div>
+      <div class="balloon-table-scroll"><table class="data-table balloon-table"><thead><tr><th><input type="checkbox" aria-label="全选本页气球" data-balloon-select-all></th><th>题目 / 颜色</th><th>参赛者</th><th>班级</th><th>教室 / 座位号</th><th>通过时间</th><th>状态 / 负责人</th><th>发放人</th><th>操作</th></tr></thead><tbody data-balloon-rows></tbody></table><div class="balloon-cards" data-balloon-cards></div><div class="balloon-empty" data-balloon-empty hidden>暂无待发放的气球</div></div>
+      <div class="balloon-pagination"><span data-page-info></span><button type="button" class="rounded button" data-balloon-prev>上一页</button><button type="button" class="rounded button" data-balloon-next>下一页</button></div>
+    </section>
+  </div>
+  <aside class="medium-3 columns">{% include "partials/contest_sidebar_management.html" %}</aside>
+  <dialog class="balloon-dialog" data-balloon-config-dialog aria-labelledby="balloon-config-title"><form data-balloon-config-form>
+    <div class="balloon-dialog-heading"><h2 id="balloon-config-title">气球配色</h2><button type="button" aria-label="关闭配色" data-balloon-close>×</button></div>
+    <div class="balloon-dialog-body"><div class="balloon-config-toolbar"><span data-balloon-config-state></span><button type="button" class="rounded button" data-balloon-defaults>恢复默认配色</button></div><div data-balloon-color-rows></div><div class="balloon-error" role="alert" data-balloon-config-error hidden></div></div>
+    <div class="balloon-dialog-footer"><button type="button" class="balloon-text-button balloon-danger" data-balloon-disable>暂停生成气球</button><span></span><button type="button" class="rounded button" data-balloon-close>取消</button><button type="submit" class="primary rounded button" data-balloon-save>保存并开启</button></div>
+  </form></dialog>
+  <dialog class="balloon-dialog balloon-confirm-dialog" data-balloon-confirm aria-labelledby="balloon-confirm-title"><div class="balloon-dialog-heading"><h2 id="balloon-confirm-title">确认气球操作</h2><button type="button" aria-label="取消操作" data-confirm-cancel>×</button></div><div class="balloon-dialog-body" data-confirm-message></div><div class="balloon-dialog-footer"><span></span><button type="button" class="rounded button" data-confirm-cancel>取消</button><button type="button" class="primary rounded button" data-confirm-ok>确认</button></div></dialog>
+  {% include "arena/balloon-push-settings.html" %}
+</div>
+<script src="{{ balloon.js }}" defer></script>
+<script src="{{ balloon.pushJs }}" defer></script>
+{% endblock %}

@@ -21,10 +21,10 @@ export function identityKey(className: string, name: string) {
 }
 
 export function canReuseTeamRoster(
-    previous: { members?: number[], journal?: unknown[] } | null | undefined,
+    previous: { members?: number[], journal?: unknown[], hasClarifications?: boolean } | null | undefined,
     members: number[],
 ) {
-    if (!previous?.journal?.length) return true;
+    if (!previous?.journal?.length && !previous?.hasClarifications) return true;
     if (!previous.members?.length) return false;
     const old = new Set(previous.members);
     const current = new Set(members);

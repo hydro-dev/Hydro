@@ -343,7 +343,8 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         const [pdict, udict, tcdocs] = await Promise.all([
             problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             user.getList(domainId, [this.tdoc.owner, this.user._id]),
-            contest.getMultiClarification(domainId, tid, this.tsdoc?.members?.length ? this.tsdoc.members : this.user._id),
+            contest.getMultiClarification(domainId, tid, this.tsdoc?.members?.length ? this.tsdoc.members : this.user._id,
+                this.tdoc.rule === 'icpc_domjudge' ? { participant: this.team ?? this.user._id, viewer: this.user._id } : undefined),
         ]);
         this.response.body = {
             pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tcdocs,
@@ -369,12 +370,12 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             rids.push(...Object.values(correction).map((i) => i.rid));
             this.response.body.correction = correction;
         }
-        const uidFilter = this.team && this.tsdoc?.members?.length
-            ? { $in: this.tsdoc.members } : this.user._id;
+        const ownQuery = await contest.getParticipantRecordQuery(this.tdoc, this.team ?? this.user._id,
+            this.team ? this.tsdoc?.members : undefined);
         [this.response.body.rdict, this.response.body.rdocs] = canViewRecord
             ? await Promise.all([
                 record.getList(domainId, rids),
-                record.getMulti(domainId, { contest: tid, uid: uidFilter })
+                record.getMulti(domainId, ownQuery)
                     .sort({ _id: -1 }).toArray(),
             ])
             : [Object.fromEntries(psdocs.map((i) => [i.rid, { _id: i.rid }])), []];
@@ -621,6 +622,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('d', Types.Range(['public', 'private']), true)
     @param('sidebar', Types.Boolean)
     async get(domainId: string, tid: ObjectId, d?: string, sidebar?: boolean) {
+        this.session.onsiteStatementCsrf ||= randomstring(32);
         this.response.body = {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
@@ -628,6 +630,9 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
             files: sortFiles(this.tdoc.files || []),
             privateFiles: sortFiles(this.tdoc.privateFiles || []),
+            onsiteStatementCsrf: this.session.onsiteStatementCsrf,
+            onsiteStatementColumn: this.tdoc.rule === 'icpc_domjudge'
+                && this.tdoc.privateFiles?.some((file) => /\.pdf$/i.test(file.name)),
             urlForFile: (filename: string, type: string) => this.url('contest_file_download', { tid, filename, type }),
         };
         this.response.pjax = [
@@ -639,6 +644,21 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             }] as const] : []),
         ];
         this.response.template = 'contest_manage.html';
+    }
+
+    @param('tid', Types.ObjectId)
+    @post('filename', Types.Filename, true)
+    @post('csrf', Types.String)
+    async postSetOnsiteStatement(domainId: string, tid: ObjectId, filename: string, csrf: string) {
+        if (!this.session.onsiteStatementCsrf || csrf !== this.session.onsiteStatementCsrf) {
+            throw new ValidationError('页面已过期，请刷新后重试');
+        }
+        if (this.tdoc.rule !== 'icpc_domjudge') throw new ValidationError('现场比赛模式');
+        if (filename && (!/\.pdf$/i.test(filename) || !this.tdoc.privateFiles?.some((file) => file.name === filename))) {
+            throw new ValidationError('请选择已上传到参赛者材料中的 PDF 文件');
+        }
+        await contest.edit(domainId, tid, { onsiteStatement: filename || '' });
+        this.back();
     }
 
     @param('tid', Types.ObjectId)
@@ -675,7 +695,10 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
         await Promise.all([
             storage.del(files.map((t) => `contest/${domainId}/${tid}/${type}/${t}`), this.user._id),
             contest.edit(domainId, tid, type === 'private'
-                ? { privateFiles: this.tdoc.privateFiles?.filter((i) => !files.includes(i.name)) }
+                ? {
+                    privateFiles: this.tdoc.privateFiles?.filter((i) => !files.includes(i.name)),
+                    ...(files.includes(this.tdoc.onsiteStatement) ? { onsiteStatement: '' } : {}),
+                }
                 : { files: this.tdoc.files?.filter((i) => !files.includes(i.name)) },
             ),
         ]);
@@ -849,7 +872,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
             ...(!this.tdoc.lockAt || this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD))
                 ? {} : { _id: { $lt: Time.getObjectID(this.tdoc.lockAt) } },
         }).sort({ _id: -1 }).toArray();
-        const uids = bdocs.map((i) => i.uid).concat(bdocs.filter((i) => i.sent).map((i) => i.sent));
+        const uids = bdocs.map((i) => i.uid).concat(bdocs.filter((i) => typeof i.sent === 'number').map((i) => i.sent));
         this.response.body = {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
@@ -866,13 +889,18 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     @param('color', Types.Content)
     async postSetColor(domainId: string, tid: ObjectId, color: string) {
         const config = yaml.load(color);
-        if (typeof config !== 'object') throw new ValidationError('color');
+        if (!config || typeof config !== 'object' || Array.isArray(config)) throw new ValidationError('color');
         const balloon = {};
         for (const pid of this.tdoc.pids) {
-            if (!config[pid]) throw new ValidationError('color');
-            balloon[pid] = config[pid.toString()];
+            if (!Object.hasOwn(config, pid)) throw new ValidationError('color');
+            const value = config[pid];
+            const c = typeof value === 'string' ? value : value?.color;
+            if (typeof c !== 'string' || !/^#(?:[a-f0-9]{3}|[a-f0-9]{6})$/i.test(c)) throw new ValidationError('color');
+            const name = typeof value === 'string' ? '' : value?.name;
+            if (name !== undefined && (typeof name !== 'string' || name.length > 30)) throw new ValidationError('name');
+            balloon[pid] = { color: c, name: name || '' };
         }
-        await contest.edit(domainId, tid, { balloon });
+        await contest.edit(domainId, tid, { balloon, balloonDisabled: false });
         this.back();
     }
 
@@ -881,8 +909,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     async postDone(domainId: string, tid: ObjectId, bid: ObjectId) {
         const balloon = await contest.getBalloon(domainId, tid, bid);
         if (!balloon) throw new ValidationError('balloon');
-        if (balloon.sent) throw new ValidationError('Balloon already sent');
-        await contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() });
+        await contest.setBalloonDelivery(domainId, tid, bid, this.user._id);
         this.back();
     }
 }

@@ -94,6 +94,7 @@ export interface EventMap {
     'contest/list': (query: Filter<Tdoc>, handler: any) => VoidReturn;
     'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn;
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn;
+    'contest/balloon-delivery': (domainId: string, tid: ObjectId, id: ObjectId, sender: number | null) => VoidReturn;
     'contest/del': (domainId: string, tid: ObjectId) => VoidReturn;
 
     'oplog/log': (type: string, handler: Handler | ConnectionHandler, args: any, data: any) => VoidReturn;

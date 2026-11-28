@@ -18,6 +18,9 @@
     const affiliation = document.getElementById('affiliation-filter');
     const category = document.getElementById('category-filter');
     const teamDialog = document.getElementById('team-dialog');
+    const avatarPlaceholder = '/arena-assets/logo/hgnu-logo.png';
+    const avatarRequests = new Map();
+    const preparedAvatars = new WeakMap();
     function fallbackAvatar(image) {
         if (
             !(image instanceof HTMLImageElement)
@@ -27,9 +30,36 @@
             return;
         }
         image.dataset.avatarFallback = '1';
-        image.src = '/arena-assets/logo/hgnu-logo.png';
+        if (image.dataset.avatarSrc) avatarRequests.set(image.dataset.avatarSrc, Promise.resolve(''));
+        image.src = avatarPlaceholder;
     }
     document.addEventListener('error', (event) => fallbackAvatar(event.target), true);
+    function loadAvatar(image) {
+        const source = image.dataset.avatarSrc;
+        if (!source || source === avatarPlaceholder || preparedAvatars.get(image) === source) return;
+        preparedAvatars.set(image, source);
+        if (!avatarRequests.has(source)) {
+            avatarRequests.set(source, new Promise((resolve) => {
+                const probe = new Image(); let timer;
+                const finish = (url) => {
+                    clearTimeout(timer);
+                    probe.onload = null; probe.onerror = null;
+                    if (!url) probe.removeAttribute('src');
+                    resolve(url);
+                };
+                timer = setTimeout(() => finish(''), 5000);
+                probe.onload = () => finish(source);
+                probe.onerror = () => finish('');
+                probe.referrerPolicy = 'no-referrer';
+                probe.src = source;
+            }));
+        }
+        avatarRequests.get(source).then((loaded) => {
+            if (!image.isConnected || image.dataset.avatarSrc !== source) return;
+            if (loaded) image.src = loaded;
+            else image.dataset.avatarFallback = '1';
+        });
+    }
     let pinned, pinnedTable, pinSource, frame;
     const mainRows = (table) => [
         ...(table.querySelector('[data-scoreboard-main]')?.querySelectorAll('[data-scoreboard-row]') || []),
@@ -106,9 +136,6 @@
         pinPosition();
     }
     function refreshBoard() {
-        for (const image of document.querySelectorAll('img[data-user-avatar]')) {
-            if (image.complete && !image.naturalWidth) fallbackAvatar(image);
-        }
         const text = (search?.value || '').trim().toLocaleLowerCase();
         const school = affiliation?.value || '';
         const group = category?.value || '';
@@ -169,6 +196,10 @@
                     (row) => row.dataset.teamId === teamDialog.dataset.teamId,
                 ),
             );
+        }
+        for (const image of document.querySelectorAll('img[data-user-avatar]')) {
+            if (image.complete && !image.naturalWidth) fallbackAvatar(image);
+            loadAvatar(image);
         }
         rebuildPin();
     }
