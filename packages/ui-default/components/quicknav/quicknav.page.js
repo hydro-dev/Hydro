@@ -15,9 +15,10 @@ let buffer = '';
 let $hint = null;
 
 function isTyping(target) {
-  const $t = $(target);
+  const el = document.activeElement || target;
+  const $t = $(el);
   return $t.is('input, textarea, select, [contenteditable]')
-    || $t.closest('[contenteditable]').length > 0;
+    || $t.closest('[contenteditable], .monaco-editor, .CodeMirror, .ace_editor').length > 0;
 }
 
 function renderHint() {

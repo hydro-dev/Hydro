@@ -8,7 +8,7 @@ import Notification from 'vj/components/notification';
 import { request, withTransitionCallback } from './base';
 
 NProgress.configure({ positionUsing: 'margin-left' });
-  
+
 const pjax = {};
 
 let currentState = null;

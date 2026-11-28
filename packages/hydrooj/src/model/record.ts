@@ -104,7 +104,7 @@ export default class RecordModel {
         const ddoc = await DomainModel.get(pdoc.domainId);
         return await task.addMany(rdocs.map((rdoc) => {
             let type = 'judge';
-            if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
+            if (typeof pdoc.config === 'string') throw new TypeError(pdoc.config);
             if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
             else if (meta?.type === 'generate') type = 'generate';
             return ({
