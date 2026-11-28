@@ -16,6 +16,8 @@ async function permitted(context: any, mode: Awaited<ReturnType<typeof modeFor>>
     const path = request.path;
     const method = request.method.toLowerCase();
     if (path === '/arena-mode/status' && method === 'get') return true;
+    // This capability grants access only to one balloon task, independently of any OJ login.
+    if (/^\/balloon-delivery\/[a-f0-9]{64}(?:\/api)?$/.test(path) && ['get', 'head', 'post'].includes(method)) return true;
     if (['get', 'head'].includes(method) && /^\/arena-assets\/(?:[a-f0-9]{16}|logo)\/(?:[\w.-]+|fonts\/[\w.-]+)$/.test(path)) { return true; }
     // This endpoint only streams files after checking the expiring server-signed link.
     if (path === '/storage' && ['get', 'head'].includes(method)) return true;
@@ -42,8 +44,10 @@ async function permitted(context: any, mode: Awaited<ReturnType<typeof modeFor>>
     ) {
         const rdoc = await record.get(mode.tdoc.domainId, new ObjectId(source[1]));
         const team = await contest.getStatus(mode.tdoc.domainId, mode.tdoc.docId, mode.binding.participantUid);
+        const owner = rdoc && await contest.getRecordParticipant(mode.tdoc.domainId, mode.tdoc.docId, rdoc.uid, rdoc._id);
         return (
             String(rdoc?.contest) === String(mode.tdoc.docId)
+            && owner === mode.binding.participantUid
             && (rdoc.uid === mode.binding._id || team?.members?.includes(rdoc.uid))
         );
     }

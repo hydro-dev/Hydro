@@ -1,3 +1,57 @@
 /* Native OJ list badges for the rule supplied by this addon. */
 .contest-type--icpc_domjudge .contest-type-tag{background:#337ab7}
 .contest-type--icpc_domjudge .contest-type-tag:hover{background:#286090}
+.page--problem_files col.onsite-statement-column,.page--contest_manage col.onsite-statement-column{width:156px}
+.page--problem_files .onsite-statement-controls,.page--contest_manage .onsite-statement-controls{min-width:140px;white-space:normal;vertical-align:middle}
+.onsite-statement-action{display:inline-flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px 8px;margin:4px 0 0;max-width:100%;font-size:12px;line-height:1.6}
+.onsite-statement-action button{padding:0;border:0;background:none;cursor:pointer;font:inherit;white-space:nowrap}
+.onsite-statement-badge{display:inline-block;color:#267744;background:#e8f5ec;border-radius:3px;padding:1px 5px;white-space:nowrap}
+.page--problem_files .additional_file-table .col--name,.page--contest_manage .files .col--name{overflow-wrap:anywhere}
+.arena-presentation-icon{display:inline-block;width:16px;height:16px;vertical-align:-3px;flex-shrink:0}
+.menu__link>.arena-presentation-icon{margin-right:5px;vertical-align:top}
+.arena-presentation{color:#24364b}
+.presentation-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:3px 0 25px}
+.presentation-heading__title{display:flex;align-items:center;gap:14px;min-width:0}
+.presentation-heading__icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:50px;height:50px;border:1px solid #d4e4ef;border-radius:12px;background:#e6f1f8;color:#337eac}
+.presentation-heading__icon svg{width:27px;height:27px;vertical-align:0}
+.presentation-heading h1{margin:0 0 3px;font-size:25px;font-weight:500;line-height:1.4}
+.presentation-heading p{margin:0;color:#6b7e92;font-size:14px;overflow-wrap:anywhere}
+.presentation-status{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;padding:6px 11px;border-radius:20px;background:#e4e8ed;color:#66788a;font-size:12px}
+.presentation-status:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.presentation-status.is-enabled{color:#267747;background:#e5f3e9}
+.arena-presentation .section__title{font-size:19px;margin-bottom:0}
+.presentation-card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.presentation-card-heading>span{color:#7a8c9d;font-size:12px}
+.presentation-field{margin:7px 0 20px}
+.presentation-field>label{display:block;margin:0 0 7px;font-size:13px;font-weight:500;color:#4a6179}
+.presentation-field__control{display:flex;align-items:center;gap:8px;min-width:0}
+.arena-presentation .presentation-field__control .textbox{flex:1;min-width:0;width:0;max-width:100%;height:40px;margin:0;padding:9px 11px;border:1px solid #dce5ec;border-radius:6px;background:#f7f9fc;color:#30485f;font:13px/20px Consolas,Monaco,monospace;text-overflow:clip}
+.arena-presentation .presentation-field__control .textbox:focus{outline:2px solid #b7d7ee;outline-offset:1px}
+.presentation-copy{flex-shrink:0;height:38px;min-width:47px;padding:0 10px;border:1px solid #d5e2ec;border-radius:6px;background:#fff;color:#327ea9;font-size:13px;cursor:pointer}
+.presentation-copy:hover{background:#edf5fa;border-color:#a8c9df}
+.presentation-copy:focus-visible{outline:2px solid #82b7da;outline-offset:2px}
+.presentation-copy-status{min-height:18px;margin:-10px 0 14px;color:#327e56;font-size:12px}
+.presentation-downloads{border-top:1px solid #e6ecf1;padding-top:21px;margin-top:3px}
+.presentation-downloads h3{font-size:16px;font-weight:500;margin:0 0 13px}
+.presentation-download-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.presentation-download{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 15px;border:1px solid #dce7ef;border-radius:8px;background:#fff;color:#286b94;transition:background .15s,border-color .15s;text-decoration:none}
+.presentation-download:hover{background:#f1f8fc;border-color:#9ec3dc;text-decoration:none}
+.presentation-download strong{display:block;font-size:14px;font-weight:500}
+.presentation-download small{display:block;margin-top:4px;color:#7b8da0;font-size:12px;line-height:1.6}
+.presentation-download>svg{flex-shrink:0}
+.presentation-download.is-disabled{opacity:.5}
+.presentation-access-settings{border-top:1px solid #e6ecf1;margin-top:22px;padding-top:16px;color:#78899a;font-size:12px}
+.presentation-access-settings summary{cursor:pointer;display:list-item;list-style:disclosure-closed inside}
+.presentation-access-settings[open] summary{list-style-type:disclosure-open}
+.presentation-access-settings form{margin:14px 0 0;display:flex;gap:9px;flex-wrap:wrap}
+.arena-presentation .presentation-access-settings .button{margin:0}
+.presentation-steps{list-style:none;margin:5px 0 0;padding:0}
+.presentation-steps li{display:flex;gap:11px;margin:0 0 24px}
+.presentation-steps li>span{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:25px;height:25px;margin-top:1px;border-radius:50%;background:#eaf2f8;color:#4887b0;font-size:12px;font-weight:600}
+.presentation-steps strong{font-size:14px;font-weight:500}
+.presentation-steps p{margin:6px 0 0;color:#7a8c9d;font-size:13px;line-height:1.8;overflow-wrap:anywhere}
+.presentation-steps code{padding:2px 4px;border:1px solid #e6ecf1;border-radius:3px;background:#f7f9fb;color:#526e89;font-size:11px;overflow-wrap:anywhere}
+.presentation-shortcut{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px solid #e6ecf1;padding-top:16px;color:#8393a2;font-size:12px}
+.presentation-shortcut kbd{padding:2px 6px;border:1px solid #dbe4ec;border-bottom-width:2px;border-radius:4px;background:#f7f9fb;color:#536b80;font:12px Consolas,monospace}
+.presentation-page-links{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 3px;font-size:13px}
+@media(max-width:767px){.presentation-heading{align-items:flex-start;gap:12px;margin-bottom:20px}.presentation-heading__title{gap:10px}.presentation-heading__icon{width:40px;height:40px;border-radius:9px}.presentation-heading h1{font-size:22px}.presentation-heading p{font-size:12px}.presentation-status{padding:5px 8px;font-size:11px}.presentation-download-grid{grid-template-columns:minmax(0,1fr)}.presentation-card-heading>span{font-size:11px}.presentation-page-links{margin-bottom:25px}.presentation-field__control{gap:6px}.presentation-copy{min-width:43px;padding:0 8px}}

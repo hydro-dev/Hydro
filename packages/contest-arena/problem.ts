@@ -23,3 +23,11 @@ export function problemLimits(config: any) {
         memory: range(config.memoryMin, config.memoryMax, 1, ' MiB'),
     };
 }
+
+/** An explicit selection takes priority over the legacy filename convention. */
+export function statementPdf<T extends { name: string }>(files: T[], selected?: string): T | undefined {
+    const pdfs = files.filter((file) => /\.pdf$/i.test(file.name));
+    if (selected !== undefined) return pdfs.find((file) => file.name === selected);
+    return pdfs.find((file) => file.name.toLowerCase() === 'statement.pdf')
+        || (pdfs.length === 1 ? pdfs[0] : undefined);
+}

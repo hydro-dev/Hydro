@@ -3397,6 +3397,7 @@ __metadata:
   resolution: "@hgnuoj/contest-arena@workspace:packages/contest-arena"
   dependencies:
     exceljs: "npm:4.4.0"
+    sharp: "npm:0.34.5"
   peerDependencies:
     "@hydrooj/ui-default": "workspace:^"
     hydrooj: "workspace:^"

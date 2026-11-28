@@ -1,7 +1,7 @@
 import { sumBy } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import {
-    Counter, formatSeconds, getAlphabeticId, sleep, Time,
+    Counter, formatSeconds, getAlphabeticId, Time,
 } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import {
@@ -870,31 +870,54 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: rule || { $in: rules } }).toArray();
 }
 
-export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
-    const balloon = await collBalloon.find({ domainId, tid, pid }).project({ uid: 1 }).toArray();
-    if (balloon.find((i) => i.uid === uid)) return null;
-    let isFirst = !balloon.length;
-    if (isFirst) {
-        let pending: RecordDoc[] = [];
-        do {
-            if (pending.length) await sleep(500); // eslint-disable-line no-await-in-loop
-            pending = await RecordModel.getMulti(domainId, { // eslint-disable-line no-await-in-loop
-                pid, contest: tid, _id: { $lt: rid }, status: {
-                    $in: [
-                        STATUS.STATUS_WAITING, STATUS.STATUS_COMPILING,
-                        STATUS.STATUS_JUDGING, STATUS.STATUS_FETCHED,
-                        STATUS.STATUS_ACCEPTED,
-                    ],
-                },
-            }).limit(1).toArray();
-        } while (pending.length && !pending.some((i) => i.status === STATUS.STATUS_ACCEPTED));
-        if (pending.some((i) => i.status === STATUS.STATUS_ACCEPTED)) isFirst = false;
+async function refreshFirstBalloon(domainId: string, tid: ObjectId, pid: number) {
+    const tdoc = await get(domainId, tid);
+    const scope: any = { contest: tid, pid };
+    if (tdoc.rule === 'icpc_domjudge') {
+        scope._id = { $gte: ObjectId.createFromTime(Math.ceil(+tdoc.beginAt / 1000)),
+            $lt: ObjectId.createFromTime(Math.ceil(+tdoc.endAt / 1000)) };
     }
-    const newBdoc = {
-        _id: rid, domainId, tid, pid, uid, ...(isFirst ? { first: true } : {}),
-    };
-    await collBalloon.insertOne(newBdoc);
+    const accepted = await RecordModel.getMulti(domainId, { ...scope, status: STATUS.STATUS_ACCEPTED })
+        .sort({ _id: 1 }).project({ _id: 1, uid: 1 }).limit(1).next();
+    if (!accepted) {
+        await collBalloon.updateMany({ domainId, tid, pid, first: true }, { $unset: { first: '' } });
+        return;
+    }
+    const pending = await RecordModel.getMulti(domainId, { ...scope, _id: { ...scope._id, $lt: accepted._id },
+        status: { $in: [STATUS.STATUS_WAITING, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING, STATUS.STATUS_FETCHED] } })
+        .project({ _id: 1 }).limit(1).next();
+    // An older pending record must never hold up a completed judgement. Its final callback resolves first blood.
+    if (pending) return;
+    // eslint-disable-next-line ts/no-use-before-define -- Ownership lookups are grouped with the roster helpers below.
+    const uid = await getRecordParticipant(domainId, tid, accepted.uid, accepted._id);
+    const winner = await collBalloon.findOne({ domainId, tid, pid, uid });
+    if (!winner) return;
+    await collBalloon.updateMany({ domainId, tid, pid, first: true, _id: { $ne: winner._id } }, { $unset: { first: '' } });
+    try {
+        const result = await collBalloon.updateOne({ domainId, tid, _id: winner._id, first: { $ne: true } }, { $set: { first: true } });
+        if (result.modifiedCount) bus.emit('contest/balloon', domainId, tid, { ...winner, first: true });
+    } catch (error) {
+        if (error.code !== 11000) throw error;
+    }
+}
+
+export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
+    if (await collBalloon.findOne({ domainId, tid, pid, uid })) {
+        await refreshFirstBalloon(domainId, tid, pid);
+        return null;
+    }
+    const newBdoc = { _id: rid, domainId, tid, pid, uid, createdAt: new Date() };
+    try {
+        await collBalloon.insertOne(newBdoc);
+    } catch (error) {
+        if (error.code !== 11000) throw error;
+        // Simultaneous AC/rejudge callbacks must not abort the contest journal update.
+        if (!await collBalloon.findOne({ domainId, tid, pid, uid })) throw error;
+        await refreshFirstBalloon(domainId, tid, pid);
+        return null;
+    }
     bus.emit('contest/balloon', domainId, tid, newBdoc);
+    await refreshFirstBalloon(domainId, tid, pid);
     return rid;
 }
 
@@ -908,6 +931,18 @@ export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}
 
 export async function updateBalloon(domainId: string, tid: ObjectId, _id: ObjectId, $set: any) {
     return await collBalloon.findOneAndUpdate({ domainId, tid, _id }, { $set });
+}
+
+/** Idempotent delivery: a concurrent click cannot overwrite the original courier or timestamp. */
+export async function setBalloonDelivery(domainId: string, tid: ObjectId, _id: ObjectId, sender: number | null) {
+    if (sender !== null && (!Number.isSafeInteger(sender) || sender <= 0)) throw new ValidationError('sender');
+    // false/0 were used by old integrations and both mean not yet delivered.
+    const pending: any = { domainId, tid, _id, sent: { $in: [null, false, 0] } };
+    const previous = sender === null
+        ? await collBalloon.findOneAndUpdate({ domainId, tid, _id }, { $unset: { sent: '', sentAt: '' } })
+        : await collBalloon.findOneAndUpdate(pending, { $set: { sent: sender, sentAt: new Date() } });
+    if (previous && (sender !== null || previous.sent)) await bus.parallel('contest/balloon-delivery', domainId, tid, _id, sender);
+    return previous;
 }
 
 export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
@@ -931,6 +966,21 @@ export async function getRecordParticipant(domainId: string, tid: ObjectId, uid:
     return previous?.uid ?? await getTeamVid(domainId, tid, uid) ?? uid;
 }
 
+/** Preserve submission ownership when a member changes teams after cancellation. */
+export async function getParticipantRecordQuery(tdoc: Tdoc, participant: number, members?: number[]): Promise<Filter<RecordDoc>> {
+    const accounts = members?.length ? members : [participant];
+    const query: Filter<RecordDoc> = { contest: tdoc.docId, uid: accounts.length === 1 ? accounts[0] : { $in: accounts } };
+    if (tdoc.rule !== 'icpc_domjudge') return query;
+    const previous = await document.getMultiStatus(tdoc.domainId, document.TYPE_CONTEST, {
+        docId: tdoc.docId, uid: { $ne: participant },
+        $or: [{ uid: { $in: accounts } }, { members: { $in: accounts } },
+            { uid: { $lt: 0 }, members: null }, { uid: { $lt: 0 }, members: { $size: 0 } }],
+    }).project({ 'journal.rid': 1 }).toArray();
+    const foreign = previous.flatMap((row) => (row.journal || []).map((entry) => entry.rid));
+    if (foreign.length) query._id = { $nin: foreign };
+    return query;
+}
+
 export async function updateStatus(
     domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
     {
@@ -941,14 +991,24 @@ export async function updateStatus(
     }: { status?: STATUS, score?: number, subtasks?: Record<number, SubtaskResult>, lang?: string } = {},
 ) {
     const tdoc = await get(domainId, tid);
-    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED && !isLocked(tdoc)
+    const onsite = tdoc.rule === 'icpc_domjudge';
+    const submittedAt = +rid.getTimestamp();
+    const inWindow = !onsite || (tdoc.pids.includes(pid) && submittedAt >= +tdoc.beginAt && submittedAt < +tdoc.endAt);
+    // A pre-freeze submission can finish judging after the public scoreboard freezes.
+    const balloonVisible = !isLocked(tdoc) || (onsite && submittedAt < +tdoc.lockAt);
+    if (tdoc.balloon?.[pid] && !tdoc.balloonDisabled && inWindow && balloonVisible && status === STATUS.STATUS_ACCEPTED
         && !(await getStatus(domainId, tid, uid))?.registrationCancelled) await addBalloon(domainId, tid, uid, rid, pid);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
         rid, pid, status, score, subtasks, lang,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
-    return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
+    const updated = await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
+    if (tdoc.balloon?.[pid] && !tdoc.balloonDisabled && status !== STATUS.STATUS_ACCEPTED
+        && ![STATUS.STATUS_WAITING, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING, STATUS.STATUS_FETCHED].includes(status)) {
+        await refreshFirstBalloon(domainId, tid, pid);
+    }
+    return updated;
 }
 
 export async function getListStatus(domainId: string, uid: number, tids: ObjectId[]) {
@@ -1048,6 +1108,12 @@ export async function isOwnOrTeammateRecord(domainId: string, rdoc: RecordDoc, u
     if (rdoc.uid === uid) return true;
     if (!rdoc.contest) return false;
     if (RecordModel.RECORD_PRETEST.equals(rdoc.contest) || RecordModel.RECORD_GENERATE.equals(rdoc.contest)) return false;
+    const tdoc = await get(domainId, rdoc.contest);
+    if (tdoc.rule === 'icpc_domjudge') {
+        const owner = await getRecordParticipant(domainId, rdoc.contest, rdoc.uid, rdoc._id);
+        const status = await getStatus(domainId, rdoc.contest, owner);
+        return !!status?.members?.includes(uid);
+    }
     return isSameTeam(domainId, rdoc.contest, rdoc.uid, uid);
 }
 
@@ -1090,13 +1156,16 @@ export async function getScoreboard(
     return [tdoc, rows, udict, pdict];
 }
 
-export function addClarification(
+export async function addClarification(
     domainId: string, tid: ObjectId, owner: number, content: string,
     ip: string, subject = 0,
 ) {
+    const tdoc = owner > 0 ? await get(domainId, tid) : null;
+    const audience = tdoc?.rule === 'icpc_domjudge'
+        ? { arenaParticipant: tdoc.allowTeam ? await getTeamVid(domainId, tid, owner) ?? owner : owner } : {};
     return document.add(
         domainId, content, owner, document.TYPE_CONTEST_CLARIFICATION,
-        null, document.TYPE_CONTEST, tid, { ip, subject },
+        null, document.TYPE_CONTEST, tid, { ip, subject, ...audience },
     );
 }
 
@@ -1114,8 +1183,14 @@ export function getClarification(domainId: string, did: ObjectId) {
     return document.get(domainId, document.TYPE_CONTEST_CLARIFICATION, did);
 }
 
-export function getMultiClarification(domainId: string, tid: ObjectId, owner?: number | number[]) {
-    const ownerFilter = owner === undefined
+export function isOwnClarification(item: { owner: number, arenaParticipant?: number }, participant: number, viewer: number) {
+    return item.owner > 0 && (Number.isSafeInteger(item.arenaParticipant) ? item.arenaParticipant === participant : item.owner === viewer);
+}
+
+export function getMultiClarification(domainId: string, tid: ObjectId, owner?: number | number[],
+    audience?: { participant: number, viewer: number }) {
+    const ownerFilter = audience ? { $or: [{ owner: 0 }, { arenaParticipant: audience.participant },
+        { arenaParticipant: { $exists: false }, owner: audience.viewer }] } : owner === undefined
         ? {}
         : { owner: { $in: [0, ...(Array.isArray(owner) ? owner : [owner])] } };
     return document.getMulti(
@@ -1216,6 +1291,7 @@ global.Hydro.model.contest = {
     getRelated,
     updateStatus,
     getStatus,
+    getParticipantRecordQuery,
     count,
     countStatus,
     getMulti,
@@ -1227,6 +1303,7 @@ global.Hydro.model.contest = {
     addBalloon,
     getMultiBalloon,
     updateBalloon,
+    setBalloonDelivery,
     canShowRecord,
     canShowSelfRecord,
     canShowScoreboard,
@@ -1236,6 +1313,7 @@ global.Hydro.model.contest = {
     addClarificationReply,
     getClarification,
     getMultiClarification,
+    isOwnClarification,
     isNew,
     isUpcoming,
     isNotStarted,

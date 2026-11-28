@@ -112,7 +112,7 @@ async function downloadImage(input: string, signal: AbortSignal, redirects = 0):
     });
 }
 
-async function accountImage(udoc: any, fallback: Image) {
+export async function accountImage(udoc: any, fallback: Image) {
     const source = avatarImage(udoc?.avatar ? avatar(udoc.avatar, 160) : '', udoc?.avatar?.startsWith('gravatar:'));
     if (!source.startsWith('https://')) return { image: fallback, fallback: true };
     const cached = imageCache.get(source);

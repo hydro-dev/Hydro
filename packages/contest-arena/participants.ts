@@ -29,6 +29,7 @@ import {
     release,
 } from './enrollment';
 import { identityKey, modeWindow, ONSITE_RULE } from './mode-policy';
+import { groupRosterEntries, locationAssignments, locationKey, ParticipantLocation, participantLocation } from './seating';
 
 function csrf(handler: any) {
     handler.session.arenaManageCsrf ||= randomBytes(24).toString('hex');
@@ -60,6 +61,8 @@ export async function participantPage(handler: any) {
                 uname: udoc.uname || String(s.uid),
                 name: s.displayName || udoc.name || udoc.displayName || udoc.uname || String(s.uid),
                 className: [...new Set(labels)].join(' / ') || '未填写班级',
+                classroom: typeof s.classroom === 'string' ? s.classroom : '',
+                seat: typeof s.seat === 'string' ? s.seat : '',
                 avatar: avatar(udoc.avatar || '', 32),
                 members: s.members?.length
                     ? s.members
@@ -116,7 +119,7 @@ function scalar(cell: ExcelJS.Cell) {
             .join('')
             .trim();
     }
-    throw new Error('班级和姓名请填写文本或粘贴为值');
+    throw new Error('请填写文本、数字或粘贴为值，不支持公式');
 }
 
 async function readRoster(buffer: Buffer) {
@@ -141,6 +144,12 @@ async function readRoster(buffer: Buffer) {
         /* Invalid header cells are reported below. */
     }
     if (!validHeader) throw new ValidationError('第一行 A1 应为“班级”，B1 应为“姓名”');
+    let hasLocation = false;
+    try {
+        const classroom = scalar(sheet.getCell('C1')); const seat = scalar(sheet.getCell('D1'));
+        hasLocation = classroom === '教室' && seat === '座位号';
+        if ((classroom || seat) && !hasLocation) throw new Error();
+    } catch { throw new ValidationError('教室和座位号请分别放在 C、D 列，表头为“教室”“座位号”'); }
     if (sheet.rowCount > 5001) throw new ValidationError('一次最多导入 5000 行');
     const rows: any[] = [];
     const issues: any[] = [];
@@ -148,9 +157,11 @@ async function readRoster(buffer: Buffer) {
         try {
             const className = scalar(sheet.getCell(line, 1));
             const name = scalar(sheet.getCell(line, 2));
-            if (!className && !name) continue;
+            const location = hasLocation ? participantLocation({ classroom: scalar(sheet.getCell(line, 3)),
+                seat: scalar(sheet.getCell(line, 4)) }) : undefined;
+            if (!className && !name && (!location || (!location.classroom && !location.seat))) continue;
             if (!className || !name || className.length > 100 || name.length > 100) throw new Error('班级或姓名为空/过长');
-            rows.push({ line, className, name });
+            rows.push({ line, className, name, ...(location ? { location } : {}) });
         } catch (error) {
             issues.push({ line, reason: error.message });
         }
@@ -181,7 +192,7 @@ export class ArenaParticipantsHandler extends ContestManagementBaseHandler {
     async get() {
         if (this.request.query.template === '1') {
             const workbook = new ExcelJS.Workbook();
-            workbook.addWorksheet('参赛者').addRow(['班级', '姓名']);
+            workbook.addWorksheet('参赛者').addRow(['班级', '姓名', '教室', '座位号']);
             this.response.type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
             this.response.disposition = `attachment; filename="participants-template.xlsx"; filename*=UTF-8''${encodeURIComponent('参赛者导入模板.xlsx')}`;
             this.response.body = Buffer.from(await workbook.xlsx.writeBuffer());
@@ -230,12 +241,30 @@ export class ArenaParticipantsHandler extends ContestManagementBaseHandler {
         const action = String(body.action || '');
         const tdoc = this.tdoc;
         if (action === 'add') {
-            this.response.body = await enroll(
+            const selected = ids(body.uids);
+            let locations: Map<number, ParticipantLocation>;
+            try {
+                locations = locationAssignments(body.locations, selected);
+            } catch (error) {
+                throw new ValidationError(error.message);
+            }
+            const result = await enroll(
                 tdoc,
-                ids(body.uids),
+                selected,
                 this.user._id,
                 body.unrank === true || body.unrank === 'true',
             );
+            this.response.body = await this.withLocations(result, locations);
+        } else if (action === 'location') {
+            const selected = ids(body.uids);
+            if (selected.length !== 1) throw new ValidationError('请选择一位参赛者设置座位');
+            let location: ParticipantLocation;
+            try {
+                location = participantLocation(body.location);
+            } catch (error) {
+                throw new ValidationError(error.message);
+            }
+            this.response.body = await this.saveLocations(new Map([[selected[0], location]]), new Set(selected));
         } else if (action === 'release') this.response.body = await release(tdoc, ids(body.uids), this.user._id);
         else if (action === 'enable') this.response.body = await enable(tdoc, ids(body.uids), this.user._id);
         else if (action === 'cancel') this.response.body = await cancel(tdoc, ids(body.uids), this.user._id);
@@ -260,18 +289,30 @@ export class ArenaParticipantsHandler extends ContestManagementBaseHandler {
         else throw new ValidationError('操作');
     }
 
+    async saveLocations(locations: Map<number, ParticipantLocation>, allowed: Set<number>) {
+        const result = { changed: [] as number[], failed: [] as { uid: number, reason: string }[] };
+        for (const [uid, location] of locations) {
+            if (!allowed.has(uid)) continue;
+            const updated = await db.collection<any>('document.status').updateOne({ domainId: this.domain._id,
+                docType: 30, docId: this.tdoc.docId, uid, attend: 1, registrationCancelled: { $ne: true } },
+            { $set: location });
+            if (updated.matchedCount) result.changed.push(uid);
+            else result.failed.push({ uid, reason: '该参赛者尚未报名或已取消报名，请刷新列表' });
+        }
+        return result;
+    }
+
+    async withLocations(result: any, locations: Map<number, ParticipantLocation>) {
+        const saved = await this.saveLocations(locations, new Set([...result.added, ...result.existing]));
+        return { ...result, locationsUpdated: saved.changed, failed: [...result.failed, ...saved.failed] };
+    }
+
     async importRoster() {
         const file = this.request.files?.file;
         if (!file || Array.isArray(file) || !/\.xlsx$/i.test(file.originalFilename || '')) { throw new ValidationError('请选择 .xlsx 文件'); }
         if (file.size > 4 * 1024 * 1024) throw new ValidationError('Excel 文件不能超过 4 MiB');
         const { rows, issues } = await readRoster(readFileSync(file.filepath));
-        const keys = new Map<string, any>();
-        for (const row of rows) {
-            const key = identityKey(row.className, row.name);
-            if (keys.has(key)) keys.get(key).lines.push(row.line);
-            else keys.set(key, { ...row, lines: [row.line] });
-        }
-        const pairs = [...keys.values()];
+        const pairs = groupRosterEntries(rows);
         const students = pairs.length
             ? await db
                 .collection<any>('stu.info')
@@ -291,18 +332,32 @@ export class ArenaParticipantsHandler extends ContestManagementBaseHandler {
             }
         }
         const unique: number[] = [];
+        const locations = new Map<number, ParticipantLocation>();
         const duplicates: any[] = [];
         const unmatched: any[] = [];
+        const perIdentity = new Map<string, Set<string>>();
+        for (const row of pairs) {
+            const key = identityKey(row.className, row.name);
+            if (!perIdentity.has(key)) perIdentity.set(key, new Set());
+            perIdentity.get(key).add(locationKey(row.location));
+        }
         for (const row of pairs) {
             const matches = byKey.get(identityKey(row.className, row.name)) || [];
             if (!matches.length) unmatched.push({ ...row, reason: '未找到班级和姓名完全一致的 OJ 账号' });
-            else if (matches.length === 1) unique.push(matches[0]);
-            else {
+            else if (matches.length === 1) {
+                if (perIdentity.get(identityKey(row.className, row.name)).size > 1) {
+                    for (const line of row.lines) issues.push({ line, reason: '同一账号填写了不同的教室或座位号，请修正重复行后重新导入' });
+                    continue;
+                }
+                unique.push(matches[0]);
+                if (row.location) locations.set(matches[0], row.location);
+            } else {
                 duplicates.push({
                     key: String(duplicates.length),
                     className: row.className,
                     name: row.name,
                     lines: row.lines,
+                    ...(row.location ? { location: row.location } : {}),
                     candidates: matches.map((uid) => ({
                         uid,
                         uname: candidates[uid].uname,
@@ -312,9 +367,10 @@ export class ArenaParticipantsHandler extends ContestManagementBaseHandler {
                 });
             }
         }
-        const imported = unique.length
+        const enrolled = unique.length
             ? await enroll(this.tdoc, [...new Set(unique)], this.user._id)
             : { added: [], existing: [], failed: [] };
+        const imported = await this.withLocations(enrolled, locations);
         let token = '';
         if (duplicates.length) {
             token = randomBytes(24).toString('hex');
@@ -353,6 +409,8 @@ export class ArenaParticipantsHandler extends ContestManagementBaseHandler {
         const pending = await imports.findOne(query);
         if (!pending || !choices || typeof choices !== 'object' || Array.isArray(choices)) { throw new ValidationError('导入选择已过期，请重新上传表格'); }
         const chosen: number[] = [];
+        const locations = new Map<number, ParticipantLocation>();
+        const assigned = new Map<number, string>();
         for (const [key, selection] of Object.entries(choices)) {
             const group = pending.groups.find((g) => g.key === key);
             if (!group || !Array.isArray(selection)) throw new ValidationError('重名选择无效');
@@ -361,13 +419,24 @@ export class ArenaParticipantsHandler extends ContestManagementBaseHandler {
                 if (!(await db.collection<any>('stu.info').findOne({ _id: uid, class: group.className, name: group.name }))) {
                     throw new ValidationError('所选账号的班级或姓名已改变，请重新上传');
                 }
+                let location: ParticipantLocation | undefined;
+                try {
+                    location = group.location ? participantLocation(group.location) : undefined;
+                } catch (error) {
+                    throw new ValidationError(error.message);
+                }
+                const seatingKey = locationKey(location);
+                if (assigned.has(uid) && assigned.get(uid) !== seatingKey) throw new ValidationError('同一账号不能配置多个不同座位，请检查重名选择');
+                assigned.set(uid, seatingKey);
+                if (location) locations.set(uid, location);
                 chosen.push(uid);
             }
         }
         if (!(await imports.findOneAndDelete(query))) throw new ValidationError('这次导入已经处理，请刷新');
-        this.response.body = chosen.length
+        const result = chosen.length
             ? await enroll(this.tdoc, [...new Set(chosen)], this.user._id)
             : { added: [], existing: [], failed: [] };
+        this.response.body = await this.withLocations(result, locations);
     }
 }
 
