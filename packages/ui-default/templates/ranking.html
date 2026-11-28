@@ -32,7 +32,7 @@
   <td class="col--external-total"><strong>{{ row.total if row.total != null else '—' }}</strong></td>
   <td class="col--daily">
     {% if row.daily.total != null %}
-      {{ row.daily.total }}{% if row.daily.partial %}<span class="ranking-partial" title="部分外站数据待同步，当前显示已有小计">*</span>{% endif %}
+      {{ row.daily.total }}{% if row.daily.partial %}<span class="ranking-partial" title="{% if row.daily.pendingPlatforms and row.daily.pendingPlatforms.length %}部分外站数据待同步（{{ row.daily.pendingPlatforms | join('、') }}），当前显示已有小计{% else %}部分外站数据待同步，当前显示已有小计{% endif %}">*</span>{% endif %}
     {% else %}<span class="ranking-pending" title="待更新：暂无昨日首次 AC 或有效外站增量，暂显示 0">0</span>{% endif %}
   </td>
 </tr>

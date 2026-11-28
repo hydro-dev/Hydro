@@ -108,7 +108,7 @@ function proc(params: Parameter): Cmd {
             { name: 'stderr', max: Math.floor(1024 * 1024 * stdioSize) },
         ],
         cpuLimit,
-        clockLimit: 3 * cpuLimit,
+        clockLimit: Math.floor(cpuLimit * 1.5 + 500 * 1000 * 1000),
         memoryLimit: Math.floor(memory * 1024 * 1024),
         strictMemoryLimit: getConfig('strict_memory'),
         addressSpaceLimit: params.addressSpaceLimit,

@@ -232,11 +232,15 @@ async function runExternalOjSync(
             );
             pausedRetrySec = Math.max(1, Math.ceil(error.retryMs / 1000));
         }
+        const retryInRound = !(error instanceof ExternalOjHistoryLimit)
+            && !(binding.failedAt && externalSyncRound(binding.failedAt).getTime() === externalSyncRound(now).getTime());
+        const nextRound = nextBeijingSync(error instanceof ExternalOjHistoryLimit ? new Date(now.getTime() + 6 * 24 * HOUR) : now);
+        const retryAt = new Date(at.getTime() + (error instanceof ExternalOjRateLimit ? Math.max(error.retryMs, 15 * 60_000) : 30 * 60_000));
         await coll.updateOne(currentJob, {
             $set: {
                 failedAt: at,
                 ...(mode === 'scheduled' ? {
-                    syncAfter: nextBeijingSync(error instanceof ExternalOjHistoryLimit ? new Date(now.getTime() + 6 * 24 * HOUR) : now),
+                    syncAfter: retryInRound && retryAt < nextRound ? retryAt : nextRound,
                 } : {}),
             },
             $unset: release,

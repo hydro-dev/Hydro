@@ -102,7 +102,13 @@ export default class RecordModel {
             source = `${pdoc.domainId}/${pdoc.docId}`;
         }
         meta = { ...meta, problemOwner: pdoc.owner };
-        const ddoc = await DomainModel.get(pdoc.domainId);
+        const contestId = rdocs[0].contest;
+        const [ddoc, tdoc] = await Promise.all([
+            DomainModel.get(pdoc.domainId),
+            (contestId && !contestId.equals(RecordModel.RECORD_PRETEST) && !contestId.equals(RecordModel.RECORD_GENERATE))
+                ? contest.get(domainId, contestId) : null,
+        ]);
+        if (tdoc?.rule === 'icpc_domjudge') meta.stopOnFirstFail = true;
         return await task.addMany(rdocs.map((rdoc) => {
             let type = 'judge';
             if (typeof pdoc.config === 'string') throw new TypeError(pdoc.config);

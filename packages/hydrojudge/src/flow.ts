@@ -34,6 +34,7 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
             const runner = judgeCase(subtask.cases[cid]);
             cases.push(ctx.queue.add(async () => {
                 const res = (ctx.errored
+                    || (ctx.meta?.stopOnFirstFail && ctx.total_status > STATUS.STATUS_ACCEPTED)
                     || (subtask.type === 'min' && ctxSubtask.score === 0)
                     || (subtask.type === 'max' && ctxSubtask.score === subtask.score)
                     || (subtask.if || []).filter((i) => ctx.failed[i]).length)
@@ -54,6 +55,7 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
                 if (res?.status !== STATUS.STATUS_CANCELED) {
                     ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, res.score);
                     ctxSubtask.status = Math.max(ctxSubtask.status, res.status);
+                    ctx.total_status = Math.max(ctx.total_status, res.status);
                     if (ctxSubtask.status > STATUS.STATUS_ACCEPTED) ctx.failed[sid] = true;
                     ctx.total_time += res.time;
                     ctx.total_memory = Math.max(ctx.total_memory, res.memory);
@@ -87,8 +89,9 @@ export const runFlow = async (ctx: Context, task: Task) => {
     ctx.total_score = 0;
     ctx.total_memory = 0;
     ctx.total_time = 0;
-    ctx.rerun = getConfig('rerun') || 0;
-    ctx.queue = new Queue({ concurrency: getConfig('singleTaskParallelism') });
+    const stopOnFirstFail = Boolean(ctx.meta?.stopOnFirstFail);
+    ctx.rerun = stopOnFirstFail ? 0 : (getConfig('rerun') || 0);
+    ctx.queue = new Queue({ concurrency: stopOnFirstFail ? 1 : getConfig('singleTaskParallelism') });
     ctx.failed = {};
     if (ctx.meta.hackRejudge) {
         const subtask = ctx.config.subtasks.find((i) => i.cases.find((j) => j.input.endsWith(ctx.meta.hackRejudge)));

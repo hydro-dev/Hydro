@@ -346,7 +346,7 @@ export async function getDailyExternalRanking(
         ? options.uids.map((uid) => ({ uid, count: localCounts.get(uid) || 0 }))
         : [...localCounts].map(([uid, count]) => ({ uid, count }));
     const [result] = await db.collection('domain.user').aggregate<{
-        rows: { uid: number, total: number | null, partial: boolean }[];
+        rows: { uid: number, total: number | null, partial: boolean, pendingPlatforms: string[] }[];
         counts: { count: number }[];
         ready: { count: number }[];
     }>([
@@ -379,6 +379,7 @@ export async function getDailyExternalRanking(
                     {
                         $project: {
                             _id: 0,
+                            platform: 1,
                             pendingTimeline: {
                                 $and: [
                                     { $in: ['$platform', ['codeforces', 'atcoder']] },
@@ -477,6 +478,22 @@ export async function getDailyExternalRanking(
                         { $gt: [{ $size: '$dailyBindings' }, { $size: '$increments' }] },
                         { $in: [true, '$dailyBindings.pendingTimeline'] },
                     ],
+                },
+                pendingPlatforms: {
+                    $map: {
+                        input: {
+                            $filter: {
+                                input: '$dailyBindings',
+                                cond: {
+                                    $or: [
+                                        { $eq: ['$$this.increment', null] },
+                                        { $eq: ['$$this.pendingTimeline', true] },
+                                    ],
+                                },
+                            },
+                        },
+                        in: '$$this.platform',
+                    },
                 },
             },
         },

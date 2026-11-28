@@ -80,6 +80,7 @@ export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
     rejudge?: boolean | 'controlled';
+    stopOnFirstFail?: boolean;
     // FIXME stricter types
     type?: string;
 }
