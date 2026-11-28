@@ -204,7 +204,8 @@ place. Clarification details also follow new replies, while automatic refresh
 preserves any message or jury reply currently being drafted.
 
 All contest rules share the participant-management screen. Its unstyled XLSX
-template contains only the first-row headers `班级` and `姓名`. Imports match
+template contains only the first-row headers `班级`, `姓名`, `教室` and `座位号`.
+Legacy two-column templates remain supported without changing locations. Imports match
 both fields exactly after trimming outer whitespace. Unambiguous rows import
 immediately; missing rows are reported, and duplicate identities require an
 explicit selection of one, several or all candidate accounts. Duplicate choices
