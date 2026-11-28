@@ -191,6 +191,7 @@ declare module './model/problem' {
         tag: string[];
         data: FileInfo[];
         additional_file: FileInfo[];
+        onsiteStatement?: string;
         hidden?: boolean;
         /** @deprecated 仅兼容读取旧题面，格式由题面文件扩展名决定。 */
         html?: boolean;
@@ -284,6 +285,7 @@ export interface Tdoc extends Document {
     assign?: string[];
     files?: FileInfo[];
     privateFiles?: FileInfo[];
+    onsiteStatement?: string;
     allowViewCode?: boolean;
     allowPrint?: boolean;
     keepScoreboardHidden?: boolean;
@@ -293,6 +295,7 @@ export interface Tdoc extends Document {
     unlocked?: boolean;
     autoHide?: boolean;
     balloon?: Record<number, string | { color: string, name: string }>;
+    balloonDisabled?: boolean;
     score?: Record<number, number>;
     langs?: string[];
     allowTeam?: boolean;
@@ -404,6 +407,7 @@ export interface ContestClarificationDoc extends Document {
     parentId: ObjectId;
     // 0: contest -1: technique [pid]: problem
     subject: number;
+    arenaParticipant?: number;
     ip: string;
     content: string;
     reply: DiscussionTailReplyDoc[];
@@ -487,6 +491,8 @@ export interface ContestStatusDoc extends StatusDocBase, ContestStat {
     rev?: number;
     displayName?: string;
     members?: number[];
+    classroom?: string;
+    seat?: string;
     registrationCancelled?: boolean;
     registrationCancelledAt?: Date;
     registrationCancelledBy?: number;
@@ -623,6 +629,7 @@ export interface ContestBalloonDoc {
     pid: number;
     uid: number;
     first?: boolean;
+    createdAt?: Date;
     /** Sent by */
     sent?: number;
     sentAt?: Date;

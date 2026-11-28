@@ -45,6 +45,7 @@ packages/**/*.js
 !packages/register/index.js
 ## ui-default
 !packages/ui-default/**/*.js
+!packages/contest-arena/frontend/*.js
 !packages/geoip/download.js
 !examples/**
 packages/ui-default/public

@@ -706,6 +706,9 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.response.body.testdata = sortFiles(this.pdoc.data || []);
         this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
         this.response.body.reference = this.pdoc.reference;
+        this.session.onsiteStatementCsrf ||= randomstring(32);
+        this.response.body.onsiteStatementCsrf = this.session.onsiteStatementCsrf;
+        this.response.body.onsiteStatementColumn = this.pdoc.additional_file?.some((file) => /\.pdf$/i.test(file.name));
         this.response.pjax = d.map((i) => ['partials/problem_files.html', { filetype: i, sidebar, can_edit: true }]);
         if (!sidebar) this.response.pjax.push(['partials/problem-sidebar-information.html', {}]);
         this.response.template = 'problem_files.html';
@@ -715,6 +718,19 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (this.args.operation === 'get_links') return;
         if (this.pdoc.reference) throw new ProblemIsReferencedError('edit files');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+    }
+
+    @post('filename', Types.Filename, true)
+    @post('csrf', Types.String)
+    async postSetOnsiteStatement(domainId: string, filename: string, csrf: string) {
+        if (!this.session.onsiteStatementCsrf || csrf !== this.session.onsiteStatementCsrf) {
+            throw new ValidationError('页面已过期，请刷新后重试');
+        }
+        if (filename && (!/\.pdf$/i.test(filename) || !this.pdoc.additional_file?.some((file) => file.name === filename))) {
+            throw new ValidationError('请选择已上传的 PDF 文件');
+        }
+        await problem.edit(domainId, this.pdoc.docId, { onsiteStatement: filename || '' });
+        this.back();
     }
 
     @post('files', Types.Set)

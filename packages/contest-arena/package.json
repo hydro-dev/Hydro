@@ -5,7 +5,8 @@
   "main": "index.ts",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "exceljs": "4.4.0"
+    "exceljs": "4.4.0",
+    "sharp": "0.34.5"
   },
   "peerDependencies": {
     "@hydrooj/ui-default": "workspace:^",

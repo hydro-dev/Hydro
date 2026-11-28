@@ -105,13 +105,13 @@ export class ProblemModel {
     static PROJECTION_CONTEST_DETAIL: Field[] = [
         ...ProblemModel.PROJECTION_CONTEST_LIST,
         'content', 'html', 'data', 'additional_file',
-        'reference', 'maintainer',
+        'reference', 'maintainer', 'onsiteStatement',
     ];
 
     static PROJECTION_PUBLIC: Field[] = [
         ...ProblemModel.PROJECTION_LIST,
         'content', 'html', 'data', 'config', 'additional_file',
-        'reference', 'maintainer',
+        'reference', 'maintainer', 'onsiteStatement',
     ];
 
     static default = {
@@ -464,6 +464,10 @@ export class ProblemModel {
                 operator,
             ),
             document.setSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', file, payload),
+            document.coll.updateOne(
+                { domainId, docType: document.TYPE_PROBLEM, docId: pid, onsiteStatement: file },
+                { $set: { onsiteStatement: /\.pdf$/i.test(newName) ? newName : '' } },
+            ),
         ]);
         await bus.emit('problem/renameAdditionalFile', domainId, pid, file, newName);
     }
@@ -473,6 +477,10 @@ export class ProblemModel {
         await Promise.all([
             storage.del(names.map((t) => `problem/${domainId}/${pid}/additional_file/${t}`), operator),
             ProblemModel.pull(domainId, pid, 'additional_file', names),
+            document.coll.updateOne(
+                { domainId, docType: document.TYPE_PROBLEM, docId: pid, onsiteStatement: { $in: names } },
+                { $set: { onsiteStatement: '' } },
+            ),
         ]);
         await bus.emit('problem/delAdditionalFile', domainId, pid, names);
     }

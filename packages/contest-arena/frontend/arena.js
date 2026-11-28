@@ -111,6 +111,69 @@
         const el = document.getElementById('arena-error');
         if (el) el.hidden = true;
     };
+    const noticePanel = document.querySelector('[data-arena-notices]');
+    const notificationKey = noticePanel?.dataset.notificationKey;
+    const noticeTags = new Set();
+    const baseTitle = document.title || '';
+    try {
+        notifications = !!notificationKey && localStorage.getItem(notificationKey) === 'enabled'
+            && 'Notification' in window && Notification.permission === 'granted';
+        for (const id of JSON.parse(localStorage.getItem(`${notificationKey}:sent`) || '[]')) noticeTags.add(id);
+    } catch {}
+    const desktopNotice = (title, body, tag, url) => {
+        if (!notifications || !('Notification' in window) || Notification.permission !== 'granted') return;
+        try {
+            const message = new Notification(title, { body, tag });
+            message.addEventListener('click', () => {
+                window.focus();
+                if (url) readDetail(url);
+                message.close();
+            });
+        } catch {
+            notifications = false;
+            showError('Desktop notifications are unavailable in this browser. Jury messages are still shown on this page.');
+        }
+    };
+    const applyNotices = (items = []) => {
+        if (!noticePanel) return;
+        noticePanel.hidden = !items.length;
+        document.title = items.length ? `(${items.length}) ${baseTitle}` : baseTitle;
+        if (items.length) {
+            noticePanel.querySelector('[data-notice-text]').textContent = `${items.length} unread message(s) from jury. ${items[0].body}`;
+            noticePanel.querySelector('[data-notice-link]').href = items[0].url;
+        }
+        for (const item of items) {
+            if (noticeTags.has(item.id) || !notifications) continue;
+            desktopNotice(item.title, item.body, `arena-clarification-${item.id}`, item.url);
+            noticeTags.add(item.id);
+        }
+        try {
+            localStorage.setItem(`${notificationKey}:sent`, JSON.stringify([...noticeTags].slice(-1000)));
+        } catch {}
+    };
+    try {
+        applyNotices(JSON.parse(noticePanel?.dataset.arenaNotices || '[]'));
+    } catch {}
+    const markNoticesRead = async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            const body = new FormData();
+            body.set('operation', 'read_notifications');
+            body.set('csrf', noticePanel.dataset.notificationCsrf);
+            const response = await fetch(`${home}/clarifications`, {
+                method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }, body,
+                signal: AbortSignal.timeout(15000),
+            });
+            if (!response.ok || !(await response.json()).ok) throw new Error('Unable to mark messages as read. Please try again.');
+            window.dispatchEvent(new Event('arena-notices-read'));
+        } catch (error) {
+            showError(error.message);
+        } finally {
+            button.disabled = false;
+        }
+    };
+    document.querySelector('[data-read-notices]')?.addEventListener('click', markNoticesRead);
     const clock = () => {
         const now = Date.now() + offset;
         const seconds = Math.max(0, Math.ceil(((now < start ? start : end) - now) / 1000));
@@ -140,7 +203,7 @@
             link.setAttribute('aria-disabled', String(!canSubmit));
         }
         for (const button of document.querySelectorAll('[data-submit-solution] button[type=submit]')) {
-            button.disabled = !canSubmit || busy || !button.form.querySelector('[data-submit-language]')?.value;
+            button.disabled = !canSubmit || busy || !button.form?.querySelector('[data-submit-language]')?.value;
         }
     };
     clock();
@@ -158,7 +221,8 @@
             polling
             || busy
             || stopped
-            || (!manual && (document.hidden || window.arenaScoreboard?.autoRefreshEnabled() === false))
+            || (!manual && ((document.hidden && !notifications)
+                || (!noticePanel && window.arenaScoreboard?.autoRefreshEnabled() === false)))
         ) {
             return;
         }
@@ -195,6 +259,7 @@
                 return;
             }
             for (const [key, html] of Object.entries(data.fragments)) {
+                if (!manual && key.startsWith('scoreboard') && window.arenaScoreboard?.autoRefreshEnabled() === false) continue;
                 const target = document.querySelector(`[data-arena-live="${key}"]`);
                 if (!target || rendered.get(key) === html) continue;
                 if (['jury-requests', 'clarification-details'].includes(key) && hasDraft(target)) continue;
@@ -215,18 +280,15 @@
             }
             if (notifications && 'Notification' in window && Notification.permission === 'granted') {
                 for (const row of document.querySelectorAll('.submissions-table tbody tr')) {
-                    const id = row.querySelector('a')?.textContent;
+                    const id = row.querySelector('a')?.href;
                     const verdict = row.querySelector('.verdict')?.textContent.trim();
                     if (id && verdict && !/PENDING|JUDGING|COMPILING/.test(verdict) && !notified.has(id)) {
                         notified.add(id);
-                        const notification = new Notification('Submission result', {
-                            body: `${id}: ${verdict}`,
-                            tag: `arena-${id}`,
-                        });
-                        notification.addEventListener('click', () => window.focus());
+                        desktopNotice('Submission result', verdict, `arena-${id}`, id);
                     }
                 }
             }
+            applyNotices(data.notices || []);
             filterTeams();
             clock();
             if (manual) hideError();
@@ -240,41 +302,73 @@
     }
     setInterval(
         () => refresh(),
-        ['home', 'scoreboard', 'submission', 'clarifications', 'clarification', 'jury'].includes(view) ? 4000 : 15000,
+        ['home', 'scoreboard', 'submissions', 'submission', 'clarifications', 'clarification', 'jury'].includes(view) ? 4000 : 15000,
     );
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) refresh();
+        if (!document.hidden) {
+            clock();
+            refresh();
+        }
     });
     window.addEventListener('pagehide', () => {
         stopped = true;
     });
     window.addEventListener('pageshow', () => {
         stopped = false;
+        clock();
         refresh();
     });
     window.addEventListener('online', () => refresh());
-    window.addEventListener('focus', () => refresh());
+    window.addEventListener('arena-notices-read', () => refresh(true));
+    window.addEventListener('focus', () => {
+        clock();
+        refresh();
+    });
     document.querySelector('[data-refresh]')?.addEventListener('click', () => refresh(true));
     document.querySelector('[data-auto-refresh]')?.addEventListener('change', (event) => {
         if (event.currentTarget.checked) refresh(true);
     });
     const notify = document.querySelector('.notify-button');
-    if (notify && 'Notification' in window) {
+    if (notify) {
         notify.hidden = false;
+        const updateNotifyButton = () => {
+            notify.textContent = notifications ? 'Disable Notifications' : 'Enable Notifications';
+            notify.setAttribute('aria-pressed', String(notifications));
+        };
+        updateNotifyButton();
         notify.addEventListener('click', async () => {
             if (notifications) {
                 notifications = false;
-                notify.textContent = 'Enable Notifications';
-                return;
-            }
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                for (const a of document.querySelectorAll('.submissions-table tbody tr td:first-child a')) {
-                    notified.add(a.textContent);
+            } else {
+                if (!('Notification' in window) || window.isSecureContext === false) {
+                    showError('Desktop notifications require HTTPS (or localhost) and a supported browser. Jury messages still appear on this page.');
+                    return;
                 }
-                notifications = true;
-                notify.textContent = 'Disable Notifications';
+                try {
+                    const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+                    if (permission !== 'granted' || Notification.permission !== 'granted') {
+                        showError(permission === 'denied' || Notification.permission === 'denied'
+                            ? 'Notifications are blocked. Allow notifications in your browser’s site settings, then try again.'
+                            : 'Notification permission was not granted. Click Enable Notifications to try again.');
+                        return;
+                    }
+                    for (const row of document.querySelectorAll('.submissions-table tbody tr')) {
+                        const id = row.querySelector('a')?.href;
+                        const verdict = row.querySelector('.verdict')?.textContent.trim();
+                        if (id && verdict && !/PENDING|JUDGING|COMPILING/.test(verdict)) notified.add(id);
+                    }
+                    notifications = true;
+                    desktopNotice('HGNUOJ notifications enabled', 'Jury messages and submission results will appear here.', 'arena-enabled');
+                } catch {
+                    showError('Unable to enable desktop notifications. Check your browser’s notification settings.');
+                    return;
+                }
             }
+            try {
+                localStorage.setItem(notificationKey, notifications ? 'enabled' : 'disabled');
+            } catch {}
+            updateNotifyButton();
+            refresh();
         });
     }
     const setProblem = (form, pid) => {
@@ -335,6 +429,7 @@
         } catch {}
         form.querySelector('[data-submit-problem]').addEventListener('change', () => setProblem(form));
         form.querySelector('[data-source-file]').addEventListener('change', (event) => {
+            clock();
             const file = event.target.files[0];
             if (!file) return;
             applyLanguage(form, file.name);
@@ -344,6 +439,7 @@
         });
     }
     document.addEventListener('click', (event) => {
+        if (event.target.closest('[data-queue-refresh]')) refresh(true);
         const detail = event.target.closest('[data-arena-modal]');
         if (detail && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.button === 0) {
             event.preventDefault();
@@ -433,15 +529,35 @@
             throw new Error('The server did not confirm this action. Check your submissions before trying again.');
         }
         if (!response.ok || data.error) {
-            throw new Error(data.error?.message || data.error || data.message || `Request failed (${response.status}).`);
+            throw new Error(data.error?.name === 'ValidationError' ? data.error.params?.[0] || data.error.message
+                : data.error?.message || data.message || `Request failed (${response.status}).`);
         }
         return data;
     };
+    const confirmation = document.getElementById('confirm-submit-modal');
+    let confirmPending = null;
+    const confirmSubmission = (file, problem, language) => {
+        if (!confirmation || confirmPending) return Promise.resolve(false);
+        confirmation.querySelector('[data-confirm-file]').textContent = file.name;
+        confirmation.querySelector('[data-confirm-problem]').textContent = problem;
+        confirmation.querySelector('[data-confirm-language]').textContent = language || '';
+        return new Promise((resolve) => {
+            confirmPending = resolve;
+            confirmation.returnValue = '';
+            confirmation.showModal();
+        });
+    };
+    confirmation?.querySelector('[data-confirm-submit]')?.addEventListener('click', () => confirmation.close('submit'));
+    confirmation?.addEventListener('close', () => {
+        const resolve = confirmPending;
+        confirmPending = null;
+        resolve?.(confirmation.returnValue === 'submit');
+    });
     document.addEventListener('submit', async (event) => {
         const form = event.target;
         if (!form.matches('[data-submit-solution], [data-arena-form], [data-rejudge]')) return;
         event.preventDefault();
-        if (busy) return;
+        if (busy || confirmPending) return;
         const solution = form.matches('[data-submit-solution]');
         const target = form.querySelector('.form-error') || document.getElementById('arena-error');
         if (target) target.hidden = true;
@@ -450,8 +566,13 @@
             if (!file) return;
             const problem = form.querySelector('[data-submit-problem]').selectedOptions[0].textContent;
             const lang = form.querySelector('[data-submit-language]').selectedOptions[0]?.textContent;
-            // eslint-disable-next-line no-alert -- Confirm the contest action before sending it.
-            if (!window.confirm(`Submit ${file.name}\nProblem: ${problem}\nLanguage: ${lang}?`)) return;
+            if (!await confirmSubmission(file, problem, lang)) return;
+            clock();
+            if (root.dataset.arenaParticipant !== 'true' || initiallyEnded || initiallyParticipantEnded
+                || Date.now() + offset < start || Date.now() + offset >= end) {
+                showError('The contest is not accepting submissions.', target);
+                return;
+            }
         }
         busy = true;
         const button = form.querySelector('button[type=submit]');
@@ -467,6 +588,7 @@
                     credentials: 'same-origin',
                     headers: { Accept: 'application/json' },
                     body: new FormData(form),
+                    signal: AbortSignal.timeout(30000),
                 }),
             );
             if (solution) {
@@ -479,7 +601,9 @@
                 location.reload();
             } else location.href = data.redirect || location.href;
         } catch (error) {
-            showError(error.message || 'Connection interrupted. Check your submissions before trying again.', target);
+            showError(error.name === 'AbortError' || error.name === 'TimeoutError' || error.name === 'TypeError'
+                ? 'Connection interrupted. Check Home for the result before trying again.'
+                : error.message || 'Connection interrupted. Check your submissions before trying again.', target);
         } finally {
             busy = false;
             if (button) {

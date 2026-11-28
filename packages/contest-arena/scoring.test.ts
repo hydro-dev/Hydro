@@ -39,6 +39,17 @@ test('pre-freeze submission judged later still affects frozen board', () => {
     assert.equal(result.accept, 1);
 });
 
+test('visible CE-only attempts leave no native -0 cell and hidden CE does not disclose its verdict', () => {
+    const ce = entry(121, 7);
+    assert.equal(score(contest, [ce]).detail[1], undefined);
+    const frozen = score(contest, [ce], new Date(+start + 120000));
+    assert.equal(frozen.detail[1].npending, 1);
+    assert.equal(frozen.detail[1].status, undefined);
+    const solved = score(contest, [ce, entry(125, 1)]);
+    assert.equal(solved.detail[1].attempts, 1);
+    assert.equal(solved.time, 120);
+});
+
 test('cancelled, ignored and system results never become pending when frozen', () => {
     const freeze = new Date(+start + 120000);
     for (const status of [8, 9, 10, 30, 31]) {

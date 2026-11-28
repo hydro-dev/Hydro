@@ -1,7 +1,7 @@
-import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { medalCounts, medalFor, problemColors } from './scoreboard';
+import { contestEntities, resolverTeamId } from './contest-data';
+import { medalCounts, medalFor } from './scoreboard';
 import { excludedStatuses, pendingStatuses, ranked, score } from './scoring';
 
 /** ICPC Contest API 2026-01 snapshot. Exporting never changes the contest. */
@@ -17,8 +17,8 @@ export const resolverJudgements: Record<number, { id: string, name: string, pena
 };
 const ignored = excludedStatuses;
 const hex = (id: any) => id.toHexString?.() || String(id);
-const classId = (name: string) => `class-${createHash('sha256').update(name).digest('hex').slice(0, 16)}`;
-export const resolverTeamId = (uid: number) => `team-${uid < 0 ? `g${-uid}` : uid}`;
+const image = (path: string) => [{ href: path, filename: path.split('/').at(-1), mime: 'image/png' }];
+export { resolverTeamId } from './contest-data';
 
 export const resolverWindowsLauncher = readFileSync(join(__dirname, 'launcher/start-resolver.cmd'), 'utf8').replace(/\r?\n/g, '\r\n');
 // Windows PowerShell 5.1 needs a BOM to read Chinese text and paths correctly.
@@ -71,77 +71,10 @@ export function buildResolverData(
     const freeze = resolverFreeze(tdoc, options.freezeMinutes);
     const id = hex(tdoc.docId || tdoc._id);
     if (!/^[a-f0-9]{24}$/.test(id)) throw new Error('无效的比赛编号');
+    const { rows, teams, organizations, groups, problems } = contestEntities(tdoc, statuses, users, pdict);
     const active = statuses.filter((row) => row.attend && !row.registrationCancelled);
-    const rows = ranked(active.map((row) => ({ ...row, ...score(tdoc, row.journal || []) })));
     const frozenRows = ranked(active.map((row) => ({ ...row, ...score(tdoc, row.journal || [], freeze.freezeAt) })));
     const medals = medalCounts(tdoc.medals);
-    const teams: any[] = [];
-    const organizations: any[] = [];
-    const groups: any[] = [
-        { id: 'participants', name: '正式参赛者' },
-        { id: 'observers', name: '打星参赛者' },
-    ];
-    const knownClasses = new Set<string>();
-    const knownTeams = new Set<number>();
-    const image = (path: string) => [{ href: path, filename: path.split('/').at(-1), mime: 'image/png' }];
-    for (const row of rows) {
-        if (knownTeams.has(row.uid)) throw new Error('参赛者数据重复，请先检查报名数据');
-        knownTeams.add(row.uid);
-        const udoc = users[row.uid] || {};
-        const members = row.members?.length ? row.members : [row.uid];
-        const affiliation =
-            [...new Set(members.map((uid) => users[uid]?.class).filter(Boolean))].join(' / ') || '未填写班级';
-        const group = classId(affiliation);
-        const team = resolverTeamId(row.uid);
-        if (!knownClasses.has(group)) {
-            knownClasses.add(group);
-            groups.push({ id: group, name: affiliation });
-        }
-        // A per-team affiliation preserves the class caption and the account's row logo.
-        // Class groups still represent actual classes, independently of these display logos.
-        const organization = `affiliation-${team}`;
-        organizations.push({
-            id: organization,
-            name: affiliation,
-            formal_name: affiliation,
-            logo: image(`organizations/${organization}/logo.png`),
-        });
-        const displayName = `${affiliation}-${row.displayName || udoc.name || udoc.displayName || udoc.uname || `Team ${row.uid}`}`;
-        teams.push({
-            id: team,
-            label: String(row.uid),
-            name: displayName,
-            display_name: displayName,
-            organization_id: organization,
-            group_ids: [row.unrank ? 'observers' : 'participants', group],
-            hidden: !!row.unrank,
-            photo: image(`teams/${team}/photo.png`),
-        });
-    }
-    const problems = tdoc.pids.map((pid, index) => {
-        if (!pdict[pid]) throw new Error(`比赛题目 ${pid} 不存在`);
-        const configured = tdoc.balloon?.[pid];
-        let color = typeof configured === 'string' ? configured : configured?.color;
-        if (!/^#(?:[a-f0-9]{3}|[a-f0-9]{6})$/i.test(color || '')) color = problemColors[index % problemColors.length];
-        if (color.length === 4) {
-            color = `#${color
-                .slice(1)
-                .split('')
-                .map((c) => c + c)
-                .join('')}`;
-        }
-        return {
-            id: String(pid),
-            label: String.fromCharCode(65 + index),
-            ordinal: index,
-            name: pdict[pid].title,
-            color: String.fromCharCode(65 + index),
-            rgb: color,
-            time_limit: Number.isFinite(pdict[pid].config?.timeMax) ? pdict[pid].config.timeMax / 1000 : 1,
-            test_data_count:
-                Number.isSafeInteger(pdict[pid].config?.count) && pdict[pid].config.count >= 0 ? pdict[pid].config.count : 0,
-        };
-    });
     const submissions: any[] = [];
     const judgements: any[] = [];
     const knownRuns = new Map<string, string>();

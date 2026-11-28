@@ -222,8 +222,16 @@ export async function enroll(tdoc: any, uids: number[], actor: number, unrank = 
             if (uid < 0 && !tdoc.allowTeam) throw new ValidationError('该比赛未开启队伍参赛');
             const members = virtual?.members?.length ? [...new Set<number>(virtual.members)] : [uid];
             if (uid < 0 && !virtual?.members?.length) throw new ValidationError('队伍没有有效成员');
-            if (uid < 0 && tdoc.rule === ONSITE_RULE && !canReuseTeamRoster(old, members)) {
-                throw new ValidationError('该队伍已有提交，不能更换成员后沿用原报名；请新建队伍参赛，原提交会保留');
+            let previousRoster = old;
+            const changedRoster = old && (!old.members?.length || old.members.length !== members.length
+                || old.members.some((member) => !members.includes(member)));
+            if (uid < 0 && tdoc.rule === ONSITE_RULE && changedRoster && !old.journal?.length) {
+                const clarifications = await contest.getMultiClarification(tdoc.domainId, tdoc.docId);
+                previousRoster = { ...old, hasClarifications: clarifications.some((item) => item.owner > 0
+                    && (item.arenaParticipant === uid || (item.arenaParticipant === undefined && old.members?.includes(item.owner)))) };
+            }
+            if (uid < 0 && tdoc.rule === ONSITE_RULE && !canReuseTeamRoster(previousRoster, members)) {
+                throw new ValidationError('该队伍已有提交或答疑，不能更换成员后沿用原报名；请新建队伍参赛，原数据会保留');
             }
             for (const member of members) {
                 if (!(await user.getById(tdoc.domainId, member))?.hasPriv(PRIV.PRIV_USER_PROFILE)) { throw new ValidationError('用户不存在或不可参赛'); }

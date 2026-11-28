@@ -13,6 +13,11 @@ test('a team with submissions cannot transfer its result to a changed roster', (
     assert.equal(canReuseTeamRoster({ journal: [{}] }, [1, 2]), false);
     assert.equal(canReuseTeamRoster({ members: [1, 2], journal: [] }, [1, 3]), true);
 });
+
+test('a private conversation also fixes the original roster even when the team has no submissions', () => {
+    assert.equal(canReuseTeamRoster({ members: [1, 2], journal: [], hasClarifications: true }, [1, 3]), false);
+    assert.equal(canReuseTeamRoster({ members: [1, 2], journal: [], hasClarifications: true }, [2, 1]), true);
+});
 test('onsite mode starts exactly twenty minutes before the contest', () => {
     const tdoc = { rule: 'icpc_domjudge', beginAt, endAt };
     assert.equal(MODE_LEAD_MS, 1200000);

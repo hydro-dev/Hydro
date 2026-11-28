@@ -23,14 +23,14 @@
   <colgroup>{% for p in arena.problems %}<col class="problem-column">{% endfor %}</colgroup>
   <thead><tr class="scoreheader">
     <th scope="col" colspan="{{ 2 if arena.hasMedals else 1 }}">rank</th><th scope="col" colspan="{{ teamColumns }}">team</th><th scope="col" colspan="2" title="Number solved / penalty time in minutes">score</th>
-    {% for p in arena.problems %}<th scope="col" class="problem-head" title="Problem {{ p.label }} — {{ p.title }}"><span class="problem-badge" style="--problem-color:{{ p.color }};--problem-text:{{ p.textColor }}">{{ p.label }}</span></th>{% endfor %}
+    {% for p in arena.problems %}<th scope="col" class="problem-head" title="Problem {{ p.label }} — {{ p.title }}">{% if p.url %}<a href="{{ p.url }}"{% if p.pdf %} target="_blank" rel="noopener"{% endif %} aria-label="Problem {{ p.label }} — {{ p.title }}">{% endif %}<span class="problem-badge" style="--problem-color:{{ p.color }};--problem-text:{{ p.textColor }}">{{ p.label }}</span>{% if p.url %}</a>{% endif %}</th>{% endfor %}
   </tr></thead>
   {% if not ownTable %}<tbody data-scoreboard-favorites></tbody>{% endif %}
   <tbody {% if not ownTable %}data-scoreboard-main{% endif %}>
   {% for row in boardRows %}<tr class="{{ 'own-team' if row.mine }}" {{ rowData(row) }}>
     {% if arena.hasMedals %}<td class="medal-cell">{{ medal(row) }}</td>{% endif %}
     <td class="rank">{{ row.rank if ownTable else row.rankLabel }}</td>
-    {% if arena.hasLogos %}<td class="affiliation-cell">{% if row.logo %}<img class="affiliation-logo {{ 'contestant-avatar' if row.avatar }}" src="{{ row.logo }}" {% if row.avatar %}data-user-avatar{% endif %} referrerpolicy="no-referrer" alt="{{ row.name ~ ' avatar' if row.avatar else row.organization }}" loading="lazy" width="32" height="32">{% endif %}</td>{% endif %}
+    {% if arena.hasLogos %}<td class="affiliation-cell">{% if row.logo %}<img class="affiliation-logo {{ 'contestant-avatar' if row.avatar }}" src="{{ '/arena-assets/logo/hgnu-logo.png' if row.avatar else row.logo }}" {% if row.avatar %}data-user-avatar data-avatar-src="{{ row.logo }}"{% endif %} referrerpolicy="no-referrer" alt="{{ row.name ~ ' avatar' if row.avatar else row.organization }}" loading="lazy" width="32" height="32">{% endif %}</td>{% endif %}
     {% if withHearts %}<td class="heart-cell">{{ heart(row) }}</td>{% endif %}
     <td class="teamname">{{ teamName(row) }}</td><td class="solved">{{ row.solved }}</td><td class="penalty">{{ row.penalty }}</td>
     {% for cell in row.cells %}<td class="score-cell" data-problem-label="{{ arena.problems[loop.index0].label }}">{{ cellContent(cell) }}</td>{% endfor %}
@@ -55,12 +55,12 @@
   {% for row in boardRows %}
     <tr class="mobile-team-row {{ 'own-team' if row.mine }}" {{ rowData(row) }}>
       <td class="rank" rowspan="2">{{ medal(row) }}<span data-rank-label>{{ row.rank if ownTable else row.rankLabel }}</span></td>
-      {% if arena.hasLogos %}<td class="affiliation-cell">{% if row.logo %}<img class="affiliation-logo {{ 'contestant-avatar' if row.avatar }}" src="{{ row.logo }}" {% if row.avatar %}data-user-avatar{% endif %} referrerpolicy="no-referrer" alt="{{ row.name ~ ' avatar' if row.avatar else row.organization }}" loading="lazy" width="28" height="28">{% endif %}</td>{% endif %}
+      {% if arena.hasLogos %}<td class="affiliation-cell">{% if row.logo %}<img class="affiliation-logo {{ 'contestant-avatar' if row.avatar }}" src="{{ '/arena-assets/logo/hgnu-logo.png' if row.avatar else row.logo }}" {% if row.avatar %}data-user-avatar data-avatar-src="{{ row.logo }}"{% endif %} referrerpolicy="no-referrer" alt="{{ row.name ~ ' avatar' if row.avatar else row.organization }}" loading="lazy" width="28" height="28">{% endif %}</td>{% endif %}
       {% if withHearts %}<td class="heart-cell">{{ heart(row) }}</td>{% endif %}
       <td class="teamname">{{ teamName(row) }}</td><td class="solved" rowspan="2">{{ row.solved }}<small>{{ row.penalty }}</small></td>
     </tr>
     <tr class="mobile-problems-row {{ 'own-team' if row.mine }}" data-team-problems="{{ row.uid }}"><td colspan="{{ teamColumns }}"><div class="mobile-problem-badges">
-      {% for cell in row.cells %}{% set p = arena.problems[loop.index0] %}<span class="mobile-problem {{ cell.state }} {{ 'first-to-solve' if cell.first }}" title="{{ p.label }} — {% if cell.correct %}{{ cell.time }} minutes; {% endif %}{{ cell.submissions }}{% if cell.pending %} + {{ cell.pending }}{% endif %} submissions"><b>{{ p.label }}</b>{% if cell.correct %}<small>{{ cell.time }}</small>{% elif cell.pending %}<small>?</small>{% elif cell.submissions %}<small>{{ cell.submissions }}</small>{% endif %}</span>{% endfor %}
+      {% for cell in row.cells %}{% set p = arena.problems[loop.index0] %}{% if p.url %}<a href="{{ p.url }}"{% if p.pdf %} target="_blank" rel="noopener"{% endif %} class="mobile-problem-link" aria-label="Problem {{ p.label }} — {{ p.title }}">{% endif %}<span class="mobile-problem {{ cell.state }} {{ 'first-to-solve' if cell.first }}" title="{{ p.label }} — {% if cell.correct %}{{ cell.time }} minutes; {% endif %}{{ cell.submissions }}{% if cell.pending %} + {{ cell.pending }}{% endif %} submissions"><b>{{ p.label }}</b>{% if cell.correct %}<small>{{ cell.time }}</small>{% elif cell.pending %}<small>?</small>{% elif cell.submissions %}<small>{{ cell.submissions }}</small>{% endif %}</span>{% if p.url %}</a>{% endif %}{% endfor %}
       </div></td></tr>
   {% else %}<tr><td colspan="{{ teamColumns + 2 }}" class="nodata">No teams on the scoreboard.</td></tr>{% endfor %}
   <tr class="score-no-matches" hidden><td colspan="{{ teamColumns + 2 }}" class="nodata">No teams match the selected filters.</td></tr>

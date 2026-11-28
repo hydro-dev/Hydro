@@ -24,11 +24,84 @@ the former arena print route and native onsite printing APIs reject requests,
 including contests with a legacy `allowPrint` flag. Scoreboard print controls
 are omitted too.
 
+Native balloon management uses a shared, versioned page with 16 preset colors,
+custom color/name drafts, per-problem previews, class/name search, status/problem
+filters, pagination and batch delivery/undo. Cancelled color dialogs do not
+change saved settings. Pausing generation retains colors and delivery history.
+The arena jury preview, scoreboard, live feed and Resolver share normalized
+problem colors. Delivery is atomic and idempotent; the first courier and time
+survive repeated clicks, and legacy boolean delivery markers remain readable.
+Rejudged non-AC and cancelled registrations are withdrawn from the pending queue.
+First blood waits for earlier pending submissions through their normal final
+callbacks rather than blocking the completed judgement in a database polling loop.
+Onsite balloon eligibility follows the submission timestamp: a pre-freeze
+submission judged later still earns its balloon, while out-of-window records
+cannot create balloons or steal first blood. Visible CE-only scoreboard cells
+remain empty; hidden compilation results remain pending until unfreezing.
+
+Each contest can use WxPusher Simple Push with ordered, individually pausable
+balloon couriers. The administrator saves each courier's OJ account and personal
+SPT, plus the OJ origin that their phones can reach. Only new balloon tasks after
+enabling notifications are assigned automatically; existing pending tasks can
+be assigned explicitly. Durable Mongo reservations advance the round-robin cursor
+once per unique task, including across concurrent AC callbacks and interrupted
+inserts. Retries keep the same courier and link, while transfer/resend rotates
+the task credential without advancing the cursor. Provider acceptance is separate
+from physical delivery and is not a read receipt.
+When a withdrawn submission is restored to AC, an unfinished notification can
+resume with its original courier and a new link, without consuming another turn.
+An administrator's explicit delivery undo is not automatically reversed.
+
+Notification links open a standalone phone page without an OJ login. The random
+credential travels in the URL fragment, is removed from the address bar and is
+sent only in a task-specific request header. Viewing the link never marks delivery;
+an explicit POST confirms only that task, using the assigned courier identity.
+Links expire two hours after the contest ends, and withdrawal, transfer, resend
+or delivery undo invalidates the appropriate old link. Native and phone delivery
+share the same atomic operation, retaining the first sender and timestamp.
+
+Participant management stores an optional classroom and textual seat number per
+contest registration, for individuals or teams. Locations can be entered while
+adding accounts or edited later. The unstyled Excel template has class, name,
+classroom and seat columns. Legacy two-column imports preserve existing locations;
+the four-column template explicitly updates them, including clearing blank cells.
+Distinct seating rows for a class-name pair remain separate during duplicate-account
+review; conflicting assignments to the same account are rejected before confirming.
+Balloon management, courier notifications and the login-free phone task all use
+the current location from the original participant's contest status. Public
+scoreboards and ICPC feeds do not publish classroom or seat metadata.
+Changing the contest end time also synchronizes existing task deadlines, including
+when notifications are paused. Extending the contest does not restore an expired
+or revoked credential; an administrator can explicitly resend a fresh link.
+SPTs and retryable task credentials are encrypted with a persistent server key
+ring; management responses never return them. The delivery page uses no external
+assets, login navigation or referrer data. Disabling pushes stops new sends while
+still allowing valid outstanding links to be confirmed. The push adapter's tests
+use an injected transport and never send synthetic messages to real recipients.
+
+The jury Submissions page has contest-scoped team/problem/language/verdict
+filters, queued/running views, testcase verdict badges, pagination and live
+updates. Jury and participant scoreboards link problem headings to statements;
+jury cells also open authorized submission details. Submission confirmation uses
+a nonblocking dialog, so the contest clock and progress continue while it is open.
+Contest descriptions may be left blank in the ordinary contest editor.
+
+Jury broadcasts and private jury replies produce unread alerts across the team
+interface, independently of desktop notification permission. Opening a message
+or marking messages read acknowledges them in the session. Desktop notification
+opt-in is retained per account/contest, with explicit permission errors and
+deduplicated message notifications, including polling while the tab is hidden.
+
 Server-side scope checks bind all pages to domain/contest/participant identity.
 Public and jury scoreboards use separate projections. In-contest submission
 details do not expose testcase feedback. New state-changing arena forms require
 a session-bound CSRF token; native submission/rejudging use Hydro's existing
 permission-checked handlers.
+Onsite history, source access and downloads retain the original participant's
+journal ownership when accounts change teams. New private clarifications also
+record their participant identity, preventing old conversations and jury replies
+from appearing in a replacement team. Legacy untagged clarifications remain
+visible to their original author and jury, without guessing an old roster.
 
 Submission history is paginated in sets of 50, with the full team history
 available. Submission dialogs follow each problem's language restrictions;
@@ -76,6 +149,9 @@ Visual and interaction references are DOMjudge 9.0.0's scoreboard templates,
 style_domjudge.css and domjudge.js:
 https://github.com/DOMjudge/domjudge/tree/9.0.0/webapp
 DOMjudge is copyright its contributors; see its COPYING for licensing.
+The file-pdf glyph is from Font Awesome Free 6.7.2, Copyright 2024 Fonticons,
+Inc., embedded as an SVG symbol under CC BY 4.0:
+https://fontawesome.com/license/free and https://creativecommons.org/licenses/by/4.0/.
 The HGNU affiliation logo is the existing public logo from the original contest.
 
 The layout and interactions follow DOMjudge's team workflow. HGNUOJ's judge is
@@ -100,8 +176,26 @@ The waiting page, two-column home screen and blue overview headings, problem
 and language card grids, compact submission/clarification tables, and large
 submission/clarification dialogs follow the installed DOMjudge 9.0.0 team
 templates. Submission times retain seconds. Source viewing is collapsed by
-default, with Hydro's source download retained. Problem statements remain
-Hydro Markdown and attachments; no nonexistent PDF or sample ZIP is advertised.
+default, with Hydro's source download retained. Upload the statement PDF to the
+problem's additional files and click `设为现场赛题面`; filenames need not change.
+The selected file takes priority over legacy single-PDF/`statement.pdf` detection.
+Renaming preserves the selection; deleting or explicitly clearing it never
+silently switches to another attachment. Statement and
+scoreboard problem links open it inline in a separate tab through Hydro's
+contest-scoped file access checks, including referenced problems. The selected
+PDF is omitted from the redundant attachment buttons. Without an unambiguous
+PDF, the existing Hydro statement remains available. Onsite contest management
+also offers `设为比赛总题面` on PDFs in its private materials. Selecting one adds
+a separate `problemset` button with a PDF icon next to the Problemset page heading,
+matching DOMjudge's combined booklet control. Its route
+enforces the same start time, registration and jury checks as the problem list;
+the uploaded PDF is opened inline in a new tab. Public materials cannot be
+selected as the combined statement. No PDF conversion or merging is used.
+PDF responses stream through stable contest URLs rather than redirecting to
+expiring storage links. Individual PDFs use `/arena/problems/:pid/statement`,
+and the combined PDF uses `/arena/statement`. The older `problem?pid=` entry
+continues to serve a selected PDF directly. Content-Disposition includes a
+UTF-8 filename and an ASCII fallback; the source PDF bytes remain unchanged.
 Private clarification threads support participant follow-ups with Markdown
 preview, without treating a participant message as a jury answer. The jury's
 native OJ clarification page preserves the real author of each reply.
@@ -110,7 +204,8 @@ place. Clarification details also follow new replies, while automatic refresh
 preserves any message or jury reply currently being drafted.
 
 All contest rules share the participant-management screen. Its unstyled XLSX
-template contains only the first-row headers `班级` and `姓名`. Imports match
+template contains only the first-row headers `班级`, `姓名`, `教室` and `座位号`.
+Legacy two-column templates remain supported without changing locations. Imports match
 both fields exactly after trimming outer whitespace. Unambiguous rows import
 immediately; missing rows are reported, and duplicate identities require an
 explicit selection of one, several or all candidate accounts. Duplicate choices
@@ -155,3 +250,44 @@ environment variables, PATH and common JDK installation directories. A portable
 JDK/JRE can be placed in `runtime/`, or selected with `-JavaHome`. No machine-wide
 Java or font settings are changed. `-Check` verifies the selected runtime without
 opening the presentation.
+
+Contest administrators can open `实时展示` in contest management or the arena
+jury page. Onsite contest creation or conversion automatically prepares a
+read-only, contest-scoped Contest API credential; existing contests initialize
+it on first access. Opening the management page immediately shows reusable
+connection details and startup downloads, without a generation step.
+Passwords are stored with AES-256-GCM, a dedicated persistent server key ring
+and authenticated contest/generation scope. Refreshing or
+using another administrator session does not change a connection. Legacy
+hash-only credentials retain their existing client passwords and event generation
+until an explicit reset. The downloadable Windows startup package connects the official
+ICPC Tools Presentation Client directly to that API. It offers scoreboard,
+submission queue, clock, and a rotation of those views with the problem summary.
+Use the official Presentation Client package containing `lib/presentations.jar`
+and a compatible 64-bit Java runtime. The launcher checks the tool's actual Java
+requirement, selects a Chinese-capable Windows font, and gives each process its
+own temporary cache so simultaneous displays do not corrupt ICPC Tools' feed cache.
+
+The public feed follows Hydro records and registered team journals. Native onsite
+whole-minute scoring, classes, names, school-logo fallback, unranked teams, and
+freeze/unfreeze rules apply to both the OJ and the presentation. Rejudges retract
+the previous judgement before publishing the replacement. Pending submissions
+remain queued without an invented judge-start timestamp. Source code, test data,
+student numbers, email addresses and native login tokens are never exported.
+
+Scoreboard avatars initially show the local school logo; custom avatars replace
+it asynchronously when available, with bounded loading and shared per-page requests.
+
+Event tokens resume immutable, Mongo-backed batches, including after an OJ
+restart. New connections receive the current public checkpoint; resuming an old
+checkpoint also filters verdicts that are now hidden by a freeze or rejudge.
+Clock, freeze, thaw and roster transitions stream as ordinary deltas, preserving
+the official client's live model. Rewriting contest times or the freeze cutoff
+invalidates earlier cursors. Credential reset or disable revokes old connections;
+regenerate the startup package after a reset. The API neither accepts contest
+writes nor changes standings, RP or the source contest's freeze state.
+
+Run `yarn test:arena` for the arena's tests. The journal's restart, interrupted
+commit, fencing and concurrency test additionally runs when
+`HGNU_ARENA_TEST_MONGO` points to a disposable Mongo database. It creates and drops
+only its own randomly named test collections.

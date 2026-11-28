@@ -1,4 +1,4 @@
-<div class="page-heading"><h1>Jury</h1><div>{% if arena.resolverExport %}<a class="btn btn-secondary btn-sm" href="{{ arena.resolverExport }}">导出 ICPC 滚榜包</a> {% endif %}<a class="btn btn-secondary btn-sm" href="{{ arena.links.scoreboard }}?realtime=1">Live scoreboard</a> <a class="btn btn-secondary btn-sm" href="{{ arena.manage }}">Contest management</a></div></div>
+<div class="page-heading"><h1>Jury</h1><div><a class="btn btn-secondary btn-sm" href="{{ arena.links.submissions }}">Submissions</a> <a class="btn btn-secondary btn-sm" href="{{ arena.presentation }}">{% include "arena/presentation-icon.html" %} 实时展示</a> {% if arena.resolverExport %}<a class="btn btn-secondary btn-sm" href="{{ arena.resolverExport }}">导出 ICPC 滚榜包</a> {% endif %}<a class="btn btn-secondary btn-sm" href="{{ arena.links.scoreboard }}?realtime=1">Jury scoreboard</a> <a class="btn btn-secondary btn-sm" href="{{ arena.manage }}">Contest management</a></div></div>
 <div class="overview-grid jury-grid">
   <section>
     <div data-arena-live="jury-requests">{% include "arena/jury-requests.html" %}</div>
